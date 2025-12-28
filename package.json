@@ -99,9 +99,11 @@
     "portainer:logs": "docker-compose -f docker-compose.portainer.yml logs -f",
     "sonar:setup": "./scripts/setup-sonarqube.sh",
     "sonar:analyze": "./scripts/run-sonarqube.sh",
+    "sonar:analyze:docker": "./scripts/sonar-docker-analyze.sh",
     "sonar:up": "docker-compose -f docker-compose.sonarqube.yml up -d",
     "sonar:down": "docker-compose -f docker-compose.sonarqube.yml down",
-    "sonar:logs": "docker-compose -f docker-compose.sonarqube.yml logs -f"
+    "sonar:logs": "docker-compose -f docker-compose.sonarqube.yml logs -f",
+    "sonar:status": "docker-compose -f docker-compose.sonarqube.yml ps"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

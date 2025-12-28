@@ -28,14 +28,26 @@ SonarQube provides continuous code quality analysis, detecting bugs, vulnerabili
    npm run sonar:analyze
    ```
 
-### Option 2: Local SonarQube Server
+### Option 2: Local SonarQube Server (Docker)
 
-1. **Start SonarQube**:
+Uses the official SonarQube Docker image from Docker Hub.
+
+1. **Start SonarQube** (Docker Compose):
    ```bash
    npm run sonar:up
    ```
+   
+   This starts:
+   - SonarQube server (official `sonarqube:latest` image)
+   - PostgreSQL database for SonarQube data
 
-2. **Access SonarQube**:
+2. **Wait for startup** (first time takes 1-2 minutes):
+   ```bash
+   npm run sonar:logs
+   ```
+   Look for: "SonarQube is operational"
+
+3. **Access SonarQube**:
    - URL: http://localhost:9000
    - Default credentials: `admin` / `admin` (change on first login)
 
@@ -81,10 +93,12 @@ Environment-specific configuration (not in git):
 | Script | Description |
 |--------|-------------|
 | `npm run sonar:setup` | Initial setup wizard |
-| `npm run sonar:analyze` | Run code quality analysis |
-| `npm run sonar:up` | Start local SonarQube server (Docker) |
+| `npm run sonar:analyze` | Run code quality analysis (requires SonarScanner installed) |
+| `npm run sonar:analyze:docker` | Run analysis using Docker (no local install needed) |
+| `npm run sonar:up` | Start local SonarQube server (Docker - official image) |
 | `npm run sonar:down` | Stop local SonarQube server |
 | `npm run sonar:logs` | View SonarQube server logs |
+| `npm run sonar:status` | Check SonarQube server status |
 
 ---
 
@@ -94,9 +108,13 @@ Environment-specific configuration (not in git):
    - Backend: `cd apps/backend && npm run test:coverage`
    - Frontend: `cd apps/frontend && npm run test:coverage`
 
-2. **Run Analysis**:
+2. **Run Analysis** (choose one):
    ```bash
+   # Option A: Using local SonarScanner (requires installation)
    npm run sonar:analyze
+   
+   # Option B: Using Docker (no local install needed - recommended)
+   npm run sonar:analyze:docker
    ```
 
 3. **View Results**:
@@ -181,6 +199,15 @@ brew install sonar-scanner
 
 # Or download from:
 # https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/
+
+# Or use Docker (alternative):
+docker run --rm \
+  -v $(pwd):/usr/src \
+  sonarsource/sonar-scanner-cli \
+  -Dsonar.projectKey=life-world-os \
+  -Dsonar.sources=apps \
+  -Dsonar.host.url=http://host.docker.internal:9000 \
+  -Dsonar.login=YOUR_TOKEN
 ```
 
 ### Connection Issues
