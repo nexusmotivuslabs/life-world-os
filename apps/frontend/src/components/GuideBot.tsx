@@ -3,6 +3,10 @@ import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, Minimize2, Sparkles, ExternalLink, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { chatApi } from '../services/api';
+import { logger } from '../lib/logger'
+
+// Get API URL from environment (same as api.ts)
+const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:5001';
 
 interface ChatMessage {
   id: string;
@@ -34,7 +38,6 @@ function GuideBot() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
         const response = await fetch(`${API_URL}/api/health`, {
           method: 'GET',
           signal: AbortSignal.timeout(3000), // 3 second timeout
@@ -108,15 +111,44 @@ function GuideBot() {
       if (response.sessionId) {
         setChatSessionId(response.sessionId);
       }
-    } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage: ChatMessage = {
+    } catch (error: any) {
+      logger.error('Chat error:', error);
+      
+      // Determine error type and provide helpful message
+      let errorContent = '';
+      const errorMessage = error?.message || String(error);
+      
+      if (errorMessage.includes('Network') || errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+        errorContent = `**Backend unavailable**
+
+I cannot connect to the backend server. The system is currently offline.
+
+**To fix:**
+1. Ensure the backend is running: \`cd apps/backend && npm run dev\`
+2. Check the backend is accessible at \`http://localhost:5001\`
+3. Verify your network connection
+
+I remain available, but cannot process queries until the backend is restored.`;
+        setIsBackendAvailable(false);
+      } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        errorContent = `**Authentication required**
+
+Please log in to use Query.`;
+      } else {
+        errorContent = `**Error occurred**
+
+${errorMessage}
+
+Please try again or check the backend logs for details.`;
+      }
+      
+      const errorMessageObj: ChatMessage = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: errorContent,
         createdAt: new Date().toISOString(),
       };
-      setChatMessages(prev => [...prev, errorMessage]);
+      setChatMessages(prev => [...prev, errorMessageObj]);
     } finally {
       setIsLoading(false);
     }
@@ -176,9 +208,27 @@ function GuideBot() {
               <Minimize2 className="w-4 h-4 text-white" />
             </button>
           </div>
-          <p className="text-sm text-white/90 mt-1 drop-shadow">
-            Question ↔ Answer. Seeking ↔ Knowing.
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-sm text-white/90 drop-shadow">
+              Question ↔ Answer. Seeking ↔ Knowing.
+            </p>
+            {/* Backend connection status */}
+            {isBackendAvailable !== null && (
+              <div className="flex items-center gap-1.5 text-xs">
+                {isBackendAvailable ? (
+                  <>
+                    <Wifi className="w-3.5 h-3.5 text-capacity-DEFAULT" />
+                    <span className="text-capacity-light">Connected</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-red-400">Offline</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -197,7 +247,14 @@ function GuideBot() {
             <p className="font-medium mb-2 text-gray-300">Query</p>
             <p className="text-sm text-gray-400">Question ↔ Answer</p>
             <p className="text-xs text-gray-500 mt-2">Seeking ↔ Knowing</p>
-            <p className="text-xs text-gray-500 mt-1">What would you like to understand?</p>
+            {isBackendAvailable === false ? (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-xs text-red-400 mb-1">Backend Offline</p>
+                <p className="text-xs text-gray-500">I remain visible but cannot process queries until the backend is restored.</p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">What would you like to understand?</p>
+            )}
           </div>
         )}
         {chatMessages.map((message) => {
@@ -293,20 +350,29 @@ function GuideBot() {
       </div>
 
       <div className="p-4 border-t border-gray-700 bg-gray-800">
+        {isBackendAvailable === false && (
+          <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <div className="flex items-center gap-2 text-xs text-red-400">
+              <WifiOff className="w-3.5 h-3.5" />
+              <span>Backend unavailable. Query will remain visible but cannot process messages.</span>
+            </div>
+          </div>
+        )}
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="What do you want to understand about Life World OS?"
-            className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-meaning-DEFAULT focus:border-transparent"
-            disabled={isLoading}
+            placeholder={isBackendAvailable === false ? "Backend offline - messages will queue..." : "What do you want to understand about Life World OS?"}
+            className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-meaning-DEFAULT focus:border-transparent disabled:opacity-50"
+            disabled={isLoading || isBackendAvailable === false}
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isBackendAvailable === false}
             className="px-4 py-2 bg-engines-DEFAULT text-white rounded-lg hover:bg-engines-dark disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            title={isBackendAvailable === false ? "Backend is offline" : ""}
           >
             <Send className="w-4 h-4" />
           </button>

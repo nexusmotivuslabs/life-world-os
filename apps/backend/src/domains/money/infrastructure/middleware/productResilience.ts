@@ -6,6 +6,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
+import { logger } from '../lib/logger.js'
 
 interface CircuitBreakerState {
   failures: number
@@ -43,7 +44,7 @@ function recordFailure(key: string): void {
 
   if (breaker.failures >= MAX_FAILURES) {
     breaker.state = 'OPEN'
-    console.warn(`🔴 Circuit breaker OPEN for ${key} due to ${breaker.failures} failures`)
+    logger.warn(`🔴 Circuit breaker OPEN for ${key} due to ${breaker.failures} failures`)
   }
 }
 
@@ -70,7 +71,7 @@ function isCircuitOpen(key: string): boolean {
     // Check if timeout has passed
     if (breaker.lastFailureTime && Date.now() - breaker.lastFailureTime > TIMEOUT_MS) {
       breaker.state = 'HALF_OPEN'
-      console.log(`🟡 Circuit breaker HALF_OPEN for ${key}, allowing test request`)
+      logger.info(`🟡 Circuit breaker HALF_OPEN for ${key}, allowing test request`)
       return false
     }
     return true
@@ -102,7 +103,7 @@ export function withProductResilience<T>(
     try {
       // Check circuit breaker
       if (isCircuitOpen(key)) {
-        console.warn(`⚠️  Circuit breaker OPEN for ${key}, using fallback`)
+        logger.warn(`⚠️  Circuit breaker OPEN for ${key}, using fallback`)
         try {
           const result = await fallback()
           resolve(result)
@@ -122,7 +123,7 @@ export function withProductResilience<T>(
       
       // Try fallback before rejecting
       try {
-        console.warn(`⚠️  Handler failed for ${key}, attempting fallback:`, error)
+        logger.warn(`⚠️  Handler failed for ${key}, attempting fallback:`, error)
         const fallbackResult = await fallback()
         resolve(fallbackResult)
       } catch (fallbackError) {

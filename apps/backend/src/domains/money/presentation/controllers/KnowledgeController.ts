@@ -11,6 +11,7 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -51,7 +52,7 @@ router.get('/search', async (req: Request, res: Response) => {
 
     res.json(response)
   } catch (error: any) {
-    console.error('Error searching knowledge:', error)
+    logger.error('Error searching knowledge:', error)
     res.status(500).json({ error: error.message || 'Failed to search knowledge base' })
   }
 })

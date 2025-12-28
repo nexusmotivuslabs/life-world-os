@@ -10,6 +10,7 @@ import { calculateXP } from '../lib/xpCalculator'
 import { useGameStore } from '../store/useGameStore'
 import { useToastStore } from '../store/useToastStore'
 import { getActivityTypeDisplayName } from '../utils/enumDisplayNames'
+import { logger } from '../lib/logger'
 
 const activitySchema = z.object({
   activityType: z.nativeEnum(ActivityType),
@@ -148,7 +149,7 @@ export default function ActivityXPCalculator() {
       setPreview(null)
       fetchDashboard()
     } catch (error) {
-      console.error('Failed to record activity:', error)
+      logger.error('Failed to record activity:', error)
       addToast({
         type: 'error',
         title: 'Failed to Record Activity',

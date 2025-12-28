@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { authenticateToken, AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -32,7 +33,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       lastUpdated: cloud.lastUpdated,
     })
   } catch (error) {
-    console.error('Get clouds error:', error)
+    logger.error('Get clouds error:', error)
     res.status(500).json({ error: 'Failed to get clouds' })
   }
 })
@@ -71,7 +72,7 @@ router.put('/:cloudType', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Update cloud error:', error)
+    logger.error('Update cloud error:', error)
     res.status(500).json({ error: 'Failed to update cloud' })
   }
 })

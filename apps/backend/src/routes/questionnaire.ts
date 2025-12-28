@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma'
 import { calculateInitialStats, QuestionnaireAnswers } from '../services/initialStatsService'
 import { calculateOverallRank, calculateOverallLevel } from '../services/rankService'
 import { Season } from '../types'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -115,7 +116,7 @@ router.post('/submit', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid questionnaire data', details: error.errors })
     }
-    console.error('Questionnaire submission error:', error)
+    logger.error('Questionnaire submission error:', error)
     res.status(500).json({ error: 'Failed to process questionnaire' })
   }
 })
@@ -135,7 +136,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json({ hasCompletedQuestionnaire: user.hasCompletedQuestionnaire })
   } catch (error) {
-    console.error('Get questionnaire status error:', error)
+    logger.error('Get questionnaire status error:', error)
     res.status(500).json({ error: 'Failed to get questionnaire status' })
   }
 })

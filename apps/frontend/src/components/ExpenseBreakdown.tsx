@@ -9,6 +9,7 @@ import { AlertCircle, CheckCircle2, Info } from 'lucide-react'
 import { expenseApi, ExpenseCategoryType, CategoryExpense } from '../services/expenseApi'
 import { useToastStore } from '../store/useToastStore'
 import { formatCurrencySimple } from '../utils/currency'
+import { logger } from '../lib/logger'
 
 const CATEGORY_INFO: Record<ExpenseCategoryType, { name: string; icon: string; description: string; isEssential: boolean; recommendedPercentage?: number }> = {
   [ExpenseCategoryType.HOUSING]: { name: 'Housing', icon: '🏠', description: 'Rent, mortgage, property taxes, maintenance, HOA fees', isEssential: true, recommendedPercentage: 30 },
@@ -59,7 +60,7 @@ export default function ExpenseBreakdown({
       const data = await expenseApi.getSuggestions(monthlyIncome, expenses)
       setSuggestions(data.suggestions)
     } catch (error) {
-      console.error('Error loading suggestions:', error)
+      logger.error('Error loading suggestions:', error)
     } finally {
       // setLoadingSuggestions(false) // Reserved for future use
     }

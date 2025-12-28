@@ -4,6 +4,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { Season } from '../types'
 import { validateSeasonTransition } from '../services/seasonValidator'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -33,7 +34,7 @@ router.get('/current', authenticateToken, async (req: AuthRequest, res) => {
       daysInSeason,
     })
   } catch (error) {
-    console.error('Get current season error:', error)
+    logger.error('Get current season error:', error)
     res.status(500).json({ error: 'Failed to get current season' })
   }
 })
@@ -109,7 +110,7 @@ router.post('/transition', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Season transition error:', error)
+    logger.error('Season transition error:', error)
     res.status(500).json({ error: 'Failed to transition season' })
   }
 })
@@ -128,7 +129,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(history)
   } catch (error) {
-    console.error('Get season history error:', error)
+    logger.error('Get season history error:', error)
     res.status(500).json({ error: 'Failed to get season history' })
   }
 })

@@ -17,6 +17,7 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI for embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -73,7 +74,7 @@ router.get('/', async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     // RESILIENCE: Return 200 with empty array instead of 500 error
-    console.error('⚠️  Error listing teams (returning empty array for resilience):', error)
+    logger.error('⚠️  Error listing teams (returning empty array for resilience):', error)
     res.json({
       teams: [],
       warning: 'Team listing encountered issues, but system remains operational',
@@ -113,7 +114,7 @@ router.get('/:teamId', async (req: Request, res: Response) => {
         : null,
     })
   } catch (error: any) {
-    console.error('Error getting team:', error)
+    logger.error('Error getting team:', error)
     res.status(500).json({ error: error.message || 'Failed to get team' })
   }
 })
@@ -144,7 +145,7 @@ router.post('/:teamId/chat', async (req: Request, res: Response) => {
 
     res.json(response)
   } catch (error: any) {
-    console.error('Error consulting team:', error)
+    logger.error('Error consulting team:', error)
     res.status(500).json({ error: error.message || 'Failed to consult team' })
   }
 })

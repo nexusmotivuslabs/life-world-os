@@ -11,6 +11,7 @@
 import { PrismaClient, TeamProductType } from '@prisma/client'
 import { ProductRepositoryPort } from '../../../application/ports/ProductRepositoryPort.js'
 import { Product } from '../../../domain/entities/Product.js'
+import { logger } from '../lib/logger.js'
 
 export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
   constructor(private prisma: PrismaClient) {}
@@ -42,7 +43,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
         requiresAuth: productData.requiresAuth,
       })
     } catch (error) {
-      console.error(`❌ Error finding product by ID ${id}:`, error)
+      logger.error(`❌ Error finding product by ID ${id}:`, error)
       throw error
     }
   }
@@ -77,7 +78,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
     } catch (error) {
       // RESILIENCE: If team associations fail, log but return empty array
       // This prevents cascading failures - products still exist independently
-      console.error(`⚠️  Warning: Failed to load products for team ${teamId}, returning empty array:`, error)
+      logger.error(`⚠️  Warning: Failed to load products for team ${teamId}, returning empty array:`, error)
       return []
     }
   }
@@ -104,7 +105,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
         })
       )
     } catch (error) {
-      console.error(`❌ Error finding products by organization ${organizationId}:`, error)
+      logger.error(`❌ Error finding products by organization ${organizationId}:`, error)
       throw error
     }
   }
@@ -131,7 +132,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
         })
       )
     } catch (error) {
-      console.error(`❌ Error finding products by type ${type}:`, error)
+      logger.error(`❌ Error finding products by type ${type}:`, error)
       throw error
     }
   }
@@ -174,7 +175,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
       } catch (error) {
         // RESILIENCE: If team associations fail, log warning and fall back to all active products
         // This ensures products remain available even when team data has issues
-        console.error(
+        logger.error(
           `⚠️  Warning: Failed to load products for team ${teamId} via associations. ` +
           `Falling back to all active products from organization:`,
           error
@@ -205,7 +206,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
         })
       )
     } catch (error) {
-      console.error('❌ Error finding active products:', error)
+      logger.error('❌ Error finding active products:', error)
       throw error
     }
   }
@@ -263,7 +264,7 @@ export class PrismaProductRepositoryAdapter implements ProductRepositoryPort {
         requiresAuth: productData.requiresAuth,
       })
     } catch (error) {
-      console.error(`❌ Error saving product ${product.id}:`, error)
+      logger.error(`❌ Error saving product ${product.id}:`, error)
       throw error
     }
   }

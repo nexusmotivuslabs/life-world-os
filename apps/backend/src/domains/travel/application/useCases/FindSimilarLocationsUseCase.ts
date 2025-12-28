@@ -13,6 +13,7 @@ import { LocationQueryRepositoryPort } from '../ports/LocationQueryRepositoryPor
 import { LLMServicePort } from '../../../money/application/ports/LLMServicePort.js'
 import { LocationMatchingService } from '../../domain/services/LocationMatchingService.js'
 import { LocationRecommendationService, RecommendationCriteria } from '../../domain/services/LocationRecommendationService.js'
+import { logger } from '../lib/logger.js'
 
 export interface FindSimilarLocationsInput {
   userId: string
@@ -46,13 +47,13 @@ export class FindSimilarLocationsUseCase {
 
     // Search using travel API (Google Places or LLM)
     const searchQuery = this.buildSearchQuery(extractedInfo)
-    console.log('Searching for locations with query:', searchQuery, 'in location:', input.location)
+    logger.info('Searching for locations with query:', searchQuery, 'in location:', input.location)
     const googlePlaces = await this.travelApi.searchPlaces(searchQuery, input.location)
-    console.log('Found', googlePlaces.length, 'places from API')
+    logger.info('Found', googlePlaces.length, 'places from API')
 
     // Convert places to domain entities
     const locations: Location[] = []
-    console.log('🔄 Converting', googlePlaces.length, 'places to domain entities...')
+    logger.info('🔄 Converting', googlePlaces.length, 'places to domain entities...')
     
     for (const place of googlePlaces.slice(0, input.limit || 15)) {
       // For LLM-generated places, create directly (they already have all data)
@@ -77,13 +78,13 @@ export class FindSimilarLocationsUseCase {
 
       if (location) {
         locations.push(location)
-        console.log('✅ Added location:', location.name, 'Website:', location.officialUrl ? 'Yes ✓' : 'No ✗')
+        logger.info('✅ Added location:', location.name, 'Website:', location.officialUrl ? 'Yes ✓' : 'No ✗')
       }
     }
     
-    console.log('📊 Total locations created:', locations.length)
+    logger.info('📊 Total locations created:', locations.length)
     const withWebsites = locations.filter(loc => loc.officialUrl).length
-    console.log('🌐 Locations with websites:', withWebsites, 'out of', locations.length)
+    logger.info('🌐 Locations with websites:', withWebsites, 'out of', locations.length)
 
     // Match locations to user description
     const matchedResults = this.matchingService.matchLocations(description, locations)

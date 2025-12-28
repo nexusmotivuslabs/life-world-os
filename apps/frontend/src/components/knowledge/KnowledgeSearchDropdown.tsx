@@ -10,6 +10,7 @@ import { Search, BookOpen, Shield, Sparkles, ChevronRight, X } from 'lucide-reac
 import { Link, useNavigate } from 'react-router-dom'
 import { powerLawsApi, bibleLawsApi, PowerLaw, BibleLaw, PowerLawDomain, BibleLawDomain } from '../../services/financeApi'
 import { awarenessApi, AwarenessLayer } from '../../services/awarenessApi'
+import { logger } from '../lib/logger'
 
 interface SearchResult {
   id: string
@@ -65,12 +66,12 @@ export default function KnowledgeSearchDropdown() {
             const laws = await powerLawsApi.getLawsByDomain(domain)
             allPowerLaws.push(...laws)
           } catch (err) {
-            console.error(`Error loading Power laws for ${domain}:`, err)
+            logger.error(`Error loading Power laws for ${domain}:`, err)
           }
         }
         setPowerLaws(allPowerLaws)
       } catch (err) {
-        console.error('Error loading Power laws:', err)
+        logger.error('Error loading Power laws:', err)
       }
 
       // Load Bible Laws - Dynamically fetch all available domains
@@ -87,25 +88,25 @@ export default function KnowledgeSearchDropdown() {
               const laws = await bibleLawsApi.getLawsByDomain(domain)
               allBibleLaws.push(...laws)
             } catch (err) {
-              console.error(`Error loading Bible laws for ${domain}:`, err)
+              logger.error(`Error loading Bible laws for ${domain}:`, err)
             }
           }
         } catch (err) {
           // Fallback to known domains if API fails
-          console.error('Error fetching Bible law domains, using fallback:', err)
+          logger.error('Error fetching Bible law domains, using fallback:', err)
           const fallbackDomains: BibleLawDomain[] = ['MONEY', 'INVESTMENT', 'CAREER', 'BUSINESS', 'RELATIONSHIPS', 'LEADERSHIP', 'SPIRITUAL_GROWTH', 'STEWARDSHIP', 'GENEROSITY', 'ENERGY']
           for (const domain of fallbackDomains) {
             try {
               const laws = await bibleLawsApi.getLawsByDomain(domain)
               allBibleLaws.push(...laws)
             } catch (domainErr) {
-              console.error(`Error loading Bible laws for ${domain}:`, domainErr)
+              logger.error(`Error loading Bible laws for ${domain}:`, domainErr)
             }
           }
         }
         setBibleLaws(allBibleLaws)
       } catch (err) {
-        console.error('Error loading Bible laws:', err)
+        logger.error('Error loading Bible laws:', err)
       }
 
       // Load Awareness Layers
@@ -113,7 +114,7 @@ export default function KnowledgeSearchDropdown() {
         const response = await awarenessApi.getLayers()
         setAwarenessLayers(response.layers || [])
       } catch (err) {
-        console.error('Error loading awareness layers:', err)
+        logger.error('Error loading awareness layers:', err)
       }
 
       // Note: Products removed - Knowledge Search limited to knowledge artifacts only

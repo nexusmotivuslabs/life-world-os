@@ -17,6 +17,7 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI for embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -75,7 +76,7 @@ router.get('/', async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     // RESILIENCE: Return 200 with empty array instead of 500 error
-    console.error('⚠️  Error listing agents (returning empty array for resilience):', error)
+    logger.error('⚠️  Error listing agents (returning empty array for resilience):', error)
     res.json({
       agents: [],
       warning: 'Agent listing encountered issues, but system remains operational',
@@ -114,7 +115,7 @@ router.get('/:agentId', async (req: Request, res: Response) => {
       metadata: agentData.metadata as any,
     })
   } catch (error: any) {
-    console.error('Error getting agent:', error)
+    logger.error('Error getting agent:', error)
     res.status(500).json({ error: error.message || 'Failed to get agent' })
   }
 })
@@ -146,7 +147,7 @@ router.post('/:agentId/chat', async (req: Request, res: Response) => {
 
     res.json(response)
   } catch (error: any) {
-    console.error('Error chatting with agent:', error)
+    logger.error('Error chatting with agent:', error)
     res.status(500).json({ error: error.message || 'Failed to chat with agent' })
   }
 })

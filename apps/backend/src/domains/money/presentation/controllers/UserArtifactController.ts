@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaUserArtifactRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaUserArtifactRepositoryAdapter.js'
 import { SaveUserArtifactUseCase } from '../../application/useCases/SaveUserArtifactUseCase.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -59,7 +60,7 @@ router.post('/', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error saving artifact:', error)
+    logger.error('Error saving artifact:', error)
     res.status(500).json({ error: error.message || 'Failed to save artifact' })
   }
 })
@@ -105,7 +106,7 @@ router.get('/', async (req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
-    console.error('Error listing artifacts:', error)
+    logger.error('Error listing artifacts:', error)
     res.status(500).json({ error: error.message || 'Failed to list artifacts' })
   }
 })
@@ -143,7 +144,7 @@ router.get('/search', async (req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
-    console.error('Error searching artifacts:', error)
+    logger.error('Error searching artifacts:', error)
     res.status(500).json({ error: error.message || 'Failed to search artifacts' })
   }
 })
@@ -177,7 +178,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error getting artifact:', error)
+    logger.error('Error getting artifact:', error)
     res.status(500).json({ error: error.message || 'Failed to get artifact' })
   }
 })
@@ -207,7 +208,7 @@ router.put('/:id/favorite', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error updating favorite status:', error)
+    logger.error('Error updating favorite status:', error)
     res.status(500).json({ error: error.message || 'Failed to update favorite status' })
   }
 })
@@ -221,7 +222,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     await artifactRepository.delete(req.params.id)
     res.json({ message: 'Artifact deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting artifact:', error)
+    logger.error('Error deleting artifact:', error)
     res.status(500).json({ error: error.message || 'Failed to delete artifact' })
   }
 })

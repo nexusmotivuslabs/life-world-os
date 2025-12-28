@@ -77,7 +77,7 @@ export const logger = {
         console.log(formatLog('info', message, context))
       }
       // In production, send to observability (Prometheus, Grafana)
-      // TODO: Integrate with observability stack
+      // Note: Observability integration handled by metrics middleware
     }
   },
 
@@ -104,7 +104,7 @@ export const logger = {
       } else {
         // In production, send to error tracking service
         console.error(formatLog('error', message, context, error))
-        // TODO: Integrate with error tracking (Sentry, etc.)
+        // Note: Error tracking integration can be added via metrics middleware or external service
       }
     }
   },

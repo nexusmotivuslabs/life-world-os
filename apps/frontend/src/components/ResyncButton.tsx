@@ -8,6 +8,7 @@
 import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { performResync } from '../lib/resync'
+import { logger } from '../lib/logger'
 
 interface ResyncButtonProps {
   variant?: 'button' | 'icon' | 'link'
@@ -53,7 +54,7 @@ export default function ResyncButton({
     } catch (error) {
       setStatus('error')
       setMessage(error instanceof Error ? error.message : 'Failed to resync data')
-      console.error('Resync failed:', error)
+      logger.error('Resync failed:', error)
     } finally {
       setSyncing(false)
     }

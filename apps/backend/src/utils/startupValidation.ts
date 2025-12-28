@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 export interface ValidationResult {
   name: string
@@ -366,19 +367,19 @@ async function validateAwarenessLayersSeeded(): Promise<ValidationResult> {
  * Run all startup validations
  */
 export async function runStartupValidation(): Promise<ValidationSummary> {
-  console.log('🔍 Running startup validation...\n')
+  logger.info('🔍 Running startup validation...\n')
 
   const results: ValidationResult[] = []
 
   // 1. Environment Variables (synchronous)
   const envResult = validateEnvironmentVariables()
   results.push(envResult)
-  console.log(`${envResult.passed ? '✅' : '❌'} ${envResult.name}: ${envResult.message}`)
+  logger.info(`${envResult.passed ? '✅' : '❌'} ${envResult.name}: ${envResult.message}`)
 
   // 2. Database Connection (async)
   const dbResult = await validateDatabase()
   results.push(dbResult)
-  console.log(`${dbResult.passed ? '✅' : '❌'} ${dbResult.name}: ${dbResult.message}`)
+  logger.info(`${dbResult.passed ? '✅' : '❌'} ${dbResult.name}: ${dbResult.message}`)
 
   // Only continue if database is connected
   if (!dbResult.passed) {
@@ -394,7 +395,7 @@ export async function runStartupValidation(): Promise<ValidationSummary> {
   // 3. Database Schema (async, requires DB connection)
   const schemaResult = await validateDatabaseSchema()
   results.push(schemaResult)
-  console.log(`${schemaResult.passed ? '✅' : '❌'} ${schemaResult.name}: ${schemaResult.message}`)
+  logger.info(`${schemaResult.passed ? '✅' : '❌'} ${schemaResult.name}: ${schemaResult.message}`)
 
   // Only continue if schema is valid
   if (!schemaResult.passed) {
@@ -410,27 +411,27 @@ export async function runStartupValidation(): Promise<ValidationSummary> {
   // 4. Power Laws Seeded (async, requires DB connection)
   const powerLawsResult = await validatePowerLawsSeeded()
   results.push(powerLawsResult)
-  console.log(`${powerLawsResult.passed ? '✅' : '❌'} ${powerLawsResult.name}: ${powerLawsResult.message}`)
+  logger.info(`${powerLawsResult.passed ? '✅' : '❌'} ${powerLawsResult.name}: ${powerLawsResult.message}`)
 
   // 5. Agents Seeded (async, requires DB connection)
   const agentsResult = await validateAgentsSeeded()
   results.push(agentsResult)
-  console.log(`${agentsResult.passed ? '✅' : '❌'} ${agentsResult.name}: ${agentsResult.message}`)
+  logger.info(`${agentsResult.passed ? '✅' : '❌'} ${agentsResult.name}: ${agentsResult.message}`)
 
   // 6. Bible Laws Seeded (async, requires DB connection)
   const bibleLawsResult = await validateBibleLawsSeeded()
   results.push(bibleLawsResult)
-  console.log(`${bibleLawsResult.passed ? '✅' : '❌'} ${bibleLawsResult.name}: ${bibleLawsResult.message}`)
+  logger.info(`${bibleLawsResult.passed ? '✅' : '❌'} ${bibleLawsResult.name}: ${bibleLawsResult.message}`)
 
   // 7. Awareness Layers Seeded (async, requires DB connection)
   const awarenessLayersResult = await validateAwarenessLayersSeeded()
   results.push(awarenessLayersResult)
-  console.log(`${awarenessLayersResult.passed ? '✅' : '❌'} ${awarenessLayersResult.name}: ${awarenessLayersResult.message}`)
+  logger.info(`${awarenessLayersResult.passed ? '✅' : '❌'} ${awarenessLayersResult.name}: ${awarenessLayersResult.message}`)
 
   // 8. Google Places API (optional - warns if missing but doesn't block startup)
   const googlePlacesResult = await validateGooglePlacesApi()
   results.push(googlePlacesResult)
-  console.log(`${googlePlacesResult.passed ? '✅' : '⚠️'} ${googlePlacesResult.name}: ${googlePlacesResult.message}`)
+  logger.info(`${googlePlacesResult.passed ? '✅' : '⚠️'} ${googlePlacesResult.name}: ${googlePlacesResult.message}`)
 
   // Count only critical failures (exclude Travel System warnings)
   const criticalFailures = results.filter(r => !r.passed && !r.name.includes('Travel System')).length
@@ -438,7 +439,7 @@ export async function runStartupValidation(): Promise<ValidationSummary> {
   const failedChecks = results.filter(r => !r.passed).length
   const allPassed = criticalFailures === 0
 
-  console.log(`\n📊 Validation Summary: ${passedChecks}/${results.length} checks passed`)
+  logger.info(`\n📊 Validation Summary: ${passedChecks}/${results.length} checks passed`)
 
   return {
     allPassed,
@@ -456,33 +457,33 @@ export async function validateAndExit(): Promise<void> {
   const summary = await runStartupValidation()
 
   if (!summary.allPassed) {
-    console.error('\n❌ Startup validation failed!')
-    console.error('\nFailed checks:')
+    logger.error('\n❌ Startup validation failed!')
+    logger.error('\nFailed checks:')
     summary.results
       .filter(r => !r.passed)
       .forEach(r => {
-        console.error(`  - ${r.name}: ${r.message}`)
+        logger.error(`  - ${r.name}: ${r.message}`)
         if (r.error) {
-          console.error(`    Error: ${r.error.message}`)
+          logger.error(`    Error: ${r.error.message}`)
         }
       })
     
     // Allow staging environment to start with warnings
     if (process.env.NODE_ENV === 'staging') {
-      console.error('\n⚠️  Starting in staging mode with validation warnings.')
-      console.error('   Seed scripts should be run for full functionality.')
-      console.error('   Application will start but some features may not work.\n')
+      logger.error('\n⚠️  Starting in staging mode with validation warnings.')
+      logger.error('   Seed scripts should be run for full functionality.')
+      logger.error('   Application will start but some features may not work.\n')
       return // Don't exit, just warn
     }
     
-    console.error('\n⚠️  Application will not start until all validations pass.')
-    console.error('Please fix the issues above and restart the application.\n')
+    logger.error('\n⚠️  Application will not start until all validations pass.')
+    logger.error('Please fix the issues above and restart the application.\n')
     
     // Don't disconnect prisma here - it's a singleton that other parts of the app use
     process.exit(1)
   }
 
-  console.log('✅ All startup validations passed!\n')
+  logger.info('✅ All startup validations passed!\n')
   // Don't disconnect prisma here - it's a singleton that other parts of the app use
 }
 

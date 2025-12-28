@@ -5,6 +5,7 @@ import { ensureDailyTick } from '../services/tickService'
 import { getEffectiveEnergy } from '../services/energyService'
 import { isInBurnout } from '../services/burnoutService'
 import { ActivityType } from '../types'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -42,7 +43,7 @@ router.get('/', async (req, res) => {
       uptime: process.uptime(),
     })
   } catch (error) {
-    console.error('Error in health check:', error)
+    logger.error('Error in health check:', error)
     res.status(500).json({
       status: 'error',
       error: 'Health check failed',
@@ -82,7 +83,7 @@ router.get('/database', async (req, res) => {
       })
     }
   } catch (error) {
-    console.error('Error in database health check:', error)
+    logger.error('Error in database health check:', error)
     res.status(500).json({
       status: 'error',
       error: 'Health check failed',
@@ -209,7 +210,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
       },
     })
   } catch (error) {
-    console.error('Error getting health status:', error)
+    logger.error('Error getting health status:', error)
     res.status(500).json({ error: 'Failed to get health status' })
   }
 })
@@ -241,7 +242,7 @@ router.post('/quick-fix', authenticateToken, async (req: AuthRequest, res) => {
       results.cacheCleared = true
       results.details.push('Caches cleared and data refreshed')
     } catch (error) {
-      console.error('Error clearing caches:', error)
+      logger.error('Error clearing caches:', error)
       results.details.push('Warning: Cache clear had issues')
     }
 
@@ -285,7 +286,7 @@ router.post('/quick-fix', authenticateToken, async (req: AuthRequest, res) => {
         }
       }
     } catch (error) {
-      console.error('Error refreshing health checks:', error)
+      logger.error('Error refreshing health checks:', error)
       results.details.push('Warning: Health check refresh had issues')
     }
 
@@ -340,7 +341,7 @@ router.post('/quick-fix', authenticateToken, async (req: AuthRequest, res) => {
         results.details.push('System state validated and synchronized')
       }
     } catch (error) {
-      console.error('Error attempting recovery:', error)
+      logger.error('Error attempting recovery:', error)
       results.details.push('Warning: Recovery attempt had issues')
     }
 
@@ -356,7 +357,7 @@ router.post('/quick-fix', authenticateToken, async (req: AuthRequest, res) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Error performing quick fix:', error)
+    logger.error('Error performing quick fix:', error)
     res.status(500).json({ 
       error: 'Failed to perform quick fix',
       message: error instanceof Error ? error.message : 'Unknown error'

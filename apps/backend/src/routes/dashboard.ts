@@ -7,6 +7,7 @@ import { getXPForNextRank, getRankProgress } from '../services/rankService'
 import { ensureDailyTick } from '../services/tickService'
 import { getEffectiveEnergy } from '../services/energyService'
 import { isInBurnout } from '../services/burnoutService'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -122,7 +123,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       })),
     })
   } catch (error) {
-    console.error('Get dashboard error:', error)
+    logger.error('Get dashboard error:', error)
     res.status(500).json({ error: 'Failed to get dashboard data' })
   }
 })

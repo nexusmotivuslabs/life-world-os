@@ -10,6 +10,7 @@
  */
 
 import { EmbeddingServicePort, EmbeddingResult } from '../../../application/ports/EmbeddingServicePort.js'
+import { logger } from '../lib/logger.js'
 
 const DEFAULT_OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434'
 const DEFAULT_EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text'
@@ -106,7 +107,7 @@ export class OllamaEmbeddingAdapter implements EmbeddingServicePort {
       }
 
       // Pull the model
-      console.log(`Pulling embedding model ${this.model}...`)
+      logger.info(`Pulling embedding model ${this.model}...`)
       const pullResponse = await fetch(`${this.ollamaUrl}/api/pull`, {
         method: 'POST',
         headers: {
@@ -135,7 +136,7 @@ export class OllamaEmbeddingAdapter implements EmbeddingServicePort {
             try {
               const data = JSON.parse(line)
               if (data.completed) {
-                console.log('Embedding model pulled successfully!')
+                logger.info('Embedding model pulled successfully!')
                 return
               }
             } catch {

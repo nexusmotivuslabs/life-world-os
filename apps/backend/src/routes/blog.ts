@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url'
 import { authenticateToken, AuthRequest } from '../middleware/auth.js'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
+import { logger } from '../lib/logger.js'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -149,7 +150,7 @@ async function getAllBlogPosts(): Promise<typeof BLOG_POSTS> {
       return dateB - dateA
     })
   } catch (error) {
-    console.error('Error fetching all blog posts:', error)
+    logger.error('Error fetching all blog posts:', error)
     // Fallback to static posts only
     return BLOG_POSTS
   }
@@ -164,7 +165,7 @@ router.get('/posts', async (req, res) => {
     const allPosts = await getAllBlogPosts()
     res.json(allPosts)
   } catch (error) {
-    console.error('Error fetching blog posts:', error)
+    logger.error('Error fetching blog posts:', error)
     res.status(500).json({ error: 'Failed to fetch blog posts' })
   }
 })
@@ -249,7 +250,7 @@ router.get('/posts/:slug', async (req, res) => {
         content
       })
     } else {
-      console.error('Error reading blog file - tried paths:', possiblePaths)
+      logger.error('Error reading blog file - tried paths:', possiblePaths)
       res.status(500).json({ 
         error: 'Failed to read blog post content',
         attemptedPaths: possiblePaths,
@@ -260,7 +261,7 @@ router.get('/posts/:slug', async (req, res) => {
       })
     }
   } catch (error) {
-    console.error('Error fetching blog post:', error)
+    logger.error('Error fetching blog post:', error)
     res.status(500).json({ error: 'Failed to fetch blog post' })
   }
 })
@@ -292,7 +293,7 @@ router.get('/categories', async (req, res) => {
 
     res.json(result)
   } catch (error) {
-    console.error('Error fetching blog categories:', error)
+    logger.error('Error fetching blog categories:', error)
     res.status(500).json({ error: 'Failed to fetch blog categories' })
   }
 })
@@ -412,7 +413,7 @@ ${data.content}
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Validation error', details: error.errors })
     }
-    console.error('Error creating blog post:', error)
+    logger.error('Error creating blog post:', error)
     res.status(500).json({ error: 'Failed to create blog post' })
   }
 })

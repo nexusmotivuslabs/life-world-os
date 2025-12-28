@@ -1,5 +1,6 @@
 import { aiService } from './aiService.js';
 import { ActivityType } from '../types/index.js';
+import { logger } from '../lib/logger.js'
 
 export interface SystemState {
   user: {
@@ -165,7 +166,7 @@ User Message: ${userMessage}`;
       try {
         proposedAction = JSON.parse(jsonStr);
       } catch (parseError) {
-        console.error('Failed to parse action proposal JSON:', jsonStr);
+        logger.error('Failed to parse action proposal JSON:', jsonStr);
         return {
           actionType: 'NONE',
           reasoning: 'Failed to parse action proposal',
@@ -184,7 +185,7 @@ User Message: ${userMessage}`;
 
       return proposedAction;
     } catch (error) {
-      console.error('Decision engine error:', error);
+      logger.error('Decision engine error:', error);
       return {
         actionType: 'NONE',
         reasoning: 'Failed to generate action proposal',

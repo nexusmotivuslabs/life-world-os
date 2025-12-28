@@ -13,6 +13,7 @@ import { getEffectiveEnergy } from '../services/energyService.js';
 import { isInBurnout } from '../services/burnoutService.js';
 import { trackQueryRequest } from '../services/queryMetrics.js';
 import { CustomInstructions } from '../services/customInstructions.js';
+import { logger } from '../lib/logger.js'
 
 const router = express.Router();
 
@@ -183,7 +184,7 @@ async function fetchUserDashboardData(userId: string): Promise<any | null> {
       })),
     };
   } catch (error) {
-    console.error('Error fetching user dashboard data:', error);
+    logger.error('Error fetching user dashboard data:', error);
     return null;
   }
 }
@@ -248,7 +249,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
         };
       }
     } catch (error) {
-      console.error('Error fetching user context:', error);
+      logger.error('Error fetching user context:', error);
       // Continue without context if fetch fails
     }
 
@@ -313,7 +314,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
           }
         }
       } catch (error) {
-        console.error('Error in decision engine flow:', error);
+        logger.error('Error in decision engine flow:', error);
         // Continue with normal chat response if decision engine fails
         // Don't let decision engine errors break the chat
       }
@@ -352,7 +353,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
         );
       }
     } catch (aiError) {
-      console.error('AI Service error in chat route:', aiError);
+      logger.error('AI Service error in chat route:', aiError);
       const errorDetails = aiError instanceof Error ? aiError.message : String(aiError);
       
       queryError = {
@@ -414,7 +415,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       }),
     });
   } catch (error) {
-    console.error('Error processing chat message:', error);
+    logger.error('Error processing chat message:', error);
     res.status(500).json({ error: 'Failed to process chat message' });
   }
 });
@@ -437,7 +438,7 @@ router.get('/history/:sessionId', async (req, res) => {
 
     res.json(session);
   } catch (error) {
-    console.error('Error fetching chat history:', error);
+    logger.error('Error fetching chat history:', error);
     res.status(500).json({ error: 'Failed to fetch chat history' });
   }
 });

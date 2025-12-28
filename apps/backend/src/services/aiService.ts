@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { OllamaLMAdapter } from '../domains/money/infrastructure/adapters/llm/OllamaLMAdapter.js';
 import { CustomInstructions, InstructionContext, PersonaType, ProviderType } from './customInstructions.js';
+import { logger } from '../lib/logger.js'
 
 // Load .env.local first (for local development), then .env
 dotenv.config({ path: '.env.local' });
@@ -157,7 +158,7 @@ export const aiService = {
       // Fallback (should not reach here)
       throw new Error('No AI provider available');
     } catch (error) {
-      console.error('AI Service error:', error);
+      logger.error('AI Service error:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       // Return user-friendly error messages

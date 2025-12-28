@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { Location, travelApi } from '../../services/travelApi'
 import { ArrowLeft, ExternalLink, Star, MapPin, Heart, Loader2 } from 'lucide-react'
 import { useToastStore } from '../../store/useToastStore'
+import { logger } from '../lib/logger'
 
 export interface LocationDetailViewProps {
   locationId: string
@@ -40,7 +41,7 @@ export default function LocationDetailView({ locationId, onBack }: LocationDetai
         setIsFavorite(savedItem.savedLocation.isFavorite)
       }
     } catch (error) {
-      console.error('Failed to load location:', error)
+      logger.error('Failed to load location:', error)
       addToast({
         type: 'error',
         title: 'Failed to Load',

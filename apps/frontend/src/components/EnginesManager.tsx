@@ -8,6 +8,7 @@ import { Engine, EngineType, EngineStatus } from '../types'
 import { enginesApi } from '../services/api'
 import { useGameStore } from '../store/useGameStore'
 import { getEngineTypeDisplayName, getEngineStatusDisplayName } from '../utils/enumDisplayNames'
+import { logger } from '../lib/logger'
 
 const engineSchema = z.object({
   type: z.nativeEnum(EngineType),
@@ -69,7 +70,7 @@ export default function EnginesManager({ engines, onUpdate }: EnginesManagerProp
       setEditingId(null)
       onUpdate()
     } catch (error) {
-      console.error('Failed to save engine:', error)
+      logger.error('Failed to save engine:', error)
       alert(error instanceof Error ? error.message : 'Failed to save engine')
     } finally {
       setLoading(false)
@@ -84,7 +85,7 @@ export default function EnginesManager({ engines, onUpdate }: EnginesManagerProp
       await enginesApi.deleteEngine(id)
       onUpdate()
     } catch (error) {
-      console.error('Failed to delete engine:', error)
+      logger.error('Failed to delete engine:', error)
       alert(error instanceof Error ? error.message : 'Failed to delete engine')
     } finally {
       setLoading(false)

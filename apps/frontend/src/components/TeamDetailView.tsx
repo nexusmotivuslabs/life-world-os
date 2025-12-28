@@ -11,6 +11,7 @@ import AgentDetailCard from './AgentDetailCard'
 import DomainTag, { DomainTagList, BibleLawDomain } from './DomainTag'
 import { getMasterProductRoute } from '../config/routes'
 import { MasterDomain } from '../types'
+import { logger } from '../lib/logger'
 
 interface TeamDetailViewProps {
   team: Team
@@ -51,12 +52,12 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
       try {
         productsRes = await productsApi.list(team.id)
       } catch (productError) {
-        console.warn(`⚠️  Failed to load products for team ${team.id}, trying all products as fallback:`, productError)
+        logger.warn(`⚠️  Failed to load products for team ${team.id}, trying all products as fallback:`, productError)
         // Fallback: Try to load all products (products are independent of teams)
         try {
           productsRes = await productsApi.list()
         } catch (fallbackError) {
-          console.error('❌ Failed to load products even with fallback:', fallbackError)
+          logger.error('❌ Failed to load products even with fallback:', fallbackError)
           // Continue with empty products array - UI will handle gracefully
         }
       }
@@ -94,7 +95,7 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Failed to load team data'
-      console.error('❌ Error loading team data:', {
+      logger.error('❌ Error loading team data:', {
         error,
         errorMessage,
         teamId: team.id,

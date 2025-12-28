@@ -10,6 +10,7 @@ import { expenseApi, CategoryExpense } from '../services/expenseApi'
 import { useToastStore } from '../store/useToastStore'
 import ExpenseBreakdown from './ExpenseBreakdown'
 import { formatCurrencySimple } from '../utils/currency'
+import { logger } from '../lib/logger'
 
 export default function BudgetBuilderTracker() {
   const { addToast } = useToastStore()
@@ -37,7 +38,7 @@ export default function BudgetBuilderTracker() {
         setActualExpenses(breakdown.expense.expenses) // In a real app, these would be separate
       }
     } catch (error) {
-      console.error('Error loading budget:', error)
+      logger.error('Error loading budget:', error)
     } finally {
       setLoading(false)
     }

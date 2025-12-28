@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticateToken, AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -30,7 +31,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(user)
   } catch (error) {
-    console.error('Get profile error:', error)
+    logger.error('Get profile error:', error)
     res.status(500).json({ error: 'Failed to get profile' })
   }
 })

@@ -14,6 +14,7 @@
  */
 
 import { LLMServicePort, LLMMessage, LLMResponse } from '../../../application/ports/LLMServicePort.js'
+import { logger } from '../lib/logger.js'
 
 const DEFAULT_OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434'
 const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'deepseek-r1:1.5b'
@@ -167,7 +168,7 @@ Use the provided knowledge base articles to answer questions accurately. When re
       }
 
       // Pull the model
-      console.log(`Pulling model ${model}...`)
+      logger.info(`Pulling model ${model}...`)
       const pullResponse = await fetch(`${this.ollamaUrl}/api/pull`, {
         method: 'POST',
         headers: {
@@ -199,7 +200,7 @@ Use the provided knowledge base articles to answer questions accurately. When re
                 process.stdout.write(`\r${data.status}`)
               }
               if (data.completed) {
-                console.log('\nModel pulled successfully!')
+                logger.info('\nModel pulled successfully!')
                 return
               }
             } catch {

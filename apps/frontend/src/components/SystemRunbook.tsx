@@ -16,6 +16,7 @@ import { BookOpen, AlertTriangle, CheckCircle2, Key, Database, Server, Globe, Mo
 import { useNavigate } from 'react-router-dom'
 import { getSystemHealthRoute } from '../config/routes'
 import { productsApi, Product } from '../services/financeApi'
+import { logger } from '../lib/logger'
 
 interface SystemRunbookProps {
   systemId: SystemId
@@ -42,7 +43,7 @@ export default function SystemRunbook({ systemId, componentId }: SystemRunbookPr
           const response = await productsApi.list()
           setProducts(response.products || [])
         } catch (error) {
-          console.error('Failed to load products for runbook:', error)
+          logger.error('Failed to load products for runbook:', error)
         } finally {
           setLoadingProducts(false)
         }

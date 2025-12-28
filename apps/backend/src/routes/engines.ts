@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticateToken, AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { EngineType, EngineStatus } from '../types'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -40,7 +41,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       }))
     )
   } catch (error) {
-    console.error('Get engines error:', error)
+    logger.error('Get engines error:', error)
     res.status(500).json({ error: 'Failed to get engines' })
   }
 })
@@ -74,7 +75,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Create engine error:', error)
+    logger.error('Create engine error:', error)
     res.status(500).json({ error: 'Failed to create engine' })
   }
 })
@@ -118,7 +119,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Update engine error:', error)
+    logger.error('Update engine error:', error)
     res.status(500).json({ error: 'Failed to update engine' })
   }
 })
@@ -144,7 +145,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json({ message: 'Engine deleted' })
   } catch (error) {
-    console.error('Delete engine error:', error)
+    logger.error('Delete engine error:', error)
     res.status(500).json({ error: 'Failed to delete engine' })
   }
 })

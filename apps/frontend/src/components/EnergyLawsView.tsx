@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { powerLawsApi, bibleLawsApi } from '../services/financeApi'
 import { BookOpen, Book, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { logger } from '../lib/logger'
 
 interface PowerLaw {
   id: string
@@ -50,7 +51,7 @@ export default function EnergyLawsView() {
       setPowerLaws(powerRes)
       setBibleLaws(bibleRes)
     } catch (error) {
-      console.error('Error loading energy laws:', error)
+      logger.error('Error loading energy laws:', error)
     } finally {
       setLoading(false)
     }

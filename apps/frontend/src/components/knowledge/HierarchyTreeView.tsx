@@ -11,6 +11,7 @@ import { realityNodeApi, RealityNode } from '../../services/financeApi'
 import { getCategoryDisplayName, getCategoryDescription, getNodeTypeDisplayName } from '../../utils/realityNodeDisplay'
 import { enumToDisplayName } from '../../utils/enumDisplayNames'
 import { motion, AnimatePresence } from 'framer-motion'
+import { logger } from '../lib/logger'
 
 interface TreeNode {
   id: string
@@ -128,17 +129,17 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       // Determine the actual root node ID to use
       const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
       
-      console.log(`Loading hierarchy tree from root: ${actualRootId}`)
+      logger.log(`Loading hierarchy tree from root: ${actualRootId}`)
       
       // Load root and all its children recursively from database
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
 
-      console.log(`Loaded tree data:`, rootTree)
+      logger.log(`Loaded tree data:`, rootTree)
       
       // Set the loaded tree (purely from database)
       setTreeData([rootTree])
     } catch (err) {
-      console.error('Failed to load tree from backend:', err)
+      logger.error('Failed to load tree from backend:', err)
       
       // Set both error state and data issues flag
       setError('Unable to load hierarchy data. Please ensure the backend server is running and the database is seeded.')

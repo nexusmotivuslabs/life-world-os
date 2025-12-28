@@ -17,6 +17,7 @@ import {
 } from '../../application/useCases/SleepUseCases.js'
 import { prisma } from '../../../../lib/prisma.js'
 import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -89,7 +90,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       updatedAt: sleep.updatedAt,
     })
   } catch (error: any) {
-    console.error('Error logging sleep:', error)
+    logger.error('Error logging sleep:', error)
     res.status(500).json({ error: error.message || 'Failed to log sleep' })
   }
 })
@@ -128,7 +129,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       count: sleepLogs.length,
     })
   } catch (error: any) {
-    console.error('Error getting sleep history:', error)
+    logger.error('Error getting sleep history:', error)
     res.status(500).json({ error: error.message || 'Failed to get sleep history' })
   }
 })
@@ -165,7 +166,7 @@ router.get('/recent', authenticateToken, async (req: AuthRequest, res: Response)
       },
     })
   } catch (error: any) {
-    console.error('Error getting recent sleep:', error)
+    logger.error('Error getting recent sleep:', error)
     res.status(500).json({ error: error.message || 'Failed to get recent sleep' })
   }
 })
@@ -200,7 +201,7 @@ router.post('/calculate-restoration', authenticateToken, async (req: AuthRequest
       newBaseEnergy: result.newBaseEnergy,
     })
   } catch (error: any) {
-    console.error('Error calculating energy restoration:', error)
+    logger.error('Error calculating energy restoration:', error)
     res.status(500).json({ error: error.message || 'Failed to calculate energy restoration' })
   }
 })

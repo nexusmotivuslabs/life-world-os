@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
 import { RealityNodeType, RealityNodeCategory } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -69,7 +70,7 @@ router.get('/', async (req: Request, res: Response) => {
       count: nodes.length,
     })
   } catch (error: any) {
-    console.error('Error listing reality nodes:', error)
+    logger.error('Error listing reality nodes:', error)
     res.status(500).json({ error: error.message || 'Failed to list reality nodes' })
   }
 })
@@ -104,7 +105,7 @@ router.get('/roots', async (req: Request, res: Response) => {
       count: roots.length,
     })
   } catch (error: any) {
-    console.error('Error fetching root nodes:', error)
+    logger.error('Error fetching root nodes:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch root nodes' })
   }
 })
@@ -150,7 +151,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     res.json({ node })
   } catch (error: any) {
-    console.error('Error fetching node:', error)
+    logger.error('Error fetching node:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch node' })
   }
 })
@@ -215,7 +216,7 @@ router.get('/:id/ancestors', async (req: Request, res: Response) => {
       depth: ancestors.length - 1, // Depth from REALITY (0 = REALITY itself)
     })
   } catch (error: any) {
-    console.error('Error fetching ancestors:', error)
+    logger.error('Error fetching ancestors:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch ancestors' })
   }
 })
@@ -253,7 +254,7 @@ router.get('/:id/children', async (req: Request, res: Response) => {
       count: children.length,
     })
   } catch (error: any) {
-    console.error('Error fetching children:', error)
+    logger.error('Error fetching children:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch children' })
   }
 })
@@ -328,7 +329,7 @@ router.get('/:id/hierarchy', async (req: Request, res: Response) => {
       depth: ancestors.length,
     })
   } catch (error: any) {
-    console.error('Error fetching hierarchy:', error)
+    logger.error('Error fetching hierarchy:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch hierarchy' })
   }
 })

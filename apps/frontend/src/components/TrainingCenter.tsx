@@ -6,6 +6,7 @@ import { useGameStore } from '../store/useGameStore'
 import { useToastStore } from '../store/useToastStore'
 import { TaskStatus, TrainingModuleType } from '../types'
 import TrainingTask from './TrainingTask'
+import { logger } from '../lib/logger'
 
 interface TrainingModule {
   id: string
@@ -51,7 +52,7 @@ export default function TrainingCenter() {
       const data = await trainingApi.getModules()
       setModules(data.modules || [])
     } catch (error) {
-      console.error('Failed to load training modules:', error)
+      logger.error('Failed to load training modules:', error)
       addToast({
         type: 'error',
         title: 'Failed to Load Training',

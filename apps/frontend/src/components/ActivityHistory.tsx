@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { History, TrendingUp } from 'lucide-react'
 import { xpApi } from '../services/api'
 import { useGameStore } from '../store/useGameStore'
+import { logger } from '../lib/logger'
 
 interface ActivityLog {
   id: string
@@ -37,7 +38,7 @@ export default function ActivityHistory() {
       const data = await xpApi.getHistory(50)
       setActivities(data)
     } catch (error) {
-      console.error('Failed to load activity history:', error)
+      logger.error('Failed to load activity history:', error)
     } finally {
       setLoading(false)
     }

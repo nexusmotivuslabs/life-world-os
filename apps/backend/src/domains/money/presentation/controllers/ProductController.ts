@@ -17,6 +17,7 @@ import {
 import { CalculateEmergencyFundWithRiskProfileUseCase } from '../../application/useCases/CalculateEmergencyFundWithRiskProfileUseCase.js'
 import { EmploymentType, JobSecurity, RiskTolerance, IncomeStructure } from '../../domain/valueObjects/EmergencyFundRiskProfile.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -52,7 +53,7 @@ router.get('/', async (req: Request, res: Response) => {
       } catch (teamError: any) {
         // RESILIENCE: If team-specific query fails, fall back to all active products
         // This ensures products remain available even when team data has issues
-        console.error(`⚠️  Warning: Failed to load products for team ${teamId}, falling back to all active products:`, teamError)
+        logger.error(`⚠️  Warning: Failed to load products for team ${teamId}, falling back to all active products:`, teamError)
         products = await productRepository.findActiveProducts()
       }
     } else {
@@ -99,7 +100,7 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error: any) {
     // RESILIENCE: Even if everything fails, return empty array instead of error
     // This prevents cascading failures and allows the frontend to handle gracefully
-    console.error('❌ Error listing products (returning empty array for resilience):', error)
+    logger.error('❌ Error listing products (returning empty array for resilience):', error)
     res.json({
       products: [],
       warning: 'Product listing encountered issues, but system remains operational',
@@ -148,7 +149,7 @@ router.get('/:productId', async (req: Request, res: Response) => {
       } : undefined,
     })
   } catch (error: any) {
-    console.error('Error getting product:', error)
+    logger.error('Error getting product:', error)
     res.status(500).json({ error: error.message || 'Failed to get product' })
   }
 })
@@ -193,7 +194,7 @@ router.post('/emergency-fund/goal', async (req: Request, res: Response) => {
       health: emergencyFund.getHealth(),
     })
   } catch (error: any) {
-    console.error('Error setting emergency fund goal:', error)
+    logger.error('Error setting emergency fund goal:', error)
     res.status(500).json({ error: error.message || 'Failed to set emergency fund goal' })
   }
 })
@@ -231,7 +232,7 @@ router.put('/emergency-fund/progress', async (req: Request, res: Response) => {
       progressHistory: emergencyFund.progressHistory,
     })
   } catch (error: any) {
-    console.error('Error updating emergency fund progress:', error)
+    logger.error('Error updating emergency fund progress:', error)
     res.status(500).json({ error: error.message || 'Failed to update emergency fund progress' })
   }
 })
@@ -279,7 +280,7 @@ router.get('/emergency-fund/status', async (req: Request, res: Response) => {
       isGoalMet: status.isGoalMet,
     })
   } catch (error: any) {
-    console.error('Error getting emergency fund status:', error)
+    logger.error('Error getting emergency fund status:', error)
     res.status(500).json({ error: error.message || 'Failed to get emergency fund status' })
   }
 })
@@ -309,7 +310,7 @@ router.post('/emergency-fund/calculate', async (req: Request, res: Response) => 
       ],
     })
   } catch (error: any) {
-    console.error('Error calculating emergency fund:', error)
+    logger.error('Error calculating emergency fund:', error)
     res.status(500).json({ error: error.message || 'Failed to calculate emergency fund' })
   }
 })
@@ -385,7 +386,7 @@ router.post('/emergency-fund/calculate-with-risk-profile', async (req: Request, 
 
     res.json(result)
   } catch (error: any) {
-    console.error('Error calculating emergency fund with risk profile:', error)
+    logger.error('Error calculating emergency fund with risk profile:', error)
     res.status(500).json({ error: error.message || 'Failed to calculate emergency fund' })
   }
 })

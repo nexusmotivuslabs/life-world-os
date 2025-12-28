@@ -59,6 +59,7 @@ import { enginesApi } from '../services/api'
 import { realityNodeApi, type RealityNode } from '../services/financeApi'
 import HierarchyTreeView from './knowledge/HierarchyTreeView'
 import { getCategoryDisplayName } from '../utils/realityNodeDisplay'
+import { logger } from '../lib/logger'
 
 interface SystemFeature {
   title: string
@@ -654,7 +655,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
         const engines = await enginesApi.getEngines()
         setUserEngines(engines)
       } catch (error) {
-        console.error('Error fetching user instances:', error)
+        logger.error('Error fetching user instances:', error)
         // Silently fail - artifacts will show without instances
       }
     }
@@ -673,7 +674,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
         // If unauthorized (401), silently skip loading weapons
         // They'll show up when user logs in
         if (error?.status !== 401) {
-          console.error('Error loading loadout items:', error)
+          logger.error('Error loading loadout items:', error)
         }
       } finally {
         setIsLoadingWeapons(false)
@@ -700,7 +701,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
         ]
         setRealityNodes(allNodes)
       } catch (error: any) {
-        console.error('Error loading reality nodes (laws/principles):', error)
+        logger.error('Error loading reality nodes (laws/principles):', error)
         // Continue even if fetch fails - artifacts will just not include them
       } finally {
         setIsLoadingRealityNodes(false)

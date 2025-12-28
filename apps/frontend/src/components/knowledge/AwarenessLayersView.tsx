@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { Eye, BookOpen, X } from 'lucide-react'
 import { awarenessApi, AwarenessLayer, AwarenessLayerCategory } from '../../services/awarenessApi'
+import { logger } from '../lib/logger'
 
 export default function AwarenessLayersView() {
   const [layers, setLayers] = useState<AwarenessLayer[]>([])
@@ -28,7 +29,7 @@ export default function AwarenessLayersView() {
       setError(null)
     } catch (err) {
       setError('Failed to load awareness layers')
-      console.error('Error loading awareness layers:', err)
+      logger.error('Error loading awareness layers:', err)
     } finally {
       setLoading(false)
     }

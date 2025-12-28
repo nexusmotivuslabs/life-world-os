@@ -5,6 +5,7 @@ import { getXPForNextRank, getRankProgress } from '../services/rankService'
 import { calculateBalance } from '../services/balanceService'
 import { calculateCategoryLevel } from '../services/rankService'
 import { checkMilestones } from '../services/milestoneService'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -36,7 +37,7 @@ router.get('/overall', authenticateToken, async (req: AuthRequest, res) => {
       progressToNextRank: progress,
     })
   } catch (error) {
-    console.error('Get overall progression error:', error)
+    logger.error('Get overall progression error:', error)
     res.status(500).json({ error: 'Failed to get overall progression' })
   }
 })
@@ -74,7 +75,7 @@ router.get('/categories', authenticateToken, async (req: AuthRequest, res) => {
       balance,
     })
   } catch (error) {
-    console.error('Get category progression error:', error)
+    logger.error('Get category progression error:', error)
     res.status(500).json({ error: 'Failed to get category progression' })
   }
 })
@@ -90,7 +91,7 @@ router.get('/milestones', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(milestones)
   } catch (error) {
-    console.error('Get milestones error:', error)
+    logger.error('Get milestones error:', error)
     res.status(500).json({ error: 'Failed to get milestones' })
   }
 })
@@ -103,7 +104,7 @@ router.post('/check-milestones', authenticateToken, async (req: AuthRequest, res
 
     res.json(result)
   } catch (error) {
-    console.error('Check milestones error:', error)
+    logger.error('Check milestones error:', error)
     res.status(500).json({ error: 'Failed to check milestones' })
   }
 })
@@ -130,7 +131,7 @@ router.get('/balance', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(balance)
   } catch (error) {
-    console.error('Get balance error:', error)
+    logger.error('Get balance error:', error)
     res.status(500).json({ error: 'Failed to get balance' })
   }
 })

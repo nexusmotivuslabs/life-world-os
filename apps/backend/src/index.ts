@@ -37,13 +37,14 @@ import unifiedArtifactRoutes from './routes/artifacts.js'
 import { metricsMiddleware } from './middleware/metrics.js'
 import { validateAndExit } from './utils/startupValidation.js'
 import { enforceKnowledgePlaneReadOnly } from './middleware/planeGuard.js'
+import { logger } from '../lib/logger.js'
 
 // Load .env first, then .env.local (so .env.local overrides .env)
 dotenv.config()
 dotenv.config({ path: '.env.local' })
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 5001
 
 // Middleware
 // CORS configuration - allow both local and dev frontends
@@ -108,7 +109,7 @@ app.use('/api/metrics', metricsRoutes)
 // Error handler (must be after metrics middleware to track errors)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   const status = err.status || 500
-  console.error('Error:', err)
+  logger.error('Error:', err)
   
   // Error is already tracked by metrics middleware via response status
   res.status(status).json({
@@ -124,10 +125,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     
     // Start server only if validation passes
     app.listen(PORT, () => {
-      console.log(`🚀 Life World OS Backend running on http://localhost:${PORT}`)
+      logger.info(`🚀 Life World OS Backend running on http://localhost:${PORT}`)
     })
   } catch (error) {
-    console.error('❌ Failed to start application:', error)
+    logger.error('❌ Failed to start application:', error)
     process.exit(1)
   }
 })()

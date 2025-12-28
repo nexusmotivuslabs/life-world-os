@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { BookOpen, ChevronDown, Filter, X } from 'lucide-react'
 import { getAllBlogPosts, getBlogCategories, type BlogCategory } from '../services/blogApi'
 import { motion, AnimatePresence } from 'framer-motion'
+import { logger } from '../lib/logger'
 
 interface BlogDropdownProps {
   onPostSelect: (slug: string) => void
@@ -32,7 +33,7 @@ export default function BlogDropdown({ onPostSelect }: BlogDropdownProps) {
         setCategories(categoriesData)
       })
       .catch((error) => {
-        console.error('Error loading blog data:', error)
+        logger.error('Error loading blog data:', error)
         // Error will be handled by the UI (empty state)
       })
       .finally(() => setLoading(false))

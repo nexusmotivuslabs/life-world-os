@@ -9,6 +9,7 @@ import ExpenseBreakdown from './ExpenseBreakdown'
 import ScenarioAnalysis from './ScenarioAnalysis'
 import EmergencyFundDecisionClarifier from './EmergencyFundDecisionClarifier'
 import { formatCurrencySimple } from '../utils/currency'
+import { logger } from '../lib/logger'
 
 /**
  * EmergencyFundTracker Component
@@ -62,7 +63,7 @@ export default function EmergencyFundTracker() {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Could not load emergency fund status'
-      console.error('❌ Error loading emergency fund status:', {
+      logger.error('❌ Error loading emergency fund status:', {
         error,
         errorMessage,
         userId: 'demo-user-id',
@@ -128,7 +129,7 @@ export default function EmergencyFundTracker() {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Failed to set emergency fund goal'
-      console.error('❌ Error setting emergency fund goal:', {
+      logger.error('❌ Error setting emergency fund goal:', {
         error,
         errorMessage,
         goalForm,
@@ -164,7 +165,7 @@ export default function EmergencyFundTracker() {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Failed to update emergency fund progress'
-      console.error('❌ Error updating emergency fund progress:', {
+      logger.error('❌ Error updating emergency fund progress:', {
         error,
         errorMessage,
         progressForm,
@@ -229,7 +230,7 @@ export default function EmergencyFundTracker() {
         targetAmount: result.requiredAmount.toString(),
       })
     } catch (error) {
-      console.error('Error calculating required:', error)
+      logger.error('Error calculating required:', error)
     }
   }
 

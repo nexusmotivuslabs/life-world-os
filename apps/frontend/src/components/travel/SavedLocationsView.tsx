@@ -10,6 +10,7 @@ import { travelApi } from '../../services/travelApi'
 import CustomLocationCard from './CustomLocationCard'
 import { Heart, Search, Loader2 } from 'lucide-react'
 import { useToastStore } from '../../store/useToastStore'
+import { logger } from '../lib/logger'
 
 export default function SavedLocationsView() {
   const { addToast } = useToastStore()
@@ -28,7 +29,7 @@ export default function SavedLocationsView() {
       const data = await travelApi.getSavedLocations(showFavorites)
       setLocations(data.locations)
     } catch (error) {
-      console.error('Failed to load saved locations:', error)
+      logger.error('Failed to load saved locations:', error)
       addToast({
         type: 'error',
         title: 'Failed to Load',
@@ -105,7 +106,7 @@ export default function SavedLocationsView() {
                   // Navigate to details
                   // TODO: Implement location detail route if needed
                   // For now, this could navigate to a detail view
-                  console.log('View location details:', id)
+                  logger.log('View location details:', id)
                 }}
               />
             ) : null

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -12,12 +13,12 @@ function createPrismaClient() {
     
     // Verify models are available
     if (typeof client.user === 'undefined') {
-      console.error('WARNING: Prisma client models not available. Client may need regeneration.')
+      logger.error('WARNING: Prisma client models not available. Client may need regeneration.')
     }
     
     return client
   } catch (error) {
-    console.error('Failed to create Prisma client:', error)
+    logger.error('Failed to create Prisma client:', error)
     throw error
   }
 }

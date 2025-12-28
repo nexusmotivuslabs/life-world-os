@@ -15,6 +15,7 @@ import {
   applyCapacityModifierToReward,
 } from '../services/capacityModifierService'
 import { isInBurnout, getBurnoutXPModifier } from '../services/burnoutService'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -51,7 +52,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       lastUpdated: xp.lastUpdated,
     })
   } catch (error) {
-    console.error('Get XP error:', error)
+    logger.error('Get XP error:', error)
     res.status(500).json({ error: 'Failed to get XP' })
   }
 })
@@ -96,7 +97,7 @@ router.post('/calculate', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Calculate XP error:', error)
+    logger.error('Calculate XP error:', error)
     res.status(500).json({ error: 'Failed to calculate XP' })
   }
 })
@@ -363,7 +364,7 @@ router.post('/activity', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Record activity error:', error)
+    logger.error('Record activity error:', error)
     res.status(500).json({ error: 'Failed to record activity' })
   }
 })
@@ -382,7 +383,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(logs)
   } catch (error) {
-    console.error('Get XP history error:', error)
+    logger.error('Get XP history error:', error)
     res.status(500).json({ error: 'Failed to get XP history' })
   }
 })
@@ -410,7 +411,7 @@ router.get('/categories', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(balance)
   } catch (error) {
-    console.error('Get categories error:', error)
+    logger.error('Get categories error:', error)
     res.status(500).json({ error: 'Failed to get categories' })
   }
 })
@@ -486,7 +487,7 @@ router.put('/admin', authenticateToken, requireAdmin, async (req: AuthRequest, r
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Admin XP update error:', error)
+    logger.error('Admin XP update error:', error)
     res.status(500).json({ error: 'Failed to update XP' })
   }
 })

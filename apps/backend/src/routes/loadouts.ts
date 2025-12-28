@@ -13,6 +13,7 @@ import {
 } from '../services/loadoutService'
 import { calculatePowerLevel } from '../services/powerLevelCalculator'
 import { LoadoutSlotType } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -46,7 +47,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(loadouts)
   } catch (error) {
-    console.error('Get loadouts error:', error)
+    logger.error('Get loadouts error:', error)
     res.status(500).json({ error: 'Failed to get loadouts' })
   }
 })
@@ -63,7 +64,7 @@ router.get('/active', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(loadout)
   } catch (error) {
-    console.error('Get active loadout error:', error)
+    logger.error('Get active loadout error:', error)
     res.status(500).json({ error: 'Failed to get active loadout' })
   }
 })
@@ -76,7 +77,7 @@ router.get('/items', async (req, res) => {
 
     res.json(items)
   } catch (error) {
-    console.error('Get loadout items error:', error)
+    logger.error('Get loadout items error:', error)
     res.status(500).json({ error: 'Failed to get loadout items' })
   }
 })
@@ -94,7 +95,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(loadout)
   } catch (error) {
-    console.error('Get loadout error:', error)
+    logger.error('Get loadout error:', error)
     res.status(500).json({ error: 'Failed to get loadout' })
   }
 })
@@ -123,7 +124,7 @@ router.get('/:id/power-level', authenticateToken, async (req: AuthRequest, res) 
 
     res.json(powerLevel)
   } catch (error) {
-    console.error('Calculate power level error:', error)
+    logger.error('Calculate power level error:', error)
     res.status(500).json({ error: 'Failed to calculate power level' })
   }
 })
@@ -141,7 +142,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors })
     }
-    console.error('Create loadout error:', error)
+    logger.error('Create loadout error:', error)
     res.status(500).json({ error: 'Failed to create loadout' })
   }
 })
@@ -163,7 +164,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof Error && error.message === 'Loadout not found') {
       return res.status(404).json({ error: error.message })
     }
-    console.error('Update loadout error:', error)
+    logger.error('Update loadout error:', error)
     res.status(500).json({ error: 'Failed to update loadout' })
   }
 })
@@ -181,7 +182,7 @@ router.put('/:id/activate', authenticateToken, async (req: AuthRequest, res) => 
     if (error instanceof Error && error.message === 'Loadout not found') {
       return res.status(404).json({ error: error.message })
     }
-    console.error('Activate loadout error:', error)
+    logger.error('Activate loadout error:', error)
     res.status(500).json({ error: 'Failed to activate loadout' })
   }
 })
@@ -199,7 +200,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof Error && error.message === 'Loadout not found') {
       return res.status(404).json({ error: error.message })
     }
-    console.error('Delete loadout error:', error)
+    logger.error('Delete loadout error:', error)
     res.status(500).json({ error: 'Failed to delete loadout' })
   }
 })

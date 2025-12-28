@@ -15,6 +15,7 @@ import {
   applyCapacityModifierToReward,
 } from '../services/capacityModifierService'
 import { isInBurnout, getBurnoutXPModifier } from '../services/burnoutService'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -108,7 +109,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json({ modules: modulesWithProgress })
   } catch (error) {
-    console.error('Get training modules error:', error)
+    logger.error('Get training modules error:', error)
     res.status(500).json({ error: 'Failed to get training modules' })
   }
 })
@@ -391,7 +392,7 @@ router.post('/tasks/:taskId/complete', authenticateToken, async (req: AuthReques
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Complete training task error:', error)
+    logger.error('Complete training task error:', error)
     res.status(500).json({ error: 'Failed to complete training task' })
   }
 })
@@ -421,7 +422,7 @@ router.get('/progress', authenticateToken, async (req: AuthRequest, res) => {
       progress,
     })
   } catch (error) {
-    console.error('Get training progress error:', error)
+    logger.error('Get training progress error:', error)
     res.status(500).json({ error: 'Failed to get training progress' })
   }
 })

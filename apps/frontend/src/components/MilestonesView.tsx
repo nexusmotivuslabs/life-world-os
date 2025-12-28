@@ -4,6 +4,7 @@ import { Trophy, Key, CheckCircle2, Circle, Sparkles } from 'lucide-react'
 import { progressionApi } from '../services/api'
 import { useGameStore } from '../store/useGameStore'
 import { useToastStore } from '../store/useToastStore'
+import { logger } from '../lib/logger'
 
 interface Milestone {
   id: string
@@ -41,7 +42,7 @@ export default function MilestonesView() {
       const data = await progressionApi.getMilestones()
       setMilestones(data)
     } catch (error) {
-      console.error('Failed to load milestones:', error)
+      logger.error('Failed to load milestones:', error)
     } finally {
       setLoading(false)
     }

@@ -14,6 +14,7 @@ import { checkMilestones } from '../services/milestoneService'
 import { ensureDailyTick } from '../services/tickService'
 import { getActionEnergyCost, getEffectiveEnergy } from '../services/energyService'
 import {
+import { logger } from '../lib/logger.js'
   applyCapacityModifierToXP,
 } from '../services/capacityModifierService'
 
@@ -77,7 +78,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       totalReturn,
     })
   } catch (error) {
-    console.error('Get investments error:', error)
+    logger.error('Get investments error:', error)
     res.status(500).json({ error: 'Failed to get investments' })
   }
 })
@@ -247,7 +248,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Create investment error:', error)
+    logger.error('Create investment error:', error)
     res.status(500).json({ error: 'Failed to create investment' })
   }
 })
@@ -388,7 +389,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Update investment error:', error)
+    logger.error('Update investment error:', error)
     res.status(500).json({ error: 'Failed to update investment' })
   }
 })
@@ -453,7 +454,7 @@ router.post('/process-growth', authenticateToken, async (req: AuthRequest, res) 
       message: 'Monthly growth processed',
     })
   } catch (error) {
-    console.error('Process growth error:', error)
+    logger.error('Process growth error:', error)
     res.status(500).json({ error: 'Failed to process growth' })
   }
 })
@@ -507,7 +508,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
       message: 'Investment sold/withdrawn',
     })
   } catch (error) {
-    console.error('Delete investment error:', error)
+    logger.error('Delete investment error:', error)
     res.status(500).json({ error: 'Failed to delete investment' })
   }
 })

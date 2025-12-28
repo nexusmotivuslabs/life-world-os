@@ -7,6 +7,7 @@ import { PrismaClient, UserFinancialDataType } from '@prisma/client'
 import { MonthlyExpense } from '../../../domain/entities/MonthlyExpense.js'
 import { MonthlyExpenseRepositoryPort } from '../../../application/ports/MonthlyExpenseRepositoryPort.js'
 import { CategoryExpense } from '../../../domain/entities/MonthlyExpense.js'
+import { logger } from '../lib/logger.js'
 
 export class MonthlyExpenseRepositoryAdapter implements MonthlyExpenseRepositoryPort {
   constructor(private prisma: PrismaClient) {}
@@ -79,7 +80,7 @@ export class MonthlyExpenseRepositoryAdapter implements MonthlyExpenseRepository
             updatedAt: data.updatedAt,
           })
         } catch (error) {
-          console.error('Error parsing expense data:', error)
+          logger.error('Error parsing expense data:', error)
           return null
         }
       })

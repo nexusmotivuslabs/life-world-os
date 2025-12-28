@@ -10,7 +10,7 @@
  */
 
 import { metricsCollector } from '../middleware/metrics.js';
-import { PersonaType, ProviderType } from './customInstructions.js';
+import { PersonaType, ProviderType, CustomInstructions } from './customInstructions.js';
 
 export interface QueryMetrics {
   persona: PersonaType;
@@ -75,8 +75,9 @@ export function trackQueryRequest(metrics: QueryMetrics): void {
   }
 
   // Track prompt version (from CustomInstructions)
+  const promptVersion = CustomInstructions.VERSION || '1.0.0'
   metricsCollector.record('query_prompt_version', 1, {
-    version: '1.0.0', // TODO: Get from CustomInstructions.VERSION
+    version: promptVersion,
     persona,
   });
 }

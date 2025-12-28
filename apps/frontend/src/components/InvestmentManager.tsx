@@ -7,6 +7,7 @@ import { useToastStore } from '../store/useToastStore'
 import { InvestmentType } from '../types'
 import InvestmentAllocation from './InvestmentAllocation'
 import InvestmentCard from './InvestmentCard'
+import { logger } from '../lib/logger'
 
 interface Investment {
   id: string
@@ -47,7 +48,7 @@ export default function InvestmentManager() {
       const data = await investmentsApi.getInvestments()
       setSummary(data)
     } catch (error) {
-      console.error('Failed to load investments:', error)
+      logger.error('Failed to load investments:', error)
       addToast({
         type: 'error',
         title: 'Failed to Load Investments',

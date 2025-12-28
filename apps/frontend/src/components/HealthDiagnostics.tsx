@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { performResync } from '../lib/resync'
 import { getSystemHealthRoute } from '../config/routes'
+import { logger } from '../lib/logger'
 
 interface HealthDiagnosticsProps {
   systemId?: SystemId
@@ -123,7 +124,7 @@ export default function HealthDiagnostics({ systemId, onFix }: HealthDiagnostics
       
       onFix?.()
     } catch (error) {
-      console.error('Fix failed:', error)
+      logger.error('Fix failed:', error)
     } finally {
       setFixing(null)
     }

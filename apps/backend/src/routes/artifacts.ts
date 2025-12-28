@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { ArtifactCategory } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -87,7 +88,7 @@ router.get('/', async (req: Request, res: Response) => {
       count: artifacts.length,
     })
   } catch (error: any) {
-    console.error('Error listing artifacts:', error)
+    logger.error('Error listing artifacts:', error)
     res.status(500).json({ error: error.message || 'Failed to list artifacts' })
   }
 })
@@ -153,7 +154,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     res.json({ artifact })
   } catch (error: any) {
-    console.error('Error getting artifact:', error)
+    logger.error('Error getting artifact:', error)
     res.status(500).json({ error: error.message || 'Failed to get artifact' })
   }
 })
@@ -195,7 +196,7 @@ router.get('/by-category/:category', async (req: Request, res: Response) => {
       category,
     })
   } catch (error: any) {
-    console.error('Error getting artifacts by category:', error)
+    logger.error('Error getting artifacts by category:', error)
     res.status(500).json({ error: error.message || 'Failed to get artifacts by category' })
   }
 })
@@ -248,7 +249,7 @@ router.get('/:id/relationships', async (req: Request, res: Response) => {
       count: relationships.length,
     })
   } catch (error: any) {
-    console.error('Error getting artifact relationships:', error)
+    logger.error('Error getting artifact relationships:', error)
     res.status(500).json({ error: error.message || 'Failed to get artifact relationships' })
   }
 })

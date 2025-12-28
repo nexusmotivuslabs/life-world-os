@@ -10,6 +10,7 @@ import { useEffect, useState, useRef } from 'react'
 import { awarenessApi, AwarenessLayer, AwarenessLayerCategory } from '../services/awarenessApi'
 import { BookOpen, Eye, X, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { logger } from '../lib/logger'
 
 interface AwarenessLayersSelectorProps {
   onLayerSelect?: (layer: AwarenessLayer) => void
@@ -42,7 +43,7 @@ export default function AwarenessLayersSelector({ onLayerSelect }: AwarenessLaye
       setError(null)
     } catch (err) {
       setError('Failed to load awareness layers')
-      console.error('Error loading awareness layers:', err)
+      logger.error('Error loading awareness layers:', err)
     } finally {
       setLoading(false)
     }

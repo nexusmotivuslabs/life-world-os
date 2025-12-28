@@ -8,6 +8,7 @@ import { Router, Request, Response } from 'express'
 import { getPrometheusMetrics, metricsCollector } from '../middleware/metrics.js'
 import { prisma } from '../lib/prisma.js'
 import { getQueryMetricsSummary } from '../services/queryMetrics.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -21,7 +22,7 @@ router.get('/', async (req: Request, res: Response) => {
     res.set('Content-Type', 'text/plain')
     res.send(metrics)
   } catch (error) {
-    console.error('Error generating metrics:', error)
+    logger.error('Error generating metrics:', error)
     res.status(500).json({ error: 'Failed to generate metrics' })
   }
 })
@@ -58,7 +59,7 @@ router.get('/errors', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Error getting error metrics:', error)
+    logger.error('Error getting error metrics:', error)
     res.status(500).json({ error: 'Failed to get error metrics' })
   }
 })
@@ -123,7 +124,7 @@ router.get('/health', async (req: Request, res: Response) => {
       },
     })
   } catch (error) {
-    console.error('Error getting health metrics:', error)
+    logger.error('Error getting health metrics:', error)
     res.status(500).json({ error: 'Failed to get health metrics' })
   }
 })
@@ -159,7 +160,7 @@ router.get('/query', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Error getting Query metrics:', error)
+    logger.error('Error getting Query metrics:', error)
     res.status(500).json({ error: 'Failed to get Query metrics' })
   }
 })

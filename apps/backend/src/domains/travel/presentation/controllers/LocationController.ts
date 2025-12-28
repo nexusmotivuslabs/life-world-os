@@ -22,6 +22,7 @@ import { GetLocationDetailsUseCase } from '../../application/useCases/GetLocatio
 import { LocationMatchingService } from '../../domain/services/LocationMatchingService.js'
 import { LocationRecommendationService } from '../../domain/services/LocationRecommendationService.js'
 import { OpenAILMAdapter } from '../../../money/infrastructure/adapters/llm/OpenAILMAdapter.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -36,19 +37,19 @@ let llmService: any
 try {
   if (process.env.GROQ_API_KEY) {
     llmService = new GroqLMAdapter(process.env.GROQ_API_KEY)
-    console.log('✅ Using Groq LLM for location recommendations')
+    logger.info('✅ Using Groq LLM for location recommendations')
   } else if (process.env.OPENAI_API_KEY) {
     llmService = new OpenAILMAdapter(process.env.OPENAI_API_KEY)
-    console.log('✅ Using OpenAI LLM for location recommendations')
+    logger.info('✅ Using OpenAI LLM for location recommendations')
   } else {
     // Create a mock LLM service that just returns empty keywords
     llmService = {
       generateResponse: async () => ({ content: '{}' })
     }
-    console.log('⚠️ No LLM API key configured - location recommendations will be limited')
+    logger.info('⚠️ No LLM API key configured - location recommendations will be limited')
   }
 } catch (error) {
-  console.error('Error initializing LLM service:', error)
+  logger.error('Error initializing LLM service:', error)
   // Fallback mock service
   llmService = {
     generateResponse: async () => ({ content: '{}' })
@@ -61,13 +62,13 @@ const useLLMForLocations = process.env.USE_LLM_FOR_LOCATIONS === 'true' || !proc
 
 if (useLLMForLocations && llmService && llmService.generateResponse) {
   travelApi = new LLMLocationAdapter(llmService)
-  console.log('✅ Using LLM-based location generation (cost-effective)')
+  logger.info('✅ Using LLM-based location generation (cost-effective)')
 } else {
   travelApi = new GooglePlacesApiAdapter(
     process.env.GOOGLE_PLACES_API_KEY,
     cacheRepository
   )
-  console.log('✅ Using Google Places API for location data')
+  logger.info('✅ Using Google Places API for location data')
 }
 
 const matchingService = new LocationMatchingService()
@@ -137,7 +138,7 @@ router.get('/health', async (req: Request, res: Response) => {
  */
 router.post('/locations/query', async (req: Request, res: Response) => {
   try {
-    console.log('📍 Location query received:', { description: req.body.description, location: req.body.location })
+    logger.info('📍 Location query received:', { description: req.body.description, location: req.body.location })
     const userId = req.body.userId || 'demo-user-id' // TODO: Extract from auth token
     const { description, location, limit } = req.body
 
@@ -145,14 +146,14 @@ router.post('/locations/query', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Description is required' })
     }
 
-    console.log('🔍 Executing FindSimilarLocationsUseCase...')
+    logger.info('🔍 Executing FindSimilarLocationsUseCase...')
     const result = await findSimilarLocationsUseCase.execute({
       userId,
       description,
       location,
       limit,
     })
-    console.log('✅ Use case completed. Found', result.locations.length, 'locations')
+    logger.info('✅ Use case completed. Found', result.locations.length, 'locations')
 
     // Group locations by category for hierarchical display
     const locationsByCategory: Record<string, typeof result.locations> = {}
@@ -218,7 +219,7 @@ router.post('/locations/query', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error querying locations:', error)
+    logger.error('Error querying locations:', error)
     res.status(500).json({ error: error.message || 'Failed to query locations' })
   }
 })
@@ -259,7 +260,7 @@ router.get('/locations', async (req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
-    console.error('Error listing locations:', error)
+    logger.error('Error listing locations:', error)
     res.status(500).json({ error: error.message || 'Failed to list locations' })
   }
 })
@@ -296,7 +297,7 @@ router.get('/locations/:id', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error getting location details:', error)
+    logger.error('Error getting location details:', error)
     if (error.message === 'Location not found') {
       return res.status(404).json({ error: error.message })
     }
@@ -335,7 +336,7 @@ router.get('/locations/:id/alternatives', async (req: Request, res: Response) =>
       })),
     })
   } catch (error: any) {
-    console.error('Error getting alternatives:', error)
+    logger.error('Error getting alternatives:', error)
     res.status(500).json({ error: error.message || 'Failed to get alternatives' })
   }
 })
@@ -367,7 +368,7 @@ router.post('/locations/:id/save', async (req: Request, res: Response) => {
       },
     })
   } catch (error: any) {
-    console.error('Error saving location:', error)
+    logger.error('Error saving location:', error)
     res.status(500).json({ error: error.message || 'Failed to save location' })
   }
 })
@@ -415,7 +416,7 @@ router.get('/saved', async (req: Request, res: Response) => {
 
     res.json({ locations })
   } catch (error: any) {
-    console.error('Error getting saved locations:', error)
+    logger.error('Error getting saved locations:', error)
     res.status(500).json({ error: error.message || 'Failed to get saved locations' })
   }
 })
@@ -453,7 +454,7 @@ router.post('/locations/search', async (req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
-    console.error('Error searching locations:', error)
+    logger.error('Error searching locations:', error)
     res.status(500).json({ error: error.message || 'Failed to search locations' })
   }
 })

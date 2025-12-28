@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
 import { BibleLawDomain } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -29,7 +30,7 @@ router.get('/domains', async (req: Request, res: Response) => {
 
     res.json({ domains: domainsWithCounts })
   } catch (error: any) {
-    console.error('Error listing Bible law domains:', error)
+    logger.error('Error listing Bible law domains:', error)
     res.status(500).json({ error: error.message || 'Failed to list domains' })
   }
 })
@@ -61,7 +62,7 @@ router.get('/', async (req: Request, res: Response) => {
       count: laws.length,
     })
   } catch (error: any) {
-    console.error('Error listing Bible laws:', error)
+    logger.error('Error listing Bible laws:', error)
     res.status(500).json({ error: error.message || 'Failed to list Bible laws' })
   }
 })
@@ -89,7 +90,7 @@ router.get('/categories', async (req: Request, res: Response) => {
 
     res.json({ categories: categoriesWithCounts })
   } catch (error: any) {
-    console.error('Error listing Bible law categories:', error)
+    logger.error('Error listing Bible law categories:', error)
     res.status(500).json({ error: error.message || 'Failed to list categories' })
   }
 })
@@ -110,7 +111,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     res.json(law)
   } catch (error: any) {
-    console.error('Error getting Bible law:', error)
+    logger.error('Error getting Bible law:', error)
     res.status(500).json({ error: error.message || 'Failed to get Bible law' })
   }
 })
@@ -143,7 +144,7 @@ router.get('/by-number/:lawNumber', async (req: Request, res: Response) => {
 
     res.json(law)
   } catch (error: any) {
-    console.error('Error getting Bible law by number:', error)
+    logger.error('Error getting Bible law by number:', error)
     res.status(500).json({ error: error.message || 'Failed to get Bible law' })
   }
 })

@@ -6,6 +6,7 @@
 
 import { TravelApiPort, GooglePlace } from '../../../application/ports/TravelApiPort.js'
 import { LocationCacheRepositoryPort } from '../../../application/ports/LocationCacheRepositoryPort.js'
+import { logger } from '../lib/logger.js'
 
 export class GooglePlacesApiAdapter implements TravelApiPort {
   private readonly apiKey: string | undefined
@@ -22,7 +23,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
 
   async searchPlaces(query: string, location?: string): Promise<GooglePlace[]> {
     if (!this.apiKey) {
-      console.warn('Google Places API key not configured - returning empty results')
+      logger.warn('Google Places API key not configured - returning empty results')
       return []
     }
 
@@ -58,14 +59,14 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
 
       return places
     } catch (error) {
-      console.error('Error searching Google Places:', error)
+      logger.error('Error searching Google Places:', error)
       throw error
     }
   }
 
   async getPlaceDetails(placeId: string): Promise<GooglePlace | null> {
     if (!this.apiKey) {
-      console.warn('Google Places API key not configured - cannot fetch place details')
+      logger.warn('Google Places API key not configured - cannot fetch place details')
       return null
     }
 
@@ -105,7 +106,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
 
       return mappedPlace
     } catch (error) {
-      console.error('Error getting place details:', error)
+      logger.error('Error getting place details:', error)
       throw error
     }
   }
@@ -117,7 +118,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
     type?: string
   ): Promise<GooglePlace[]> {
     if (!this.apiKey) {
-      console.warn('Google Places API key not configured - returning empty results')
+      logger.warn('Google Places API key not configured - returning empty results')
       return []
     }
 
@@ -162,7 +163,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
 
       return places
     } catch (error) {
-      console.error('Error finding similar places:', error)
+      logger.error('Error finding similar places:', error)
       throw error
     }
   }
@@ -181,7 +182,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
       // Return photo references (frontend can construct URLs)
       return place.photos.slice(0, maxPhotos)
     } catch (error) {
-      console.error('Error getting place photos:', error)
+      logger.error('Error getting place photos:', error)
       return []
     }
   }
@@ -220,7 +221,7 @@ export class GooglePlacesApiAdapter implements TravelApiPort {
       await this.searchPlaces('London', 'London')
       return true
     } catch (error) {
-      console.error('Google Places API connection test failed:', error)
+      logger.error('Google Places API connection test failed:', error)
       return false
     }
   }

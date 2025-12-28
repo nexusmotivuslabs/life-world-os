@@ -15,6 +15,7 @@ import {
 import { ScenarioAnalysisUseCase } from '../../application/useCases/ScenarioAnalysisUseCase.js'
 import { ExpenseCategoryType } from '../../domain/valueObjects/ExpenseCategory.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -75,7 +76,7 @@ router.post('/', async (req: Request, res: Response) => {
       breakdown: monthlyExpense.getBreakdown(),
     })
   } catch (error: any) {
-    console.error('Error creating/updating monthly expenses:', error)
+    logger.error('Error creating/updating monthly expenses:', error)
     res.status(500).json({ error: error.message || 'Failed to create/update monthly expenses' })
   }
 })
@@ -101,7 +102,7 @@ router.get('/', async (req: Request, res: Response) => {
     const result = await getBreakdownUseCase.execute(userId)
     res.json(result)
   } catch (error: any) {
-    console.error('Error getting expense breakdown:', error)
+    logger.error('Error getting expense breakdown:', error)
     res.status(500).json({ error: error.message || 'Failed to get expense breakdown' })
   }
 })
@@ -131,7 +132,7 @@ router.get('/suggestions', async (req: Request, res: Response) => {
       suggestions,
     })
   } catch (error: any) {
-    console.error('Error getting expense suggestions:', error)
+    logger.error('Error getting expense suggestions:', error)
     res.status(500).json({ error: error.message || 'Failed to get expense suggestions' })
   }
 })
@@ -164,7 +165,7 @@ router.post('/calculate-emergency-fund', async (req: Request, res: Response) => 
       ],
     })
   } catch (error: any) {
-    console.error('Error calculating emergency fund from expenses:', error)
+    logger.error('Error calculating emergency fund from expenses:', error)
     res.status(500).json({ error: error.message || 'Failed to calculate emergency fund' })
   }
 })
@@ -199,7 +200,7 @@ router.post('/analyze-scenario', async (req: Request, res: Response) => {
 
     res.json({ scenarios })
   } catch (error: any) {
-    console.error('Error analyzing scenario:', error)
+    logger.error('Error analyzing scenario:', error)
     res.status(500).json({ error: error.message || 'Failed to analyze scenario' })
   }
 })

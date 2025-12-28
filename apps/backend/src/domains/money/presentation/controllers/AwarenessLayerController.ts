@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
 import { AwarenessLayerCategory } from '@prisma/client'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -62,7 +63,7 @@ router.get('/', async (req: Request, res: Response) => {
       count: layers.length,
     })
   } catch (error: any) {
-    console.error('Error listing awareness layers:', error)
+    logger.error('Error listing awareness layers:', error)
     res.status(500).json({ error: error.message || 'Failed to list awareness layers' })
   }
 })
@@ -102,7 +103,7 @@ router.get('/roots', async (req: Request, res: Response) => {
       count: layers.length,
     })
   } catch (error: any) {
-    console.error('Error getting root awareness layers:', error)
+    logger.error('Error getting root awareness layers:', error)
     res.status(500).json({ error: error.message || 'Failed to get root awareness layers' })
   }
 })
@@ -142,7 +143,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     res.json(layer)
   } catch (error: any) {
-    console.error('Error getting awareness layer:', error)
+    logger.error('Error getting awareness layer:', error)
     res.status(500).json({ error: error.message || 'Failed to get awareness layer' })
   }
 })
@@ -166,7 +167,7 @@ router.get('/:id/children', async (req: Request, res: Response) => {
       count: children.length,
     })
   } catch (error: any) {
-    console.error('Error getting children:', error)
+    logger.error('Error getting children:', error)
     res.status(500).json({ error: error.message || 'Failed to get children' })
   }
 })
@@ -203,7 +204,7 @@ router.get('/categories', async (req: Request, res: Response) => {
 
     res.json({ categories: layersByCategory })
   } catch (error: any) {
-    console.error('Error getting layers by category:', error)
+    logger.error('Error getting layers by category:', error)
     res.status(500).json({ error: error.message || 'Failed to get layers by category' })
   }
 })
@@ -258,7 +259,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json(layer)
   } catch (error: any) {
-    console.error('Error creating awareness layer:', error)
+    logger.error('Error creating awareness layer:', error)
     res.status(500).json({ error: error.message || 'Failed to create awareness layer' })
   }
 })
@@ -349,7 +350,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     res.json(layer)
   } catch (error: any) {
-    console.error('Error updating awareness layer:', error)
+    logger.error('Error updating awareness layer:', error)
     res.status(500).json({ error: error.message || 'Failed to update awareness layer' })
   }
 })

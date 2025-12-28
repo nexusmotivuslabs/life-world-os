@@ -9,6 +9,7 @@ import { TrendingUp, TrendingDown, BarChart3, ArrowUpRight } from 'lucide-react'
 import { expenseApi } from '../services/expenseApi'
 import { useToastStore } from '../store/useToastStore'
 import { formatCurrencySimple } from '../utils/currency'
+import { logger } from '../lib/logger'
 
 interface MonthlyData {
   month: number
@@ -58,13 +59,13 @@ export default function CashFlowAnalyzer() {
           }
         } catch (error) {
           // Skip months without data
-          console.log(`No data for ${month}/${year}`)
+          logger.log(`No data for ${month}/${year}`)
         }
       }
       
       setMonthlyData(data)
     } catch (error) {
-      console.error('Error loading cash flow data:', error)
+      logger.error('Error loading cash flow data:', error)
       addToast({
         type: 'error',
         title: 'Failed to Load Data',

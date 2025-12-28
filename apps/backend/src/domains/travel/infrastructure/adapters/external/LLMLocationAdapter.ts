@@ -7,6 +7,7 @@
 
 import { TravelApiPort, GooglePlace } from '../../../application/ports/TravelApiPort.js'
 import { LLMServicePort } from '../../../money/application/ports/LLMServicePort.js'
+import { logger } from '../lib/logger.js'
 
 export class LLMLocationAdapter implements TravelApiPort {
   constructor(private llmService: LLMServicePort) {}
@@ -46,7 +47,7 @@ Requirements:
 - Ensure all locations have websites - if you don't know the website, research it or skip that location`
 
     try {
-      console.log('🤖 Calling LLM to generate locations for query:', query)
+      logger.info('🤖 Calling LLM to generate locations for query:', query)
       const response = await this.llmService.generateResponse(
         [
           {
@@ -63,7 +64,7 @@ Requirements:
           maxTokens: 4000, // Increased for more detailed responses
         }
       )
-      console.log('🤖 LLM response received, length:', response.content.length)
+      logger.info('🤖 LLM response received, length:', response.content.length)
 
       // Parse JSON response
       let content = response.content.trim()
@@ -81,7 +82,7 @@ Requirements:
         if (jsonMatch) {
           locations = JSON.parse(jsonMatch[0])
         } else {
-          console.error('Failed to parse LLM response as JSON:', content.substring(0, 200))
+          logger.error('Failed to parse LLM response as JSON:', content.substring(0, 200))
           return []
         }
       }
@@ -95,12 +96,12 @@ Requirements:
       const validLocations = locations.filter((loc: any) => {
         const hasWebsite = loc.website && (loc.website.startsWith('http://') || loc.website.startsWith('https://'))
         if (!hasWebsite) {
-          console.warn(`⚠️ Location "${loc.name}" skipped - no valid website URL provided. Website value:`, loc.website)
+          logger.warn(`⚠️ Location "${loc.name}" skipped - no valid website URL provided. Website value:`, loc.website)
         }
         return hasWebsite
       })
       
-      console.log(`✅ Filtered ${validLocations.length} locations with websites from ${locations.length} total`)
+      logger.info(`✅ Filtered ${validLocations.length} locations with websites from ${locations.length} total`)
 
       // Map to GooglePlace format with enhanced data
       return validLocations.map((loc: any, index: number) => ({
@@ -122,7 +123,7 @@ Requirements:
         highlights: loc.highlights || [],
       }))
     } catch (error) {
-      console.error('Error generating locations with LLM:', error)
+      logger.error('Error generating locations with LLM:', error)
       // Return empty array on error
       return []
     }

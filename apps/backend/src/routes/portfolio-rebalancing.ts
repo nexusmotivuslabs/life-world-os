@@ -7,6 +7,7 @@ import { CreatePortfolioRebalancingConfigUseCase } from '../domains/money/applic
 import { UpdatePortfolioRebalancingConfigUseCase } from '../domains/money/application/useCases/UpdatePortfolioRebalancingConfigUseCase.js'
 import { GetPortfolioRebalancingStatusUseCase } from '../domains/money/application/useCases/GetPortfolioRebalancingStatusUseCase.js'
 import { GetRebalancingRecommendationsUseCase } from '../domains/money/application/useCases/GetRebalancingRecommendationsUseCase.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -75,7 +76,7 @@ router.get('/config', authenticateToken, async (req: AuthRequest, res) => {
       updatedAt: config.updatedAt,
     })
   } catch (error) {
-    console.error('Error getting portfolio rebalancing config:', error)
+    logger.error('Error getting portfolio rebalancing config:', error)
     res.status(500).json({ error: 'Failed to get portfolio rebalancing config' })
   }
 })
@@ -112,7 +113,7 @@ router.post('/config', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors })
     }
-    console.error('Error creating/updating portfolio rebalancing config:', error)
+    logger.error('Error creating/updating portfolio rebalancing config:', error)
     res.status(500).json({ 
       error: 'Failed to create/update portfolio rebalancing config',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -136,7 +137,7 @@ router.put('/config', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors })
     }
-    console.error('Error updating portfolio rebalancing config:', error)
+    logger.error('Error updating portfolio rebalancing config:', error)
     res.status(500).json({ 
       error: 'Failed to update portfolio rebalancing config',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -178,7 +179,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
       availableContributionAmount: status.availableContributionAmount?.toNumber(),
     })
   } catch (error) {
-    console.error('Error getting portfolio rebalancing status:', error)
+    logger.error('Error getting portfolio rebalancing status:', error)
     res.status(500).json({ error: 'Failed to get portfolio rebalancing status' })
   }
 })
@@ -201,7 +202,7 @@ router.get('/recommendations', authenticateToken, async (req: AuthRequest, res) 
       })),
     })
   } catch (error) {
-    console.error('Error getting rebalancing recommendations:', error)
+    logger.error('Error getting rebalancing recommendations:', error)
     res.status(500).json({ error: 'Failed to get rebalancing recommendations' })
   }
 })

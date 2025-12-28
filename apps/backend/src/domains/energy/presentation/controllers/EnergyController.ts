@@ -17,6 +17,7 @@ import {
 import { prisma } from '../../../../lib/prisma.js'
 import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 import { getLiveEnergy } from '../../../../services/energyBurndownService.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -76,7 +77,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res: Response)
       restoredAt: liveEnergy.restoredAt,
     })
   } catch (error: any) {
-    console.error('Error getting energy status:', error)
+    logger.error('Error getting energy status:', error)
     res.status(500).json({ error: error.message || 'Failed to get energy status' })
   }
 })
@@ -126,7 +127,7 @@ router.post('/boosts', authenticateToken, async (req: AuthRequest, res: Response
       createdAt: boost.createdAt,
     })
   } catch (error: any) {
-    console.error('Error creating energy boost:', error)
+    logger.error('Error creating energy boost:', error)
     res.status(500).json({ error: error.message || 'Failed to create energy boost' })
   }
 })
@@ -155,7 +156,7 @@ router.get('/boosts', authenticateToken, async (req: AuthRequest, res: Response)
       count: boosts.length,
     })
   } catch (error: any) {
-    console.error('Error getting energy boosts:', error)
+    logger.error('Error getting energy boosts:', error)
     res.status(500).json({ error: error.message || 'Failed to get energy boosts' })
   }
 })
@@ -175,7 +176,7 @@ router.post('/boosts/cleanup', authenticateToken, async (req: AuthRequest, res: 
       message: `Cleaned up ${deletedCount} expired energy boost(s)`,
     })
   } catch (error: any) {
-    console.error('Error cleaning up energy boosts:', error)
+    logger.error('Error cleaning up energy boosts:', error)
     res.status(500).json({ error: error.message || 'Failed to clean up energy boosts' })
   }
 })

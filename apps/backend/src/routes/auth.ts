@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -22,7 +23,7 @@ router.post('/register', async (req, res) => {
   try {
     // Ensure Prisma client is available
     if (!prisma) {
-      console.error('Prisma client is not initialized')
+      logger.error('Prisma client is not initialized')
       return res.status(503).json({ error: 'Database connection not available. Please try again later.' })
     }
 
@@ -53,7 +54,7 @@ router.post('/register', async (req, res) => {
         },
       })
     } catch (createError: any) {
-      console.error('User creation error:', createError)
+      logger.error('User creation error:', createError)
       return res.status(500).json({ 
         error: 'Failed to create user account.',
         details: process.env.NODE_ENV === 'development' ? createError.message : undefined
@@ -99,12 +100,12 @@ router.post('/register', async (req, res) => {
       }),
       ])
     } catch (initError: any) {
-      console.error('Initial data creation error:', initError)
+      logger.error('Initial data creation error:', initError)
       // User was created but initial data failed - try to clean up
       try {
         await prisma.user.delete({ where: { id: user.id } })
       } catch (cleanupError) {
-        console.error('Cleanup error:', cleanupError)
+        logger.error('Cleanup error:', cleanupError)
       }
       return res.status(500).json({ 
         error: 'Failed to initialize user data. Please try again.',
@@ -136,7 +137,7 @@ router.post('/register', async (req, res) => {
         error: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
       })
     }
-    console.error('Register error:', error)
+    logger.error('Register error:', error)
     
     // Provide more specific error messages
     if (error instanceof Error) {
@@ -192,7 +193,7 @@ router.post('/login', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Login error:', error)
+    logger.error('Login error:', error)
     res.status(500).json({ error: 'Login failed' })
   }
 })

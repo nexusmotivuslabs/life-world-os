@@ -8,6 +8,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../lib/prisma'
 import { AuthRequest } from './auth'
+import { logger } from '../lib/logger.js'
 
 export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -41,7 +42,7 @@ export async function requireAdmin(req: AuthRequest, res: Response, next: NextFu
 
     next()
   } catch (error) {
-    console.error('Admin guard error:', error)
+    logger.error('Admin guard error:', error)
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to verify admin status',

@@ -10,6 +10,7 @@ import { ExecuteGuideStepUseCase } from '../../application/useCases/ExecuteGuide
 import { PrismaGuideRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaGuideRepositoryAdapter.js'
 import { PrismaSessionRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaSessionRepositoryAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -63,7 +64,7 @@ router.get('/', async (req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
-    console.error('Error listing guides:', error)
+    logger.error('Error listing guides:', error)
     res.status(500).json({ error: error.message || 'Failed to list guides' })
   }
 })
@@ -100,7 +101,7 @@ router.get('/:guideId', async (req: Request, res: Response) => {
       isTeamGuide: guide.isTeamGuide,
     })
   } catch (error: any) {
-    console.error('Error getting guide:', error)
+    logger.error('Error getting guide:', error)
     res.status(500).json({ error: error.message || 'Failed to get guide' })
   }
 })
@@ -128,7 +129,7 @@ router.post('/:guideId/start', async (req: Request, res: Response) => {
 
     res.json(response)
   } catch (error: any) {
-    console.error('Error starting guide:', error)
+    logger.error('Error starting guide:', error)
     res.status(500).json({ error: error.message || 'Failed to start guide' })
   }
 })
@@ -155,7 +156,7 @@ router.post('/sessions/:sessionId/step', async (req: Request, res: Response) => 
 
     res.json(response)
   } catch (error: any) {
-    console.error('Error executing guide step:', error)
+    logger.error('Error executing guide step:', error)
     res.status(500).json({ error: error.message || 'Failed to execute guide step' })
   }
 })

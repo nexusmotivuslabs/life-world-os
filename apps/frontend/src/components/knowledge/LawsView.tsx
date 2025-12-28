@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, Search, ChevronRight, Filter, Target } from 'lucide-react'
 import { powerLawsApi, bibleLawsApi, PowerLaw, BibleLaw, PowerLawDomain, BibleLawDomain } from '../../services/financeApi'
+import { logger } from '../lib/logger'
 
 export default function LawsView() {
   const [view, setView] = useState<'power' | 'bible'>('power')
@@ -59,7 +60,7 @@ export default function LawsView() {
         setAvailableDomains(domains.map(d => d.domain))
       }
     } catch (error) {
-      console.error('Error loading domains:', error)
+      logger.error('Error loading domains:', error)
       // Fallback to default domains
       if (view === 'bible') {
         setAvailableDomains(['MONEY', 'INVESTMENT', 'CAREER', 'BUSINESS', 'RELATIONSHIPS', 'LEADERSHIP', 'SPIRITUAL_GROWTH', 'STEWARDSHIP', 'GENEROSITY', 'ENERGY'])
@@ -82,7 +83,7 @@ export default function LawsView() {
         setAvailableCategories(categories)
       }
     } catch (error) {
-      console.error('Error loading categories:', error)
+      logger.error('Error loading categories:', error)
       setAvailableCategories([])
     } finally {
       setLoadingCategories(false)
@@ -97,7 +98,7 @@ export default function LawsView() {
       const laws = await powerLawsApi.getLawsByDomain(selectedDomain as PowerLawDomain, category)
       setPowerLaws(laws)
     } catch (error) {
-      console.error('Error loading Power laws:', error)
+      logger.error('Error loading Power laws:', error)
       setPowerLaws([])
     } finally {
       setLoading(false)
@@ -112,7 +113,7 @@ export default function LawsView() {
       const laws = await bibleLawsApi.getLawsByDomain(selectedDomain as BibleLawDomain, category)
       setBibleLaws(laws)
     } catch (error) {
-      console.error('Error loading Bible laws:', error)
+      logger.error('Error loading Bible laws:', error)
       setBibleLaws([])
     } finally {
       setLoading(false)

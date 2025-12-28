@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { BookOpen, Search, ChevronRight } from 'lucide-react'
 import { powerLawsApi, bibleLawsApi, PowerLaw, BibleLaw } from '../services/financeApi'
 import { MasterDomain } from '../types'
+import { logger } from '../lib/logger'
 
 interface DomainLawsViewProps {
   domain: MasterDomain
@@ -64,7 +65,7 @@ export default function DomainLawsView({ domain }: DomainLawsViewProps) {
       const laws = await powerLawsApi.getLawsByDomain(powerDomain)
       setPowerLaws(laws)
     } catch (error) {
-      console.error('Error loading Power laws:', error)
+      logger.error('Error loading Power laws:', error)
     } finally {
       setLoading(false)
     }
@@ -76,7 +77,7 @@ export default function DomainLawsView({ domain }: DomainLawsViewProps) {
       const laws = await bibleLawsApi.getLawsByDomain(bibleDomain)
       setBibleLaws(laws)
     } catch (error) {
-      console.error('Error loading Bible laws:', error)
+      logger.error('Error loading Bible laws:', error)
     } finally {
       setLoading(false)
     }

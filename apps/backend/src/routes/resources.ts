@@ -7,6 +7,7 @@ import { prisma } from '../lib/prisma'
 import { ensureDailyTick } from '../services/tickService'
 import { getEffectiveEnergy } from '../services/energyService'
 import { isInBurnout } from '../services/burnoutService'
+import { logger } from '../lib/logger.js'
 
 const router = Router()
 
@@ -58,7 +59,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       isInBurnout: userIsInBurnout,
     })
   } catch (error) {
-    console.error('Get resources error:', error)
+    logger.error('Get resources error:', error)
     res.status(500).json({ error: 'Failed to get resources' })
   }
 })
@@ -100,7 +101,7 @@ router.post('/transaction', authenticateToken, async (req: AuthRequest, res) => 
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Resource transaction error:', error)
+    logger.error('Resource transaction error:', error)
     res.status(500).json({ error: 'Failed to update resources' })
   }
 })
@@ -129,7 +130,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(logs)
   } catch (error) {
-    console.error('Get resource history error:', error)
+    logger.error('Get resource history error:', error)
     res.status(500).json({ error: 'Failed to get resource history' })
   }
 })
@@ -179,7 +180,7 @@ router.put('/admin', authenticateToken, requireAdmin, async (req: AuthRequest, r
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors })
     }
-    console.error('Admin resource update error:', error)
+    logger.error('Admin resource update error:', error)
     res.status(500).json({ error: 'Failed to update resources' })
   }
 })
