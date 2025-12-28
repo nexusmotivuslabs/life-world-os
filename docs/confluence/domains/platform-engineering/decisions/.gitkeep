@@ -1,0 +1,9 @@
+# Decisions Directory
+
+This directory contains platform decision documents following the Outcome Documentation Format.
+
+Each decision should be named: `PLATFORM-[YYYYMMDD]-[###]-[short-title].md`
+
+Example: `PLATFORM-20250115-001-docker-compose-profiles.md`
+
+

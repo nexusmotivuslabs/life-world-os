@@ -1,0 +1,285 @@
+version: '3.8'
+
+# Domain-based routing with Nginx Reverse Proxy
+# This file sets up custom domains for all environments
+# Access via: dev.lifeworld.com, staging.lifeworld.com, prod.lifeworld.com
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: life-world-os-nginx
+    ports:
+      - "0.0.0.0:80:80"
+    depends_on:
+      - backend-dev
+      - frontend-dev
+      - backend-staging
+      - frontend-staging
+      - backend-prod
+      - frontend-prod
+    networks:
+      - life-world-os-dev-network
+      - life-world-os-staging-network
+      - life-world-os-prod-network
+    restart: unless-stopped
+    # Cloud-ready: Replace with ALB, CloudFront, or Application Gateway
+
+  # Development Environment Services
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: life-world-os-db-dev
+    environment:
+      POSTGRES_USER: ${DEV_DB_USER:-lifeworld_dev}
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-lifeworld_dev_local}
+      POSTGRES_DB: ${DEV_DB_NAME:-lifeworld_dev}
+    ports:
+      - "${DEV_DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DEV_DB_USER:-lifeworld_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
+  backend-dev:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+    image: life-world-os-backend-dev:latest
+    container_name: life-world-os-backend-dev
+    env_file:
+      - .env.dev
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${DEV_DB_USER:-lifeworld_dev}:${DEV_DB_PASSWORD:-lifeworld_dev_local}@postgres-dev:5432/${DEV_DB_NAME:-lifeworld_dev}
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production-min-32-chars}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+    expose:
+      - "3001"
+    volumes:
+      - ./apps/backend/src:/app/src
+      - ./apps/backend/prisma:/app/prisma
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
+  frontend-dev:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+      args:
+        VITE_API_URL: http://dev.lifeworld.com/api
+        NODE_ENV: development
+    image: life-world-os-frontend-dev:latest
+    container_name: life-world-os-frontend-dev
+    expose:
+      - "5173"
+    environment:
+      - VITE_API_URL=http://dev.lifeworld.com/api
+    volumes:
+      - ./apps/frontend/src:/app/src
+    depends_on:
+      - backend-dev
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
+  # Staging Environment Services
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: life-world-os-db-staging
+    environment:
+      POSTGRES_USER: lifeworld_staging
+      POSTGRES_PASSWORD: lifeworld_staging_secure
+      POSTGRES_DB: lifeworld_staging
+    ports:
+      - "${STAGING_DB_PORT:-5434}:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifeworld_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+
+  backend-staging:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.staging
+      args:
+        NODE_ENV: staging
+        BUILD_VERSION: ${BUILD_VERSION:-staging-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: life-world-os-backend-staging:${BUILD_VERSION:-latest}
+    container_name: life-world-os-backend-staging
+    env_file:
+      - .env.staging
+    environment:
+      - NODE_ENV=staging
+      - DATABASE_URL=postgresql://lifeworld_staging:lifeworld_staging_secure@postgres-staging:5432/lifeworld_staging
+      - PORT=3002
+      - JWT_SECRET=${STAGING_JWT_SECRET:-staging-jwt-secret-min-32-characters-change-in-production}
+      - JWT_EXPIRES_IN=${STAGING_JWT_EXPIRES_IN:-7d}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${STAGING_LOG_LEVEL:-info}
+    expose:
+      - "3002"
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+
+  frontend-staging:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.staging
+      args:
+        VITE_API_URL: http://staging.lifeworld.com/api
+        NODE_ENV: staging
+        BUILD_VERSION: ${BUILD_VERSION:-staging-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: life-world-os-frontend-staging:${BUILD_VERSION:-latest}
+    container_name: life-world-os-frontend-staging
+    expose:
+      - "5174"
+    environment:
+      - VITE_API_URL=http://staging.lifeworld.com/api
+    depends_on:
+      - backend-staging
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+
+  # Production Environment Services
+  postgres-prod:
+    image: postgres:15-alpine
+    container_name: life-world-os-db-prod
+    environment:
+      POSTGRES_USER: lifeworld_prod
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD:-CHANGE_IN_PRODUCTION}
+      POSTGRES_DB: lifeworld_prod
+    ports:
+      - "${PROD_DB_PORT:-5435}:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifeworld_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-prod-network
+    restart: unless-stopped
+
+  backend-prod:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.prod
+      args:
+        NODE_ENV: production
+        BUILD_VERSION: ${BUILD_VERSION:-prod-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: life-world-os-backend-prod:${BUILD_VERSION:-latest}
+    container_name: life-world-os-backend-prod
+    env_file:
+      - .env.prod
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://lifeworld_prod:${PROD_DB_PASSWORD:-CHANGE_IN_PRODUCTION}@postgres-prod:5432/lifeworld_prod
+      - PORT=3003
+      - JWT_SECRET=${PROD_JWT_SECRET:-CHANGE_IN_PRODUCTION}
+      - JWT_EXPIRES_IN=${PROD_JWT_EXPIRES_IN:-7d}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${PROD_LOG_LEVEL:-warn}
+    expose:
+      - "3003"
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - life-world-os-prod-network
+    restart: unless-stopped
+
+  frontend-prod:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: http://prod.lifeworld.com/api
+        NODE_ENV: production
+        BUILD_VERSION: ${BUILD_VERSION:-prod-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: life-world-os-frontend-prod:${BUILD_VERSION:-latest}
+    container_name: life-world-os-frontend-prod
+    expose:
+      - "5175"
+    environment:
+      - VITE_API_URL=http://prod.lifeworld.com/api
+    depends_on:
+      - backend-prod
+    networks:
+      - life-world-os-prod-network
+    restart: unless-stopped
+
+networks:
+  life-world-os-dev-network:
+    driver: bridge
+  life-world-os-staging-network:
+    driver: bridge
+  life-world-os-prod-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+  postgres_staging_data:
+  postgres_prod_data:
+

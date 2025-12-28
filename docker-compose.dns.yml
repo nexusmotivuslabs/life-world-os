@@ -1,0 +1,27 @@
+version: '3.8'
+
+# Local DNS Server for Automatic Domain Resolution
+# This allows devices on the same network to access dev.lifeworld.com
+# without editing hosts files on each device
+
+services:
+  dnsmasq:
+    image: andyshinn/dnsmasq:latest
+    container_name: life-world-os-dns
+    ports:
+      - "0.0.0.0:53:53/udp"
+      - "0.0.0.0:53:53/tcp"
+    volumes:
+      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro
+      - ./dnsmasq/hosts:/etc/hosts.dnsmasq:ro
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - life-world-os-dns-network
+    restart: unless-stopped
+    # Note: Port 53 requires root/admin privileges
+
+networks:
+  life-world-os-dns-network:
+    driver: bridge
+

@@ -1,0 +1,94 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e21]:
+          - generic [ref=e23]:
+            - img [ref=e24]
+            - generic [ref=e27]: Home
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - link "Choose your mode" [ref=e31] [cursor=pointer]:
+              - /url: /choose-plane
+              - img [ref=e32]
+              - generic [ref=e35]: Choose your mode
+        - generic [ref=e36]:
+          - generic [ref=e38]:
+            - img [ref=e39]
+            - generic [ref=e41]: Choose Your Mode
+          - heading "Life World OS" [level=1] [ref=e42]
+          - paragraph [ref=e43]: Choose how you want to interact with your operating system
+        - generic [ref=e44]:
+          - heading "Available Now" [level=2] [ref=e45]
+          - generic [ref=e46]:
+            - generic [ref=e47] [cursor=pointer]:
+              - generic [ref=e48]:
+                - img [ref=e50]
+                - generic [ref=e52]:
+                  - heading "Systems" [level=3] [ref=e53]
+                  - generic [ref=e54]: Operate
+              - paragraph [ref=e55]: Operate within the world. Actions occur, consequences apply. Consumes energy, affected by capacity, subject to decay and burnout.
+              - generic [ref=e57]: AI Agents • Teams • Products
+            - generic [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]:
+                - img [ref=e61]
+                - generic [ref=e63]:
+                  - heading "Artifacts" [level=3] [ref=e64]
+                  - generic [ref=e65]: Collect
+              - paragraph [ref=e66]: Discover and collect significant pieces of your operating system. Artifacts represent key resources, stats, systems, concepts, laws, and frameworks.
+              - generic [ref=e68]: Laws & Principles • Frameworks • Weapons
+        - generic [ref=e69]:
+          - heading "Coming Soon" [level=2] [ref=e70]
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - generic [ref=e73]:
+                - img [ref=e74]
+                - generic [ref=e77]: Coming Soon
+              - generic [ref=e78]:
+                - img [ref=e80]
+                - generic [ref=e83]:
+                  - heading "Knowledge" [level=3] [ref=e84]
+                  - generic [ref=e85]: Understand
+              - paragraph [ref=e86]: Understand the world, reason, orient, and interpret system behavior. No energy consumption, no state changes, no consequences.
+              - generic [ref=e88]: Laws • Frameworks • Guides
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e91]
+                - generic [ref=e94]: Coming Soon
+              - generic [ref=e95]:
+                - img [ref=e97]
+                - generic [ref=e100]:
+                  - heading "Insight" [level=3] [ref=e101]
+                  - generic [ref=e102]: Reflect
+              - paragraph [ref=e103]: Review your performance, understand trends, and gain insights into your system behavior. Analyze patterns, track progress, and make data-driven decisions.
+              - generic [ref=e105]: Analytics • Trends • Reports
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - img [ref=e108]
+                - generic [ref=e111]: Coming Soon
+              - generic [ref=e112]:
+                - img [ref=e114]
+                - generic [ref=e119]:
+                  - heading "Weapons" [level=3] [ref=e120]
+                  - generic [ref=e121]: Equip
+              - paragraph [ref=e122]: Equip powerful tools, strategies, and capabilities to enhance your effectiveness. Build your arsenal for navigating challenges and achieving goals.
+              - generic [ref=e124]: Loadout Items • Abilities • Strategies
+  - button "Open Guide Bot" [ref=e125] [cursor=pointer]:
+    - img [ref=e128]
+```

@@ -1,0 +1,168 @@
+{
+  "dashboard": {
+    "title": "Database Metrics",
+    "tags": ["database", "postgres", "metrics"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Database Connection Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=\"postgres\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Backend-DB Connection",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"backend-dev|backend-local\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 3,
+        "title": "DB Query Latency (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Database Requests/sec",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Database Health Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "up{job=\"postgres\"}",
+            "refId": "A",
+            "legendFormat": "PostgreSQL Exporter"
+          },
+          {
+            "expr": "up{job=~\"backend-dev|backend-local\"}",
+            "refId": "B",
+            "legendFormat": "Backend (can query DB)"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Status"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Query Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m])) by (le))",
+            "refId": "B",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m])) by (le))",
+            "refId": "C",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Response Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(http_4xx_errors{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "4xx Errors"
+          },
+          {
+            "expr": "sum(rate(http_5xx_errors{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "5xx Errors"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total{job=~\"backend-dev|backend-local\",route=~\".*database.*|.*db.*\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "DB Requests/sec"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}

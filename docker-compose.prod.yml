@@ -1,0 +1,166 @@
+# Production Environment
+# Use this as reference for production deployments
+# NOTE: For production, prefer managed services over containers
+
+services:
+  postgres-prod:
+    image: postgres:15-alpine
+    container_name: ${PROD_DB_CONTAINER_NAME:-life-db-prod}
+    environment:
+      POSTGRES_USER: ${PROD_DB_USER}
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
+      POSTGRES_DB: ${PROD_DB_NAME}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    # Ports - internal only in production (behind load balancer)
+    ports:
+      - "${PROD_DB_PORT:-5435}:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: ${PROD_DB_CPU_LIMIT:-2.0}
+          memory: ${PROD_DB_MEMORY_LIMIT:-2G}
+        reservations:
+          cpus: ${PROD_DB_CPU_RESERVATION:-0.5}
+          memory: ${PROD_DB_MEMORY_RESERVATION:-512M}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PROD_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - life-world-os-prod-network
+    restart: always
+    # RECOMMENDED: Use managed database (RDS, Cloud SQL, Azure Database)
+    # Note: PostgreSQL runs as postgres user (uid 70) by default in official image
+
+  backend-prod:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.prod
+      args:
+        NODE_ENV: production
+        BUILD_VERSION: ${BUILD_VERSION:-latest}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: ${PROD_BACKEND_IMAGE_NAME:-life-world-os-backend-prod}:latest
+    container_name: ${PROD_BACKEND_CONTAINER_NAME:-life-world-os-backend-prod}
+    env_file:
+      - .env.prod
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${PROD_DATABASE_URL}
+      - PORT=${PROD_BACKEND_PORT:-3000}
+      - JWT_SECRET=${PROD_JWT_SECRET}
+      - JWT_EXPIRES_IN=${PROD_JWT_EXPIRES_IN:-7d}
+      # AI Services
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Logging and Monitoring
+      - LOG_LEVEL=${PROD_LOG_LEVEL:-warn}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - DATADOG_API_KEY=${DATADOG_API_KEY:-}
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY:-}
+      # Security
+      - CORS_ORIGIN=${PROD_CORS_ORIGIN:-https://yourdomain.com}
+      - RATE_LIMIT_ENABLED=${PROD_RATE_LIMIT_ENABLED:-true}
+      - RATE_LIMIT_WINDOW_MS=${PROD_RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${PROD_RATE_LIMIT_MAX_REQUESTS:-100}
+      # Database Connection Pooling
+      - DB_POOL_MIN=${PROD_DB_POOL_MIN:-2}
+      - DB_POOL_MAX=${PROD_DB_POOL_MAX:-10}
+      - DB_POOL_IDLE_TIMEOUT_MS=${PROD_DB_POOL_IDLE_TIMEOUT_MS:-30000}
+      - DB_POOL_CONNECTION_TIMEOUT_MS=${PROD_DB_POOL_CONNECTION_TIMEOUT_MS:-20000}
+      # Request/Response
+      - MAX_REQUEST_SIZE=${PROD_MAX_REQUEST_SIZE:-10mb}
+      - REQUEST_TIMEOUT_MS=${PROD_REQUEST_TIMEOUT_MS:-30000}
+      - KEEP_ALIVE_TIMEOUT_MS=${PROD_KEEP_ALIVE_TIMEOUT_MS:-65000}
+      # Graceful Shutdown
+      - GRACEFUL_SHUTDOWN_TIMEOUT_MS=${PROD_GRACEFUL_SHUTDOWN_TIMEOUT_MS:-30000}
+      # SSL/TLS (if terminating at load balancer)
+      - TRUST_PROXY=${PROD_TRUST_PROXY:-true}
+      - PROXY_PROTOCOL=${PROD_PROXY_PROTOCOL:-false}
+    # Ports - internal only in production (behind load balancer)
+    ports:
+      - "${PROD_BACKEND_PORT:-3000}:${PROD_BACKEND_PORT:-3000}"
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: ${PROD_BACKEND_CPU_LIMIT:-1.0}
+          memory: ${PROD_BACKEND_MEMORY_LIMIT:-1G}
+        reservations:
+          cpus: ${PROD_BACKEND_CPU_RESERVATION:-0.25}
+          memory: ${PROD_BACKEND_MEMORY_RESERVATION:-256M}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${PROD_BACKEND_PORT:-3000}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - life-world-os-prod-network
+    restart: always
+    # Security: Run as non-root user (configured in Dockerfile)
+    # RECOMMENDED: Deploy to ECS, Cloud Run, App Service, Kubernetes
+
+  frontend-prod:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${PROD_API_URL}
+        NODE_ENV: production
+    image: ${PROD_FRONTEND_IMAGE_NAME:-life-world-os-frontend-prod}:latest
+    container_name: ${PROD_FRONTEND_CONTAINER_NAME:-life-world-os-frontend-prod}
+    # Ports - internal only in production (behind CDN/load balancer)
+    ports:
+      - "${PROD_FRONTEND_PORT:-8080}:80"
+    environment:
+      - VITE_API_URL=${PROD_API_URL}
+      # Security headers (configured in nginx)
+      - SECURITY_HEADERS_ENABLED=${PROD_SECURITY_HEADERS_ENABLED:-true}
+      - CSP_ENABLED=${PROD_CSP_ENABLED:-true}
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: ${PROD_FRONTEND_CPU_LIMIT:-0.5}
+          memory: ${PROD_FRONTEND_MEMORY_LIMIT:-256M}
+        reservations:
+          cpus: ${PROD_FRONTEND_CPU_RESERVATION:-0.1}
+          memory: ${PROD_FRONTEND_MEMORY_RESERVATION:-128M}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - life-world-os-prod-network
+    restart: always
+    # RECOMMENDED: Deploy to S3+CloudFront, Cloud Storage+CDN, Static Web Apps
+
+networks:
+  life-world-os-prod-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    driver: local
+    # RECOMMENDED: Use managed storage with backups (EBS, GCE Persistent Disk, Azure Disk)
+    # For production: Configure backups, snapshots, and high availability
+
+

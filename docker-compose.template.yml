@@ -1,0 +1,120 @@
+version: '3.8'
+
+# Unified Docker Compose Template
+# All environments use the same structure with environment-specific variables
+# Variables are loaded from .env.{environment} files
+# 
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up -d
+#   docker-compose -f docker-compose.staging.yml up -d
+#   docker-compose -f docker-compose.prod.yml up -d
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${DB_CONTAINER_NAME}
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ${DB_VOLUME_NAME}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ${NETWORK_NAME}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    # Cloud-ready: Replace with RDS, Cloud SQL, Azure Database, etc.
+    # Just update DATABASE_URL env var
+
+  # Backend Service
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: ${BACKEND_DOCKERFILE}
+      args:
+        NODE_ENV: ${NODE_ENV}
+        BUILD_VERSION: ${BUILD_VERSION:-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+        VITE_API_URL: ${API_URL}
+    image: ${BACKEND_IMAGE_NAME}:${BUILD_VERSION:-latest}
+    container_name: ${BACKEND_CONTAINER_NAME}
+    env_file:
+      - ${ENV_FILE}
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=${BACKEND_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL}
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - ${BACKEND_SRC_VOLUME:-./apps/backend/src:/app/src}
+      - ${BACKEND_PRISMA_VOLUME:-./apps/backend/prisma:/app/prisma}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${BACKEND_PORT}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ${NETWORK_NAME}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    command: ${BACKEND_COMMAND:-}
+    # Cloud-ready: Replace with ECS, Cloud Run, App Service, etc.
+    # Just update API_URL env var
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: ${FRONTEND_DOCKERFILE}
+      args:
+        VITE_API_URL: ${API_URL}
+        NODE_ENV: ${NODE_ENV}
+        BUILD_VERSION: ${BUILD_VERSION:-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: ${FRONTEND_IMAGE_NAME}:${BUILD_VERSION:-latest}
+    container_name: ${FRONTEND_CONTAINER_NAME}
+    ports:
+      - "${FRONTEND_PORT}:5174"
+    environment:
+      - VITE_API_URL=${API_URL}
+    volumes:
+      - ${FRONTEND_SRC_VOLUME:-./apps/frontend/src:/app/src}
+    depends_on:
+      - backend
+    networks:
+      - ${NETWORK_NAME}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    # Cloud-ready: Replace with S3+CloudFront, Cloud Storage+CDN, etc.
+    # Just update VITE_API_URL env var
+
+networks:
+  ${NETWORK_NAME}:
+    driver: bridge
+
+volumes:
+  ${DB_VOLUME_NAME}:
+    # Cloud-ready: Replace with EBS, Persistent Disk, etc.
+

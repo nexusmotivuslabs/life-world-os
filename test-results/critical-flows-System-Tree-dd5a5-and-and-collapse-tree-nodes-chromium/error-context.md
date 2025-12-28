@@ -1,0 +1,119 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e20]:
+          - link "Home" [ref=e22] [cursor=pointer]:
+            - /url: /
+            - img [ref=e23]
+            - generic [ref=e26]: Home
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - link "Choose Mode" [ref=e30] [cursor=pointer]:
+              - /url: /choose-plane
+              - generic [ref=e31]: Choose Mode
+          - generic [ref=e32]:
+            - img [ref=e33]
+            - generic [ref=e35]:
+              - img [ref=e36]
+              - generic [ref=e38]: Systems
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - img [ref=e42]
+              - heading "System Tiers" [level=1] [ref=e46]
+            - paragraph [ref=e47]: "Navigate systems organized by the universal tier hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - paragraph [ref=e48]: Switch between Tier View, List View, System Tree, and Artifacts to explore all available systems
+          - generic [ref=e50]:
+            - button "Tier View" [ref=e51] [cursor=pointer]:
+              - generic [ref=e52]:
+                - img [ref=e53]
+                - generic [ref=e57]: Tier View
+            - button "List View" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e61]: List View
+            - button "Artifacts" [ref=e62] [cursor=pointer]:
+              - generic [ref=e63]:
+                - img [ref=e64]
+                - generic [ref=e66]: Artifacts
+            - button "System Tree" [ref=e67] [cursor=pointer]:
+              - generic [ref=e68]:
+                - img [ref=e69]
+                - generic [ref=e73]: System Tree
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]:
+                  - img [ref=e79]
+                  - heading "Reality" [level=2] [ref=e83]
+                - generic [ref=e84]:
+                  - button "Expand All" [ref=e85] [cursor=pointer]:
+                    - img [ref=e86]
+                    - text: Expand All
+                  - button "Collapse All" [ref=e91] [cursor=pointer]:
+                    - img [ref=e92]
+                    - text: Collapse All
+              - paragraph [ref=e97]: Complete hierarchical view from REALITY (root) down to individual laws, principles, and frameworks. This structure supports artifacts and provides a complete ontological view. The tree is collapsed to root by default - click nodes to expand/collapse sections.
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - button "CONSTRAINTS_OF_REALITY Immutable Foundational" [ref=e101] [cursor=pointer]:
+                  - img [ref=e102]
+                  - img [ref=e104]
+                  - generic [ref=e108]: CONSTRAINTS_OF_REALITY
+                  - img "Immutable" [ref=e109]
+                  - generic "Core structure nodes that form the foundation" [ref=e112]: Foundational
+                - button "View as artifact" [ref=e113] [cursor=pointer]:
+                  - img [ref=e114]
+              - generic [ref=e116]:
+                - generic [ref=e118]:
+                  - button "LAWS Immutable Foundational" [ref=e119] [cursor=pointer]:
+                    - img [ref=e120]
+                    - img [ref=e122]
+                    - generic [ref=e125]: LAWS
+                    - img "Immutable" [ref=e126]
+                    - generic "Core structure nodes that form the foundation" [ref=e129]: Foundational
+                  - button "View as artifact" [ref=e130] [cursor=pointer]:
+                    - img [ref=e131]
+                - generic [ref=e134]:
+                  - button "PRINCIPLES Immutable Foundational" [ref=e135] [cursor=pointer]:
+                    - img [ref=e136]
+                    - img [ref=e138]
+                    - generic [ref=e141]: PRINCIPLES
+                    - img "Immutable" [ref=e142]
+                    - generic "Core structure nodes that form the foundation" [ref=e145]: Foundational
+                  - button "View as artifact" [ref=e146] [cursor=pointer]:
+                    - img [ref=e147]
+                - generic [ref=e150]:
+                  - button "FRAMEWORKS Immutable Foundational" [ref=e151] [cursor=pointer]:
+                    - img [ref=e152]
+                    - img [ref=e154]
+                    - generic [ref=e157]: FRAMEWORKS
+                    - img "Immutable" [ref=e158]
+                    - generic "Core structure nodes that form the foundation" [ref=e161]: Foundational
+                  - button "View as artifact" [ref=e162] [cursor=pointer]:
+                    - img [ref=e163]
+            - button "Legend" [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]:
+                - img [ref=e168]
+                - generic [ref=e172]: Legend
+              - img [ref=e173]
+  - button "Open Guide Bot" [ref=e175] [cursor=pointer]:
+    - img [ref=e178]
+```

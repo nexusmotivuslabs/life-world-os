@@ -1,0 +1,76 @@
+# Production Dockerfile for Backend
+FROM node:20-alpine AS base
+
+# Build arguments for versioning
+ARG BUILD_VERSION=prod-unknown
+ARG BUILD_COMMIT=unknown
+ARG BUILD_BRANCH=unknown
+ARG BUILD_TIMESTAMP=unknown
+
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install all dependencies (including dev) for building
+FROM base AS builder-deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=builder-deps /app/node_modules ./node_modules
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build TypeScript
+RUN npm run build
+
+# Production dependencies (without dev)
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
+
+# Production image, copy all the files and run the app
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Version information
+ENV BUILD_VERSION=${BUILD_VERSION}
+ENV BUILD_COMMIT=${BUILD_COMMIT}
+ENV BUILD_BRANCH=${BUILD_BRANCH}
+ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+
+# Copy built application
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+
+USER nodejs
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Run migrations and start server
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+

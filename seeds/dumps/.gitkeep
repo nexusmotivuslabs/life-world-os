@@ -1,0 +1,3 @@
+# This file keeps the dumps directory in git
+# Actual dump files (*.dump, *.metadata.json) are gitignored
+

@@ -1,0 +1,26 @@
+version: '3.8'
+
+# Alternative DNS Server on Non-Standard Port
+# Use this if port 53 is already in use
+# Devices will need to use port 5353 for DNS
+
+services:
+  dnsmasq:
+    image: andyshinn/dnsmasq:latest
+    container_name: life-world-os-dns-alt
+    ports:
+      - "0.0.0.0:5353:53/udp"
+      - "0.0.0.0:5353:53/tcp"
+    volumes:
+      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro
+      - ./dnsmasq/hosts:/etc/hosts.dnsmasq:ro
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - life-world-os-dns-network
+    restart: unless-stopped
+
+networks:
+  life-world-os-dns-network:
+    driver: bridge
+

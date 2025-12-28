@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.log
+
+# Production
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dev secrets and API key setup (hidden from main view)
+.dev-secrets/
+apps/backend/.dev-secrets/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+apps/backend/prisma/migrations/
+
+# Database dumps (generated files, not version controlled)
+seeds/dumps/*.dump
+seeds/dumps/*.metadata.json
+!seeds/dumps/.gitkeep
+
+# Smoke test logs
+/tmp/life-world-backend.log
+/tmp/life-world-frontend.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# Dev Hub (old location - migrated to apps/dev-hub-app)
+dev-hub/
+DEV_HUB_REFERENCE.md

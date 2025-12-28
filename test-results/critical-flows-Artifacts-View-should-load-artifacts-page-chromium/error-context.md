@@ -1,0 +1,732 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e20]:
+          - link "Home" [ref=e22] [cursor=pointer]:
+            - /url: /
+            - img [ref=e23]
+            - generic [ref=e26]: Home
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - link "Choose Mode" [ref=e30] [cursor=pointer]:
+              - /url: /choose-plane
+              - generic [ref=e31]: Choose Mode
+          - generic [ref=e32]:
+            - img [ref=e33]
+            - link "Systems" [ref=e35] [cursor=pointer]:
+              - /url: /systems
+              - img [ref=e36]
+              - generic [ref=e38]: Systems
+          - generic [ref=e39]:
+            - img [ref=e40]
+            - generic [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e45]: Artifacts
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - img [ref=e49]
+              - heading "System Tiers" [level=1] [ref=e53]
+            - paragraph [ref=e54]: "Navigate systems organized by the universal tier hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - paragraph [ref=e55]: Switch between Tier View, List View, System Tree, and Artifacts to explore all available systems
+          - generic [ref=e57]:
+            - button "Tier View" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e64]: Tier View
+            - button "List View" [ref=e65] [cursor=pointer]:
+              - generic [ref=e66]:
+                - img [ref=e67]
+                - generic [ref=e68]: List View
+            - button "Artifacts" [active] [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]:
+                - img [ref=e71]
+                - generic [ref=e73]: Artifacts
+            - button "System Tree" [ref=e75] [cursor=pointer]:
+              - generic [ref=e76]:
+                - img [ref=e77]
+                - generic [ref=e81]: System Tree
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - heading "Artifacts" [level=1] [ref=e85]
+                - generic [ref=e86]: Artifacts
+              - paragraph [ref=e87]: Tools and concepts that support your systems. View resources, stats, concepts, laws, principles, frameworks, and weapons. Optional but valuable for understanding how to optimize system performance.
+              - paragraph [ref=e88]: Each system leverages artifacts for better outcomes • Explore how they enhance your operations
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e91]
+                - textbox "Search artifacts by name, description, tags, or details..." [ref=e94]
+              - generic [ref=e95]:
+                - heading "Filter by Category" [level=3] [ref=e97]
+                - generic [ref=e98]:
+                  - button "🌐 All 31 items" [ref=e99] [cursor=pointer]:
+                    - generic [ref=e100]:
+                      - generic [ref=e102]: 🌐
+                      - generic [ref=e103]: All
+                      - generic [ref=e104]: 31 items
+                  - button "Resources 6" [ref=e105] [cursor=pointer]:
+                    - generic [ref=e106]:
+                      - generic [ref=e109]: Resources
+                      - generic [ref=e110]: "6"
+                  - button "Stats 4" [ref=e111] [cursor=pointer]:
+                    - generic [ref=e112]:
+                      - generic [ref=e115]: Stats
+                      - generic [ref=e116]: "4"
+                  - button "Concepts 1" [ref=e117] [cursor=pointer]:
+                    - generic [ref=e118]:
+                      - generic [ref=e121]: Concepts
+                      - generic [ref=e122]: "1"
+                  - button "Laws 2" [ref=e123] [cursor=pointer]:
+                    - generic [ref=e124]:
+                      - generic [ref=e127]: Laws
+                      - generic [ref=e128]: "2"
+                  - button "Principles 15" [ref=e129] [cursor=pointer]:
+                    - generic [ref=e130]:
+                      - generic [ref=e133]: Principles
+                      - generic [ref=e134]: "15"
+                  - button "Frameworks 3" [ref=e135] [cursor=pointer]:
+                    - generic [ref=e136]:
+                      - generic [ref=e139]: Frameworks
+                      - generic [ref=e140]: "3"
+            - generic [ref=e141]:
+              - generic [ref=e142] [cursor=pointer]:
+                - generic [ref=e143]:
+                  - img [ref=e145]
+                  - generic [ref=e147]: Resources
+                - heading "Energy" [level=3] [ref=e149]
+                - paragraph [ref=e150]: Daily budget that enables all system operations. Energy powers Finance, Health, and other systems, forcing prioritization of high-value activities across competing demands.
+                - list [ref=e152]:
+                  - listitem [ref=e153]:
+                    - generic [ref=e154]: •
+                    - generic [ref=e155]: Enables actions across all systems
+                  - listitem [ref=e156]:
+                    - generic [ref=e157]: •
+                    - generic [ref=e158]: Systems consume energy for operations
+                  - listitem [ref=e159]:
+                    - generic [ref=e160]: •
+                    - generic [ref=e161]: Resets at daily tick
+                  - listitem [ref=e162]: +4 more
+                - generic [ref=e163]:
+                  - generic [ref=e164]: Click to learn more
+                  - img [ref=e165]
+              - generic [ref=e167] [cursor=pointer]:
+                - generic [ref=e168]:
+                  - img [ref=e170]
+                  - generic [ref=e173]: Stats
+                - heading "Capacity" [level=3] [ref=e175]
+                - paragraph [ref=e176]: Foundation for system performance. High Capacity enables sustained operation across Finance, Health, and Energy systems. Low Capacity degrades all system effectiveness and increases burnout risk.
+                - list [ref=e178]:
+                  - listitem [ref=e179]:
+                    - generic [ref=e180]: •
+                    - generic [ref=e181]: "Range: 0-100"
+                  - listitem [ref=e182]:
+                    - generic [ref=e183]: •
+                    - generic [ref=e184]: Modifies usable Energy cap across all systems
+                  - listitem [ref=e185]:
+                    - generic [ref=e186]: •
+                    - generic [ref=e187]: Low Capacity = degraded system performance
+                  - listitem [ref=e188]: +3 more
+                - generic [ref=e189]:
+                  - generic [ref=e190]: Click to learn more
+                  - img [ref=e191]
+              - generic [ref=e193] [cursor=pointer]:
+                - generic [ref=e194]:
+                  - img [ref=e196]
+                  - generic [ref=e198]: Resources
+                - heading "Money (Gold)" [level=3] [ref=e200]
+                - paragraph [ref=e201]: Currency of the Power Game. Enables influence, control, and expansion of options.
+                - list [ref=e203]:
+                  - listitem [ref=e204]:
+                    - generic [ref=e205]: •
+                    - generic [ref=e206]: Primary currency of influence
+                  - listitem [ref=e207]:
+                    - generic [ref=e208]: •
+                    - generic [ref=e209]: Generated by Engines
+                  - listitem [ref=e210]:
+                    - generic [ref=e211]: •
+                    - generic [ref=e212]: Used for investments
+                  - listitem [ref=e213]: +2 more
+                - generic [ref=e214]:
+                  - generic [ref=e215]: Click to learn more
+                  - img [ref=e216]
+              - generic [ref=e218] [cursor=pointer]:
+                - generic [ref=e219]:
+                  - img [ref=e221]
+                  - generic [ref=e223]: Resources
+                - heading "Oxygen" [level=3] [ref=e225]
+                - paragraph [ref=e226]: Financial safety net measured in months of expenses. Primary survival buffer.
+                - list [ref=e228]:
+                  - listitem [ref=e229]:
+                    - generic [ref=e230]: •
+                    - generic [ref=e231]: Measured in months covered
+                  - listitem [ref=e232]:
+                    - generic [ref=e233]: •
+                    - generic [ref=e234]: Decays daily if not maintained
+                  - listitem [ref=e235]:
+                    - generic [ref=e236]: •
+                    - generic [ref=e237]: Enables risk-taking when high
+                  - listitem [ref=e238]: +2 more
+                - generic [ref=e239]:
+                  - generic [ref=e240]: Click to learn more
+                  - img [ref=e241]
+              - generic [ref=e243] [cursor=pointer]:
+                - generic [ref=e244]:
+                  - img [ref=e246]
+                  - generic [ref=e248]: Resources
+                - heading "Water" [level=3] [ref=e250]
+                - paragraph [ref=e251]: Health and vitality score. Low Water triggers Winter season and blocks progression.
+                - list [ref=e253]:
+                  - listitem [ref=e254]:
+                    - generic [ref=e255]: •
+                    - generic [ref=e256]: "Range: 0-100"
+                  - listitem [ref=e257]:
+                    - generic [ref=e258]: •
+                    - generic [ref=e259]: Health and vitality indicator
+                  - listitem [ref=e260]:
+                    - generic [ref=e261]: •
+                    - generic [ref=e262]: Low Water forces rest (Winter)
+                  - listitem [ref=e263]: +2 more
+                - generic [ref=e264]:
+                  - generic [ref=e265]: Click to learn more
+                  - img [ref=e266]
+              - generic [ref=e268] [cursor=pointer]:
+                - generic [ref=e269]:
+                  - img [ref=e271]
+                  - generic [ref=e273]: Resources
+                - heading "Armor" [level=3] [ref=e275]
+                - paragraph [ref=e276]: Systems, buffers, boundaries. Protects against stress events and reduces failure penalties.
+                - list [ref=e278]:
+                  - listitem [ref=e279]:
+                    - generic [ref=e280]: •
+                    - generic [ref=e281]: "Range: 0-100"
+                  - listitem [ref=e282]:
+                    - generic [ref=e283]: •
+                    - generic [ref=e284]: Protects against stress events
+                  - listitem [ref=e285]:
+                    - generic [ref=e286]: •
+                    - generic [ref=e287]: Reduces failure state penalties
+                  - listitem [ref=e288]: +2 more
+                - generic [ref=e289]:
+                  - generic [ref=e290]: Click to learn more
+                  - img [ref=e291]
+              - generic [ref=e293] [cursor=pointer]:
+                - generic [ref=e294]:
+                  - img [ref=e296]
+                  - generic [ref=e300]: Resources
+                - heading "Keys" [level=3] [ref=e302]
+                - paragraph [ref=e303]: Unlocked options and opportunities. Count of available choices and pathways.
+                - list [ref=e305]:
+                  - listitem [ref=e306]:
+                    - generic [ref=e307]: •
+                    - generic [ref=e308]: Count of unlocked options
+                  - listitem [ref=e309]:
+                    - generic [ref=e310]: •
+                    - generic [ref=e311]: Enables new pathways
+                  - listitem [ref=e312]:
+                    - generic [ref=e313]: •
+                    - generic [ref=e314]: Gained through achievements
+                  - listitem [ref=e315]: +2 more
+                - generic [ref=e316]:
+                  - generic [ref=e317]: Click to learn more
+                  - img [ref=e318]
+              - generic [ref=e320] [cursor=pointer]:
+                - generic [ref=e321]:
+                  - img [ref=e323]
+                  - generic [ref=e326]: Stats
+                - heading "Engines" [level=3] [ref=e328]
+                - paragraph [ref=e329]: Income generation capability. Governs multiple income sources and unlocks higher-value actions.
+                - list [ref=e331]:
+                  - listitem [ref=e332]:
+                    - generic [ref=e333]: •
+                    - generic [ref=e334]: "Range: 0-100"
+                  - listitem [ref=e335]:
+                    - generic [ref=e336]: •
+                    - generic [ref=e337]: Governs income generation
+                  - listitem [ref=e338]:
+                    - generic [ref=e339]: •
+                    - generic [ref=e340]: Career, Business, Investment Engines
+                  - listitem [ref=e341]: +2 more
+                - generic [ref=e342]:
+                  - generic [ref=e343]: Click to learn more
+                  - img [ref=e344]
+              - generic [ref=e346] [cursor=pointer]:
+                - generic [ref=e347]:
+                  - img [ref=e349]
+                  - generic [ref=e351]: Stats
+                - heading "Meaning" [level=3] [ref=e353]
+                - paragraph [ref=e354]: Purpose, values alignment. Provides burnout resistance and prevents decay when actions align with values.
+                - list [ref=e356]:
+                  - listitem [ref=e357]:
+                    - generic [ref=e358]: •
+                    - generic [ref=e359]: "Range: 0-100"
+                  - listitem [ref=e360]:
+                    - generic [ref=e361]: •
+                    - generic [ref=e362]: Purpose and values alignment
+                  - listitem [ref=e363]:
+                    - generic [ref=e364]: •
+                    - generic [ref=e365]: Provides burnout resistance
+                  - listitem [ref=e366]: +2 more
+                - generic [ref=e367]:
+                  - generic [ref=e368]: Click to learn more
+                  - img [ref=e369]
+              - generic [ref=e371] [cursor=pointer]:
+                - generic [ref=e372]:
+                  - img [ref=e374]
+                  - generic [ref=e378]: Stats
+                - heading "Optionality" [level=3] [ref=e380]
+                - paragraph [ref=e381]: Available choices and pathways. Increases with investments, keys, and unlocked systems.
+                - list [ref=e383]:
+                  - listitem [ref=e384]:
+                    - generic [ref=e385]: •
+                    - generic [ref=e386]: "Range: 0-100"
+                  - listitem [ref=e387]:
+                    - generic [ref=e388]: •
+                    - generic [ref=e389]: Available choices and pathways
+                  - listitem [ref=e390]:
+                    - generic [ref=e391]: •
+                    - generic [ref=e392]: Increases with investments
+                  - listitem [ref=e393]: +2 more
+                - generic [ref=e394]:
+                  - generic [ref=e395]: Click to learn more
+                  - img [ref=e396]
+              - generic [ref=e398] [cursor=pointer]:
+                - generic [ref=e399]:
+                  - img [ref=e401]
+                  - generic [ref=e404]: Concepts
+                - heading "Tier System" [level=3] [ref=e406]
+                - paragraph [ref=e407]: "Universal system hierarchy: Survival, Stability, Growth, Leverage, Expression."
+                - list [ref=e409]:
+                  - listitem [ref=e410]:
+                    - generic [ref=e411]: •
+                    - generic [ref=e412]: "Tier 0: Survival (Non-negotiable)"
+                  - listitem [ref=e413]:
+                    - generic [ref=e414]: •
+                    - generic [ref=e415]: "Tier 1: Stability (Variance control)"
+                  - listitem [ref=e416]:
+                    - generic [ref=e417]: •
+                    - generic [ref=e418]: "Tier 2: Growth (Compounding)"
+                  - listitem [ref=e419]: +2 more
+                - generic [ref=e420]:
+                  - generic [ref=e421]: Click to learn more
+                  - img [ref=e422]
+              - generic [ref=e424] [cursor=pointer]:
+                - generic [ref=e425]:
+                  - img [ref=e427]
+                  - generic [ref=e430]: Laws
+                - heading "48 Laws of Power" [level=3] [ref=e432]
+                - paragraph [ref=e433]: "Strategic principles applied across domains: Money, Career, Business, Relationships, Leadership."
+                - list [ref=e435]:
+                  - listitem [ref=e436]:
+                    - generic [ref=e437]: •
+                    - generic [ref=e438]: 48 strategic principles
+                  - listitem [ref=e439]:
+                    - generic [ref=e440]: •
+                    - generic [ref=e441]: Applied across multiple domains
+                  - listitem [ref=e442]:
+                    - generic [ref=e443]: •
+                    - generic [ref=e444]: Money, Career, Business domains
+                  - listitem [ref=e445]: +2 more
+                - generic [ref=e446]:
+                  - generic [ref=e447]: Click to learn more
+                  - img [ref=e448]
+              - generic [ref=e450] [cursor=pointer]:
+                - generic [ref=e451]:
+                  - img [ref=e453]
+                  - generic [ref=e456]: Laws
+                - heading "Bible Laws" [level=3] [ref=e458]
+                - paragraph [ref=e459]: Biblical principles applied to financial and life domains.
+                - list [ref=e461]:
+                  - listitem [ref=e462]:
+                    - generic [ref=e463]: •
+                    - generic [ref=e464]: Biblical principles
+                  - listitem [ref=e465]:
+                    - generic [ref=e466]: •
+                    - generic [ref=e467]: Applied to financial domains
+                  - listitem [ref=e468]:
+                    - generic [ref=e469]: •
+                    - generic [ref=e470]: Money, Investment, Career
+                  - listitem [ref=e471]: +2 more
+                - generic [ref=e472]:
+                  - generic [ref=e473]: Click to learn more
+                  - img [ref=e474]
+              - generic [ref=e476] [cursor=pointer]:
+                - generic [ref=e477]:
+                  - img [ref=e479]
+                  - generic [ref=e481]: Principles
+                - heading "Compound Growth Principle" [level=3] [ref=e483]
+                - paragraph [ref=e484]: Small consistent gains compound exponentially over time, creating asymmetric long-term outcomes.
+                - list [ref=e486]:
+                  - listitem [ref=e487]:
+                    - generic [ref=e488]: •
+                    - generic [ref=e489]: Applies to wealth, skills, relationships
+                  - listitem [ref=e490]:
+                    - generic [ref=e491]: •
+                    - generic [ref=e492]: Time is the critical variable
+                  - listitem [ref=e493]:
+                    - generic [ref=e494]: •
+                    - generic [ref=e495]: Consistency > Intensity
+                  - listitem [ref=e496]: +2 more
+                - generic [ref=e497]:
+                  - generic [ref=e498]: Click to learn more
+                  - img [ref=e499]
+              - generic [ref=e501] [cursor=pointer]:
+                - generic [ref=e502]:
+                  - img [ref=e504]
+                  - generic [ref=e506]: Principles
+                - heading "Energy Conservation Principle" [level=3] [ref=e508]
+                - paragraph [ref=e509]: Total energy in a system remains constant; it can only be transferred or transformed, never created or destroyed.
+                - list [ref=e511]:
+                  - listitem [ref=e512]:
+                    - generic [ref=e513]: •
+                    - generic [ref=e514]: First law of thermodynamics
+                  - listitem [ref=e515]:
+                    - generic [ref=e516]: •
+                    - generic [ref=e517]: Energy transfers between forms
+                  - listitem [ref=e518]:
+                    - generic [ref=e519]: •
+                    - generic [ref=e520]: Efficiency matters in transformations
+                  - listitem [ref=e521]: +2 more
+                - generic [ref=e522]:
+                  - generic [ref=e523]: Click to learn more
+                  - img [ref=e524]
+              - generic [ref=e526] [cursor=pointer]:
+                - generic [ref=e527]:
+                  - img [ref=e529]
+                  - generic [ref=e531]: Principles
+                - heading "Risk-Return Tradeoff" [level=3] [ref=e533]
+                - paragraph [ref=e534]: Higher potential returns require accepting higher levels of risk and uncertainty.
+                - list [ref=e536]:
+                  - listitem [ref=e537]:
+                    - generic [ref=e538]: •
+                    - generic [ref=e539]: Universal economic principle
+                  - listitem [ref=e540]:
+                    - generic [ref=e541]: •
+                    - generic [ref=e542]: No free lunch in markets
+                  - listitem [ref=e543]:
+                    - generic [ref=e544]: •
+                    - generic [ref=e545]: Asymmetry exists but is rare
+                  - listitem [ref=e546]: +2 more
+                - generic [ref=e547]:
+                  - generic [ref=e548]: Click to learn more
+                  - img [ref=e549]
+              - generic [ref=e551] [cursor=pointer]:
+                - generic [ref=e552]:
+                  - img [ref=e554]
+                  - generic [ref=e556]: Principles
+                - heading "Progressive Overload" [level=3] [ref=e558]
+                - paragraph [ref=e559]: Gradual increase in stress or demand over time leads to adaptation and capacity growth.
+                - list [ref=e561]:
+                  - listitem [ref=e562]:
+                    - generic [ref=e563]: •
+                    - generic [ref=e564]: Applies to physical & mental training
+                  - listitem [ref=e565]:
+                    - generic [ref=e566]: •
+                    - generic [ref=e567]: Stress triggers adaptation
+                  - listitem [ref=e568]:
+                    - generic [ref=e569]: •
+                    - generic [ref=e570]: Recovery enables growth
+                  - listitem [ref=e571]: +2 more
+                - generic [ref=e572]:
+                  - generic [ref=e573]: Click to learn more
+                  - img [ref=e574]
+              - generic [ref=e576] [cursor=pointer]:
+                - generic [ref=e577]:
+                  - img [ref=e579]
+                  - generic [ref=e581]: Principles
+                - heading "Sustainable Balance Principle" [level=3] [ref=e583]
+                - paragraph [ref=e584]: "Long-term success requires balancing competing forces: growth vs recovery, risk vs safety, short-term vs long-term."
+                - list [ref=e586]:
+                  - listitem [ref=e587]:
+                    - generic [ref=e588]: •
+                    - generic [ref=e589]: Extremes lead to collapse
+                  - listitem [ref=e590]:
+                    - generic [ref=e591]: •
+                    - generic [ref=e592]: Dynamic equilibrium
+                  - listitem [ref=e593]:
+                    - generic [ref=e594]: •
+                    - generic [ref=e595]: Context-dependent balance
+                  - listitem [ref=e596]: +2 more
+                - generic [ref=e597]:
+                  - generic [ref=e598]: Click to learn more
+                  - img [ref=e599]
+              - generic [ref=e601] [cursor=pointer]:
+                - generic [ref=e602]:
+                  - img [ref=e604]
+                  - generic [ref=e606]: Principles
+                - heading "Time Value of Money" [level=3] [ref=e608]
+                - paragraph [ref=e609]: Money available now is worth more than the same amount in the future due to earning potential.
+                - list [ref=e611]:
+                  - listitem [ref=e612]:
+                    - generic [ref=e613]: •
+                    - generic [ref=e614]: Present value > Future value
+                  - listitem [ref=e615]:
+                    - generic [ref=e616]: •
+                    - generic [ref=e617]: Opportunity cost of capital
+                  - listitem [ref=e618]:
+                    - generic [ref=e619]: •
+                    - generic [ref=e620]: Discounting future cash flows
+                  - listitem [ref=e621]: +2 more
+                - generic [ref=e622]:
+                  - generic [ref=e623]: Click to learn more
+                  - img [ref=e624]
+              - generic [ref=e626] [cursor=pointer]:
+                - generic [ref=e627]:
+                  - img [ref=e629]
+                  - generic [ref=e631]: Principles
+                - heading "Asymmetric Risk-Reward" [level=3] [ref=e633]
+                - paragraph [ref=e634]: Seek opportunities where potential upside significantly exceeds downside risk.
+                - list [ref=e636]:
+                  - listitem [ref=e637]:
+                    - generic [ref=e638]: •
+                    - generic [ref=e639]: Limited downside, unlimited upside
+                  - listitem [ref=e640]:
+                    - generic [ref=e641]: •
+                    - generic [ref=e642]: Options thinking
+                  - listitem [ref=e643]:
+                    - generic [ref=e644]: •
+                    - generic [ref=e645]: Venture capital model
+                  - listitem [ref=e646]: +2 more
+                - generic [ref=e647]:
+                  - generic [ref=e648]: Click to learn more
+                  - img [ref=e649]
+              - generic [ref=e651] [cursor=pointer]:
+                - generic [ref=e652]:
+                  - img [ref=e654]
+                  - generic [ref=e656]: Principles
+                - heading "Diversification & Hedging" [level=3] [ref=e658]
+                - paragraph [ref=e659]: Spread risk across uncorrelated assets to reduce portfolio volatility while maintaining returns.
+                - list [ref=e661]:
+                  - listitem [ref=e662]:
+                    - generic [ref=e663]: •
+                    - generic [ref=e664]: Don't put all eggs in one basket
+                  - listitem [ref=e665]:
+                    - generic [ref=e666]: •
+                    - generic [ref=e667]: Uncorrelated assets reduce risk
+                  - listitem [ref=e668]:
+                    - generic [ref=e669]: •
+                    - generic [ref=e670]: Modern Portfolio Theory
+                  - listitem [ref=e671]: +2 more
+                - generic [ref=e672]:
+                  - generic [ref=e673]: Click to learn more
+                  - img [ref=e674]
+              - generic [ref=e676] [cursor=pointer]:
+                - generic [ref=e677]:
+                  - img [ref=e679]
+                  - generic [ref=e681]: Principles
+                - heading "Cash Flow Management" [level=3] [ref=e683]
+                - paragraph [ref=e684]: Sustainable wealth requires managing the timing and magnitude of cash inflows and outflows.
+                - list [ref=e686]:
+                  - listitem [ref=e687]:
+                    - generic [ref=e688]: •
+                    - generic [ref=e689]: Cash is king
+                  - listitem [ref=e690]:
+                    - generic [ref=e691]: •
+                    - generic [ref=e692]: Liquidity enables optionality
+                  - listitem [ref=e693]:
+                    - generic [ref=e694]: •
+                    - generic [ref=e695]: Timing mismatches create risk
+                  - listitem [ref=e696]: +2 more
+                - generic [ref=e697]:
+                  - generic [ref=e698]: Click to learn more
+                  - img [ref=e699]
+              - generic [ref=e701] [cursor=pointer]:
+                - generic [ref=e702]:
+                  - img [ref=e704]
+                  - generic [ref=e706]: Principles
+                - heading "Compound Interest" [level=3] [ref=e708]
+                - paragraph [ref=e709]: Earnings on earnings create exponential growth over time, making time your greatest ally.
+                - list [ref=e711]:
+                  - listitem [ref=e712]:
+                    - generic [ref=e713]: •
+                    - generic [ref=e714]: Eighth wonder of the world
+                  - listitem [ref=e715]:
+                    - generic [ref=e716]: •
+                    - generic [ref=e717]: Exponential vs linear growth
+                  - listitem [ref=e718]:
+                    - generic [ref=e719]: •
+                    - generic [ref=e720]: Start early, benefit greatly
+                  - listitem [ref=e721]: +2 more
+                - generic [ref=e722]:
+                  - generic [ref=e723]: Click to learn more
+                  - img [ref=e724]
+              - generic [ref=e726] [cursor=pointer]:
+                - generic [ref=e727]:
+                  - img [ref=e729]
+                  - generic [ref=e731]: Principles
+                - heading "Recovery > Depletion" [level=3] [ref=e733]
+                - paragraph [ref=e734]: Long-term performance requires that recovery consistently exceeds depletion.
+                - list [ref=e736]:
+                  - listitem [ref=e737]:
+                    - generic [ref=e738]: •
+                    - generic [ref=e739]: Sustainable performance equation
+                  - listitem [ref=e740]:
+                    - generic [ref=e741]: •
+                    - generic [ref=e742]: Sleep is non-negotiable
+                  - listitem [ref=e743]:
+                    - generic [ref=e744]: •
+                    - generic [ref=e745]: Active recovery strategies
+                  - listitem [ref=e746]: +2 more
+                - generic [ref=e747]:
+                  - generic [ref=e748]: Click to learn more
+                  - img [ref=e749]
+              - generic [ref=e751] [cursor=pointer]:
+                - generic [ref=e752]:
+                  - img [ref=e754]
+                  - generic [ref=e756]: Principles
+                - heading "Energy Conservation Law" [level=3] [ref=e758]
+                - paragraph [ref=e759]: You have finite energy; allocate it strategically to high-leverage activities.
+                - list [ref=e761]:
+                  - listitem [ref=e762]:
+                    - generic [ref=e763]: •
+                    - generic [ref=e764]: Energy is your scarcest resource
+                  - listitem [ref=e765]:
+                    - generic [ref=e766]: •
+                    - generic [ref=e767]: Prioritization is essential
+                  - listitem [ref=e768]:
+                    - generic [ref=e769]: •
+                    - generic [ref=e770]: Say no to protect energy
+                  - listitem [ref=e771]: +2 more
+                - generic [ref=e772]:
+                  - generic [ref=e773]: Click to learn more
+                  - img [ref=e774]
+              - generic [ref=e776] [cursor=pointer]:
+                - generic [ref=e777]:
+                  - img [ref=e779]
+                  - generic [ref=e781]: Principles
+                - heading "Sustainable Rhythm" [level=3] [ref=e783]
+                - paragraph [ref=e784]: Establish consistent, repeatable rhythms for work, rest, and recovery to maximize long-term output.
+                - list [ref=e786]:
+                  - listitem [ref=e787]:
+                    - generic [ref=e788]: •
+                    - generic [ref=e789]: Consistency > Heroic bursts
+                  - listitem [ref=e790]:
+                    - generic [ref=e791]: •
+                    - generic [ref=e792]: Circadian rhythm optimization
+                  - listitem [ref=e793]:
+                    - generic [ref=e794]: •
+                    - generic [ref=e795]: Weekly/daily cycles
+                  - listitem [ref=e796]: +2 more
+                - generic [ref=e797]:
+                  - generic [ref=e798]: Click to learn more
+                  - img [ref=e799]
+              - generic [ref=e801] [cursor=pointer]:
+                - generic [ref=e802]:
+                  - img [ref=e804]
+                  - generic [ref=e806]: Principles
+                - heading "Capacity Building" [level=3] [ref=e808]
+                - paragraph [ref=e809]: Systematically increase your energy capacity through progressive overload and recovery.
+                - list [ref=e811]:
+                  - listitem [ref=e812]:
+                    - generic [ref=e813]: •
+                    - generic [ref=e814]: Train your capacity like a muscle
+                  - listitem [ref=e815]:
+                    - generic [ref=e816]: •
+                    - generic [ref=e817]: Stress + Recovery = Growth
+                  - listitem [ref=e818]:
+                    - generic [ref=e819]: •
+                    - generic [ref=e820]: Physical & mental capacity
+                  - listitem [ref=e821]: +2 more
+                - generic [ref=e822]:
+                  - generic [ref=e823]: Click to learn more
+                  - img [ref=e824]
+              - generic [ref=e826] [cursor=pointer]:
+                - generic [ref=e827]:
+                  - img [ref=e829]
+                  - generic [ref=e831]: Principles
+                - heading "Burnout Prevention" [level=3] [ref=e833]
+                - paragraph [ref=e834]: Proactively manage energy depletion before it becomes chronic and leads to burnout.
+                - list [ref=e836]:
+                  - listitem [ref=e837]:
+                    - generic [ref=e838]: •
+                    - generic [ref=e839]: Early warning signs matter
+                  - listitem [ref=e840]:
+                    - generic [ref=e841]: •
+                    - generic [ref=e842]: Prevention > Recovery
+                  - listitem [ref=e843]:
+                    - generic [ref=e844]: •
+                    - generic [ref=e845]: Chronic depletion = burnout
+                  - listitem [ref=e846]: +2 more
+                - generic [ref=e847]:
+                  - generic [ref=e848]: Click to learn more
+                  - img [ref=e849]
+              - generic [ref=e851] [cursor=pointer]:
+                - generic [ref=e852]:
+                  - img [ref=e854]
+                  - generic [ref=e859]: Frameworks
+                - heading "Financial Frameworks" [level=3] [ref=e861]
+                - paragraph [ref=e862]: Strategic frameworks for investment, cash flow management, debt strategy, and wealth building.
+                - list [ref=e864]:
+                  - listitem [ref=e865]:
+                    - generic [ref=e866]: •
+                    - generic [ref=e867]: Investment Portfolio Framework
+                  - listitem [ref=e868]:
+                    - generic [ref=e869]: •
+                    - generic [ref=e870]: Cash Flow Optimization Framework
+                  - listitem [ref=e871]:
+                    - generic [ref=e872]: •
+                    - generic [ref=e873]: Debt Management Framework
+                  - listitem [ref=e874]: +2 more
+                - generic [ref=e875]:
+                  - generic [ref=e876]: Click to learn more
+                  - img [ref=e877]
+              - generic [ref=e879] [cursor=pointer]:
+                - generic [ref=e880]:
+                  - img [ref=e882]
+                  - generic [ref=e887]: Frameworks
+                - heading "Energy Frameworks" [level=3] [ref=e889]
+                - paragraph [ref=e890]: Structured approaches for capacity management, recovery planning, and performance optimization.
+                - list [ref=e892]:
+                  - listitem [ref=e893]:
+                    - generic [ref=e894]: •
+                    - generic [ref=e895]: Capacity Management Framework
+                  - listitem [ref=e896]:
+                    - generic [ref=e897]: •
+                    - generic [ref=e898]: Recovery Planning Framework
+                  - listitem [ref=e899]:
+                    - generic [ref=e900]: •
+                    - generic [ref=e901]: Performance Optimization Model
+                  - listitem [ref=e902]: +2 more
+                - generic [ref=e903]:
+                  - generic [ref=e904]: Click to learn more
+                  - img [ref=e905]
+              - generic [ref=e907] [cursor=pointer]:
+                - generic [ref=e908]:
+                  - img [ref=e910]
+                  - generic [ref=e915]: Frameworks
+                - heading "Strategic Frameworks" [level=3] [ref=e917]
+                - paragraph [ref=e918]: High-level frameworks for decision-making, goal achievement, and strategic planning.
+                - list [ref=e920]:
+                  - listitem [ref=e921]:
+                    - generic [ref=e922]: •
+                    - generic [ref=e923]: Goal Setting Framework (SMART)
+                  - listitem [ref=e924]:
+                    - generic [ref=e925]: •
+                    - generic [ref=e926]: Decision Matrix Model
+                  - listitem [ref=e927]:
+                    - generic [ref=e928]: •
+                    - generic [ref=e929]: Strategic Planning Framework
+                  - listitem [ref=e930]: +2 more
+                - generic [ref=e931]:
+                  - generic [ref=e932]: Click to learn more
+                  - img [ref=e933]
+  - button "Open Guide Bot" [ref=e935] [cursor=pointer]:
+    - img [ref=e938]
+```

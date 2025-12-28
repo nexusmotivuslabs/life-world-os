@@ -1,0 +1,142 @@
+{
+  "dashboard": {
+    "title": "Error Tracking - 4xx/5xx Errors",
+    "tags": ["errors", "monitoring", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Error Rate (4xx + 5xx)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(http_4xx_errors[5m]) + rate(http_5xx_errors[5m])",
+            "refId": "A",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "4xx Errors by Status",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum by (status) (rate(http_4xx_errors[5m]))",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "5xx Errors by Status",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum by (status) (rate(http_5xx_errors[5m]))",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Errors by Route",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "topk(10, sum by (route, status) (rate(http_request_total{status=~\"4..|5..\"}[5m])))",
+            "refId": "A",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Total Error Count (Last Hour)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(http_4xx_errors[1h])) + sum(increase(http_5xx_errors[1h]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 6,
+        "title": "4xx Error Count",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(http_4xx_errors[1h]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 7,
+        "title": "5xx Error Count",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(http_5xx_errors[1h]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Error Rate Percentage",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+        "targets": [
+          {
+            "expr": "(sum(rate(http_4xx_errors[5m])) + sum(rate(http_5xx_errors[5m]))) / sum(rate(http_request_total[5m])) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "unit": "percent"
+        }
+      }
+    ]
+  }
+}
+

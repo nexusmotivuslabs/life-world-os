@@ -1,0 +1,132 @@
+# Development Environment - Local First, Cloud Ready
+# Use profiles to run only what you need:
+#   docker-compose --profile db -f docker-compose.dev.yml up -d        # Database only
+#   docker-compose --profile db --profile backend -f docker-compose.dev.yml up -d  # DB + Backend
+#   docker-compose --profile full -f docker-compose.dev.yml up -d     # Everything
+
+services:
+  # Database Service
+  postgres-dev:
+    profiles: ["db", "full"]
+    image: postgres:15-alpine
+    container_name: ${DEV_DB_CONTAINER_NAME:-life-db-dev}
+    environment:
+      POSTGRES_USER: ${DEV_DB_USER:-lifeworld_dev}
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-lifeworld_dev_local}
+      POSTGRES_DB: ${DEV_DB_NAME:-lifeworld_dev}
+      ENVIRONMENT: dev
+    ports:
+      - "${DEV_DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./seeds/scripts/init-db.sh:/docker-entrypoint-initdb.d/01-init-db.sh:ro
+      - ./seeds/dumps:/docker-entrypoint-initdb.d/dumps:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DEV_DB_USER:-lifeworld_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+    # Cloud-ready: Replace with RDS, Cloud SQL, Azure Database, etc.
+    # Just update DATABASE_URL env var
+
+  # Backend Service (Optional - for full Docker mode)
+  backend-dev:
+    profiles: ["backend", "full"]
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+    image: ${DEV_BACKEND_IMAGE_NAME:-life-world-os-backend-dev}:latest
+    container_name: ${DEV_BACKEND_CONTAINER_NAME:-life-world-os-backend-dev}
+    env_file:
+      - .env.dev
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${DEV_DB_USER:-lifeworld_dev}:${DEV_DB_PASSWORD:-lifeworld_dev_local}@postgres-dev:5432/${DEV_DB_NAME:-lifeworld_dev}
+      - PORT=${DEV_BACKEND_PORT:-3001}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production-min-32-chars}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      # AI Services - connect to local or cloud
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+    ports:
+      - "${DEV_BACKEND_PORT:-3001}:${DEV_BACKEND_PORT:-3001}"
+    volumes:
+      - ./apps/backend/src:/app/src  # Hot reload
+      - ./apps/backend/prisma:/app/prisma
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+    # Cloud-ready: Replace with ECS, Cloud Run, App Service, etc.
+    # Just update API_URL env var
+
+  # Frontend Service (Optional - for full Docker mode)
+  frontend-dev:
+    profiles: ["frontend", "full"]
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+      args:
+        VITE_API_URL: ${DEV_API_URL:-http://localhost:3001}
+        NODE_ENV: development
+    image: ${DEV_FRONTEND_IMAGE_NAME:-life-world-os-frontend-dev}:latest
+    container_name: ${DEV_FRONTEND_CONTAINER_NAME:-life-world-os-frontend-dev}
+    ports:
+      - "${DEV_FRONTEND_PORT:-5173}:5173"
+    environment:
+      - VITE_API_URL=${DEV_API_URL:-http://localhost:3001}
+    volumes:
+      - ./apps/frontend/src:/app/src  # Hot reload
+    depends_on:
+      - backend-dev
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+    # Cloud-ready: Replace with S3+CloudFront, Cloud Storage+CDN, etc.
+    # Just update VITE_API_URL env var
+
+  # Dev Hub Service - Environment Management & Networking UI
+  # Always available as static reference page for the organization
+  # Starts automatically with database and other core services
+  dev-hub:
+    profiles: ["dev-hub", "full", "db"]
+    build:
+      context: ./apps/dev-hub-app
+      dockerfile: Dockerfile.dev
+    image: ${DEV_HUB_IMAGE_NAME:-life-world-os-dev-hub}:latest
+    container_name: ${DEV_HUB_CONTAINER_NAME:-life-world-os-dev-hub}
+    ports:
+      - "${DEV_HUB_PORT:-8080}:8080"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - NEXT_PUBLIC_API_URL=${DEV_API_URL:-http://localhost:3001}
+    volumes:
+      - ./apps/dev-hub-app:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+    # Accessible via nexus.devhub.com domain (configured in nginx)
+    # External port is configurable via DEV_HUB_PORT env var (default: 8080)
+    # Internal port is always 8080
+
+networks:
+  life-world-os-dev-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    # Cloud-ready: Replace with EBS, Persistent Disk, etc.

@@ -1,0 +1,106 @@
+# Prometheus Configuration for Local Build with Dev
+# Scrapes metrics from BOTH:
+#   1. Local services (running on host machine) - local/local
+#   2. Dev environment services (Docker containers) - local/dev
+# Connects to both local and dev for development and testing
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'local-build-dev'
+    environment: 'dev'
+    build_type: 'local'
+
+# Alertmanager configuration (optional for local)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: []
+
+# Load rules once and periodically evaluate them (optional)
+# rule_files:
+#   - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Backend Service (if running in Docker) - local/dev
+  # Connects to dev environment Docker containers for development and testing
+  - job_name: 'backend-dev'
+    static_configs:
+      - targets: ['backend-dev:3001']
+        labels:
+          service: 'backend'
+          environment: 'dev'
+          build_type: 'local'
+          deployment: 'docker'
+    scrape_interval: 15s
+    metrics_path: '/api/metrics'  # If you add a metrics endpoint
+    # Note: Backend needs to expose metrics endpoint for this to work
+
+  # Backend Service (if running locally on host) - local/local
+  # Connects to local machine services (not in Docker) for development and testing
+  - job_name: 'backend-local'
+    static_configs:
+      - targets: ['host.docker.internal:5001']
+        labels:
+          service: 'backend'
+          environment: 'dev'
+          build_type: 'local'
+          deployment: 'local'
+          instance: 'local'
+    scrape_interval: 15s
+    metrics_path: '/api/metrics'
+
+  # Frontend Service (if running in Docker) - local/dev
+  # Connects to dev environment Docker containers
+  - job_name: 'frontend-dev'
+    static_configs:
+      - targets: ['frontend-dev:5173']
+        labels:
+          service: 'frontend'
+          environment: 'dev'
+          build_type: 'local'
+          deployment: 'docker'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    # Note: Frontend needs to expose metrics endpoint for this to work
+
+  # Frontend Service (if running locally on host) - local/local
+  # Connects to local machine services (not in Docker)
+  - job_name: 'frontend-local'
+    static_configs:
+      - targets: ['host.docker.internal:5002']
+        labels:
+          service: 'frontend'
+          environment: 'dev'
+          build_type: 'local'
+          deployment: 'local'
+          instance: 'local'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  # Node Exporter - System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          environment: 'dev'
+          build_type: 'local'
+
+  # PostgreSQL Exporter (optional - if you add postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+  #         environment: 'dev'
+

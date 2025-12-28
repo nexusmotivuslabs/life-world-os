@@ -1,0 +1,143 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e20]:
+          - link "Home" [ref=e22] [cursor=pointer]:
+            - /url: /
+            - img [ref=e23]
+            - generic [ref=e26]: Home
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - generic [ref=e34]: System Tiers
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - heading "System Tiers" [level=1] [ref=e42]
+            - paragraph [ref=e43]: "Navigate systems organized by the universal tier hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - paragraph [ref=e44]: Switch between Tier View, List View, System Tree, and Artifacts to explore all available systems
+          - generic [ref=e46]:
+            - button "Tier View" [ref=e47] [cursor=pointer]:
+              - generic [ref=e48]:
+                - img [ref=e49]
+                - generic [ref=e53]: Tier View
+            - button "List View" [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - generic [ref=e58]: List View
+            - button "Artifacts" [ref=e59] [cursor=pointer]:
+              - generic [ref=e60]:
+                - img [ref=e61]
+                - generic [ref=e63]: Artifacts
+            - button "System Tree" [ref=e64] [cursor=pointer]:
+              - generic [ref=e65]:
+                - img [ref=e66]
+                - generic [ref=e70]: System Tree
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - heading "System Tiers" [level=1] [ref=e74]
+              - paragraph [ref=e75]: "Universal system hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - generic [ref=e76]:
+              - 'button "Tier 0: Survival Can I continue playing at all? Non-negotiable systems for basic continuity. No optimisation, no growth, no upside. Only survival and continuity. Failure here collapses everything above it. No optimisation No growth No upside Only survival and continuity Failure collapses everything above" [ref=e78] [cursor=pointer]':
+                - generic [ref=e79]:
+                  - img [ref=e81]
+                  - generic [ref=e83]:
+                    - 'heading "Tier 0: Survival" [level=2] [ref=e85]'
+                    - paragraph [ref=e86]: Can I continue playing at all?
+                    - paragraph [ref=e87]: Non-negotiable systems for basic continuity. No optimisation, no growth, no upside. Only survival and continuity. Failure here collapses everything above it.
+                    - generic [ref=e88]:
+                      - generic [ref=e89]: No optimisation
+                      - generic [ref=e90]: No growth
+                      - generic [ref=e91]: No upside
+                      - generic [ref=e92]: Only survival and continuity
+                      - generic [ref=e93]: Failure collapses everything above
+                - img [ref=e95]
+              - 'button "Tier 1: Stability Requires: Survival Can I absorb shocks without breaking? Systems that provide buffers, predictability, and downside protection. Low volatility. This tier protects capacity to decide. Buffers Predictability Downside protection Low volatility Protects capacity to decide" [ref=e98] [cursor=pointer]':
+                - generic [ref=e99]:
+                  - img [ref=e101]
+                  - generic [ref=e103]:
+                    - generic [ref=e104]:
+                      - 'heading "Tier 1: Stability" [level=2] [ref=e105]'
+                      - generic [ref=e106]: "Requires: Survival"
+                    - paragraph [ref=e107]: Can I absorb shocks without breaking?
+                    - paragraph [ref=e108]: Systems that provide buffers, predictability, and downside protection. Low volatility. This tier protects capacity to decide.
+                    - generic [ref=e109]:
+                      - generic [ref=e110]: Buffers
+                      - generic [ref=e111]: Predictability
+                      - generic [ref=e112]: Downside protection
+                      - generic [ref=e113]: Low volatility
+                      - generic [ref=e114]: Protects capacity to decide
+                - img [ref=e116]
+              - 'button "Tier 2: Growth Requires: Survival, Stability Can I improve over time if I behave well? Systems that enable compounding and long-term expected value. Requires patience, vulnerable to neglect, rewards consistency. This is where discipline pays off. Long-term expected value Requires patience Vulnerable to neglect Rewards consistency Discipline pays off" [ref=e119] [cursor=pointer]':
+                - generic [ref=e120]:
+                  - img [ref=e122]
+                  - generic [ref=e125]:
+                    - generic [ref=e126]:
+                      - 'heading "Tier 2: Growth" [level=2] [ref=e127]'
+                      - generic [ref=e128]: "Requires: Survival, Stability"
+                    - paragraph [ref=e129]: Can I improve over time if I behave well?
+                    - paragraph [ref=e130]: Systems that enable compounding and long-term expected value. Requires patience, vulnerable to neglect, rewards consistency. This is where discipline pays off.
+                    - generic [ref=e131]:
+                      - generic [ref=e132]: Long-term expected value
+                      - generic [ref=e133]: Requires patience
+                      - generic [ref=e134]: Vulnerable to neglect
+                      - generic [ref=e135]: Rewards consistency
+                      - generic [ref=e136]: Discipline pays off
+                - img [ref=e138]
+              - 'button "Tier 3: Leverage Requires: Survival, Stability, Growth Can I make outcomes disproportionate to effort? Systems that create asymmetric outcomes through optionality, skill + capital amplification. Higher risk. Requires foundations below. This is where people get tempted too early. Optionality Skill + capital amplification Higher risk Requires foundations below People get tempted too early" [ref=e141] [cursor=pointer]':
+                - generic [ref=e142]:
+                  - img [ref=e144]
+                  - generic [ref=e146]:
+                    - generic [ref=e147]:
+                      - 'heading "Tier 3: Leverage" [level=2] [ref=e148]'
+                      - generic [ref=e149]: "Requires: Survival, Stability, Growth"
+                    - paragraph [ref=e150]: Can I make outcomes disproportionate to effort?
+                    - paragraph [ref=e151]: Systems that create asymmetric outcomes through optionality, skill + capital amplification. Higher risk. Requires foundations below. This is where people get tempted too early.
+                    - generic [ref=e152]:
+                      - generic [ref=e153]: Optionality
+                      - generic [ref=e154]: Skill + capital amplification
+                      - generic [ref=e155]: Higher risk
+                      - generic [ref=e156]: Requires foundations below
+                      - generic [ref=e157]: People get tempted too early
+                - img [ref=e159]
+              - 'button "Tier 4: Expression Requires: Survival, Stability, Growth How do I want to live once I''m safe and strong? Systems for lifestyle, identity, taste, and non-optimal choices. This is not about winning. It''s about living. Lifestyle Identity Taste Non-optimal choices Not about winning, about living" [ref=e162] [cursor=pointer]':
+                - generic [ref=e163]:
+                  - img [ref=e165]
+                  - generic [ref=e167]:
+                    - generic [ref=e168]:
+                      - 'heading "Tier 4: Expression" [level=2] [ref=e169]'
+                      - generic [ref=e170]: "Requires: Survival, Stability, Growth"
+                    - paragraph [ref=e171]: How do I want to live once I'm safe and strong?
+                    - paragraph [ref=e172]: Systems for lifestyle, identity, taste, and non-optimal choices. This is not about winning. It's about living.
+                    - generic [ref=e173]:
+                      - generic [ref=e174]: Lifestyle
+                      - generic [ref=e175]: Identity
+                      - generic [ref=e176]: Taste
+                      - generic [ref=e177]: Non-optimal choices
+                      - generic [ref=e178]: Not about winning, about living
+                - img [ref=e180]
+            - paragraph [ref=e183]:
+              - strong [ref=e184]: "Note:"
+              - text: This hierarchy applies to ALL domains. Systems can span multiple tiers (e.g., Money System has both Tier 1 stability aspects and Tier 3 leverage aspects). The tier view helps you understand system priorities and dependencies.
+  - button "Open Guide Bot" [ref=e185] [cursor=pointer]:
+    - img [ref=e188]
+```

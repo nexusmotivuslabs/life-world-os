@@ -1,0 +1,151 @@
+{
+  "dashboard": {
+    "title": "Health Monitoring - FE, BE, DB",
+    "tags": ["health", "monitoring", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Backend Health",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"backend-dev|backend-local\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Database Health",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=\"postgres\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Frontend Health",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=\"frontend\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Backend Response Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_ms_bucket[5m])) by (le))",
+            "refId": "B",
+            "legendFormat": "p50"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Response Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total[5m])) by (method)",
+            "refId": "A",
+            "legendFormat": "{{method}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Connection Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "database_latency_ms",
+            "refId": "A",
+            "legendFormat": "DB Latency"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Latency"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Service Status Overview",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "up",
+            "refId": "A",
+            "format": "table"
+          }
+        ]
+      }
+    ]
+  }
+}
+

@@ -1,0 +1,241 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e20]:
+          - link "Home" [ref=e22] [cursor=pointer]:
+            - /url: /
+            - img [ref=e23]
+            - generic [ref=e26]: Home
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - link "Choose Mode" [ref=e30] [cursor=pointer]:
+              - /url: /choose-plane
+              - generic [ref=e31]: Choose Mode
+          - generic [ref=e32]:
+            - img [ref=e33]
+            - link "Systems" [ref=e35] [cursor=pointer]:
+              - /url: /systems
+              - img [ref=e36]
+              - generic [ref=e38]: Systems
+          - generic [ref=e39]:
+            - img [ref=e40]
+            - generic [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e45]: Artifacts
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - img [ref=e49]
+              - heading "System Tiers" [level=1] [ref=e53]
+            - paragraph [ref=e54]: "Navigate systems organized by the universal tier hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - paragraph [ref=e55]: Switch between Tier View, List View, System Tree, and Artifacts to explore all available systems
+          - generic [ref=e57]:
+            - button "Tier View" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e64]: Tier View
+            - button "List View" [ref=e65] [cursor=pointer]:
+              - generic [ref=e66]:
+                - img [ref=e67]
+                - generic [ref=e68]: List View
+            - button "Artifacts" [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]:
+                - img [ref=e71]
+                - generic [ref=e73]: Artifacts
+            - button "System Tree" [ref=e75] [cursor=pointer]:
+              - generic [ref=e76]:
+                - img [ref=e77]
+                - generic [ref=e81]: System Tree
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - heading "Artifacts" [level=1] [ref=e85]
+                - generic [ref=e86]: Artifacts
+              - paragraph [ref=e87]: Tools and concepts that support your systems. View resources, stats, concepts, laws, principles, frameworks, and weapons. Optional but valuable for understanding how to optimize system performance.
+              - paragraph [ref=e88]: Each system leverages artifacts for better outcomes • Explore how they enhance your operations
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e91]
+                - textbox "Search artifacts by name, description, tags, or details..." [ref=e94]
+              - generic [ref=e95]:
+                - generic [ref=e96]:
+                  - heading "Filter by Category" [level=3] [ref=e97]
+                  - button "Clear filter" [ref=e98] [cursor=pointer]:
+                    - img [ref=e99]
+                    - text: Clear filter
+                - generic [ref=e102]:
+                  - button "🌐 All 31 items" [ref=e103] [cursor=pointer]:
+                    - generic [ref=e104]:
+                      - generic [ref=e106]: 🌐
+                      - generic [ref=e107]: All
+                      - generic [ref=e108]: 31 items
+                  - button "Resources 6" [active] [ref=e109] [cursor=pointer]:
+                    - generic [ref=e110]:
+                      - generic [ref=e113]: Resources
+                      - generic [ref=e114]: "6"
+                    - img [ref=e116]
+                  - button "Stats 4" [ref=e118] [cursor=pointer]:
+                    - generic [ref=e119]:
+                      - generic [ref=e122]: Stats
+                      - generic [ref=e123]: "4"
+                  - button "Concepts 1" [ref=e124] [cursor=pointer]:
+                    - generic [ref=e125]:
+                      - generic [ref=e128]: Concepts
+                      - generic [ref=e129]: "1"
+                  - button "Laws 2" [ref=e130] [cursor=pointer]:
+                    - generic [ref=e131]:
+                      - generic [ref=e134]: Laws
+                      - generic [ref=e135]: "2"
+                  - button "Principles 15" [ref=e136] [cursor=pointer]:
+                    - generic [ref=e137]:
+                      - generic [ref=e140]: Principles
+                      - generic [ref=e141]: "15"
+                  - button "Frameworks 3" [ref=e142] [cursor=pointer]:
+                    - generic [ref=e143]:
+                      - generic [ref=e146]: Frameworks
+                      - generic [ref=e147]: "3"
+                - generic [ref=e148]:
+                  - generic [ref=e149]: "Active filter:"
+                  - generic [ref=e152]: Resources
+                  - generic [ref=e153]: (6 items)
+            - generic [ref=e154]:
+              - generic [ref=e155] [cursor=pointer]:
+                - generic [ref=e156]:
+                  - img [ref=e158]
+                  - generic [ref=e160]: Resources
+                - heading "Energy" [level=3] [ref=e162]
+                - paragraph [ref=e163]: Daily budget that enables all system operations. Energy powers Finance, Health, and other systems, forcing prioritization of high-value activities across competing demands.
+                - list [ref=e165]:
+                  - listitem [ref=e166]:
+                    - generic [ref=e167]: •
+                    - generic [ref=e168]: Enables actions across all systems
+                  - listitem [ref=e169]:
+                    - generic [ref=e170]: •
+                    - generic [ref=e171]: Systems consume energy for operations
+                  - listitem [ref=e172]:
+                    - generic [ref=e173]: •
+                    - generic [ref=e174]: Resets at daily tick
+                  - listitem [ref=e175]: +4 more
+                - generic [ref=e176]:
+                  - generic [ref=e177]: Click to learn more
+                  - img [ref=e178]
+              - generic [ref=e180] [cursor=pointer]:
+                - generic [ref=e181]:
+                  - img [ref=e183]
+                  - generic [ref=e185]: Resources
+                - heading "Money (Gold)" [level=3] [ref=e187]
+                - paragraph [ref=e188]: Currency of the Power Game. Enables influence, control, and expansion of options.
+                - list [ref=e190]:
+                  - listitem [ref=e191]:
+                    - generic [ref=e192]: •
+                    - generic [ref=e193]: Primary currency of influence
+                  - listitem [ref=e194]:
+                    - generic [ref=e195]: •
+                    - generic [ref=e196]: Generated by Engines
+                  - listitem [ref=e197]:
+                    - generic [ref=e198]: •
+                    - generic [ref=e199]: Used for investments
+                  - listitem [ref=e200]: +2 more
+                - generic [ref=e201]:
+                  - generic [ref=e202]: Click to learn more
+                  - img [ref=e203]
+              - generic [ref=e205] [cursor=pointer]:
+                - generic [ref=e206]:
+                  - img [ref=e208]
+                  - generic [ref=e210]: Resources
+                - heading "Oxygen" [level=3] [ref=e212]
+                - paragraph [ref=e213]: Financial safety net measured in months of expenses. Primary survival buffer.
+                - list [ref=e215]:
+                  - listitem [ref=e216]:
+                    - generic [ref=e217]: •
+                    - generic [ref=e218]: Measured in months covered
+                  - listitem [ref=e219]:
+                    - generic [ref=e220]: •
+                    - generic [ref=e221]: Decays daily if not maintained
+                  - listitem [ref=e222]:
+                    - generic [ref=e223]: •
+                    - generic [ref=e224]: Enables risk-taking when high
+                  - listitem [ref=e225]: +2 more
+                - generic [ref=e226]:
+                  - generic [ref=e227]: Click to learn more
+                  - img [ref=e228]
+              - generic [ref=e230] [cursor=pointer]:
+                - generic [ref=e231]:
+                  - img [ref=e233]
+                  - generic [ref=e235]: Resources
+                - heading "Water" [level=3] [ref=e237]
+                - paragraph [ref=e238]: Health and vitality score. Low Water triggers Winter season and blocks progression.
+                - list [ref=e240]:
+                  - listitem [ref=e241]:
+                    - generic [ref=e242]: •
+                    - generic [ref=e243]: "Range: 0-100"
+                  - listitem [ref=e244]:
+                    - generic [ref=e245]: •
+                    - generic [ref=e246]: Health and vitality indicator
+                  - listitem [ref=e247]:
+                    - generic [ref=e248]: •
+                    - generic [ref=e249]: Low Water forces rest (Winter)
+                  - listitem [ref=e250]: +2 more
+                - generic [ref=e251]:
+                  - generic [ref=e252]: Click to learn more
+                  - img [ref=e253]
+              - generic [ref=e255] [cursor=pointer]:
+                - generic [ref=e256]:
+                  - img [ref=e258]
+                  - generic [ref=e260]: Resources
+                - heading "Armor" [level=3] [ref=e262]
+                - paragraph [ref=e263]: Systems, buffers, boundaries. Protects against stress events and reduces failure penalties.
+                - list [ref=e265]:
+                  - listitem [ref=e266]:
+                    - generic [ref=e267]: •
+                    - generic [ref=e268]: "Range: 0-100"
+                  - listitem [ref=e269]:
+                    - generic [ref=e270]: •
+                    - generic [ref=e271]: Protects against stress events
+                  - listitem [ref=e272]:
+                    - generic [ref=e273]: •
+                    - generic [ref=e274]: Reduces failure state penalties
+                  - listitem [ref=e275]: +2 more
+                - generic [ref=e276]:
+                  - generic [ref=e277]: Click to learn more
+                  - img [ref=e278]
+              - generic [ref=e280] [cursor=pointer]:
+                - generic [ref=e281]:
+                  - img [ref=e283]
+                  - generic [ref=e287]: Resources
+                - heading "Keys" [level=3] [ref=e289]
+                - paragraph [ref=e290]: Unlocked options and opportunities. Count of available choices and pathways.
+                - list [ref=e292]:
+                  - listitem [ref=e293]:
+                    - generic [ref=e294]: •
+                    - generic [ref=e295]: Count of unlocked options
+                  - listitem [ref=e296]:
+                    - generic [ref=e297]: •
+                    - generic [ref=e298]: Enables new pathways
+                  - listitem [ref=e299]:
+                    - generic [ref=e300]: •
+                    - generic [ref=e301]: Gained through achievements
+                  - listitem [ref=e302]: +2 more
+                - generic [ref=e303]:
+                  - generic [ref=e304]: Click to learn more
+                  - img [ref=e305]
+  - button "Open Guide Bot" [ref=e307] [cursor=pointer]:
+    - img [ref=e310]
+```

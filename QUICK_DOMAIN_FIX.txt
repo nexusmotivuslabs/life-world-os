@@ -1,0 +1,16 @@
+QUICK FIX: Domain Not Working on Other Device
+
+Your IP: 192.168.11.211
+
+Add to hosts file on the OTHER device:
+
+192.168.11.211 dev.lifeworld.com
+192.168.11.211 staging.lifeworld.com
+192.168.11.211 prod.lifeworld.com
+
+iPhone/iPad: Use "DNS Override" or "AdGuard" app
+Android: Use "Hosts Go" app or edit /etc/hosts (rooted)
+macOS/Linux: sudo nano /etc/hosts
+Windows: Notepad as Admin → C:\Windows\System32\drivers\etc\hosts
+
+Or just use: http://192.168.11.211/ (no setup needed)

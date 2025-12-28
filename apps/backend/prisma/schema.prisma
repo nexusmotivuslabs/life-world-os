@@ -1,0 +1,1206 @@
+// Life World OS - Prisma Schema
+// Gamified life operating system database schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum OverallRank {
+  RECRUIT
+  PRIVATE
+  CORPORAL
+  SERGEANT
+  STAFF_SERGEANT
+  SERGEANT_FIRST_CLASS
+  MASTER_SERGEANT
+  FIRST_SERGEANT
+  SERGEANT_MAJOR
+  COMMAND_SERGEANT_MAJOR
+}
+
+enum Season {
+  SPRING
+  SUMMER
+  AUTUMN
+  WINTER
+}
+
+enum EngineType {
+  CAREER
+  BUSINESS
+  INVESTMENT
+  LEARNING
+}
+
+enum EngineStatus {
+  ACTIVE
+  INACTIVE
+  PLANNING
+}
+
+enum MilestoneType {
+  OXYGEN_MONTHS
+  FIRST_ASSET
+  ABILITY_TO_SAY_NO
+  SURVIVE_LOW_INCOME
+  REDUCED_FRAGILITY
+  FIRST_PASSIVE_INCOME
+  SIX_MONTHS_EXPENSES
+  ONE_YEAR_EXPENSES
+}
+
+enum ActivityType {
+  WORK_PROJECT
+  EXERCISE
+  SAVE_EXPENSES
+  LEARNING
+  SEASON_COMPLETION
+  MILESTONE
+  CUSTOM
+}
+
+enum TrainingModuleType {
+  EMERGENCY_FUND
+  INCREASE_INCOME
+  REDUCE_EXPENSES
+  AUTOMATE_SAVINGS
+  MULTIPLE_INCOME_STREAMS
+  TRACK_EXPENSES
+  AVOID_LIFESTYLE_INFLATION
+}
+
+enum TaskStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum InvestmentType {
+  CRYPTO
+  STOCKS
+  CASH
+  HIGH_YIELD_SAVINGS
+}
+
+enum AgentType {
+  INVESTOR
+  FINANCIAL_ADVISOR
+  ACCOUNTANT
+  BOOKKEEPER
+  TAX_STRATEGIST
+  CASH_FLOW_SPECIALIST
+  DEBT_SPECIALIST
+  SECURITY_SPECIALIST
+  CAPACITY_SPECIALIST
+  RECOVERY_COACH
+  BURNOUT_PREVENTION_SPECIALIST
+}
+
+enum GuideCategory {
+  INVESTMENT_STRATEGY
+  INCOME_GENERATION
+  EXPENSE_OPTIMIZATION
+  TAX_PLANNING
+  CASH_FLOW_MANAGEMENT
+  BUSINESS_DEVELOPMENT
+  BOOKKEEPING
+  DEBT_MANAGEMENT
+  CAPACITY_MANAGEMENT
+  RECOVERY_PLANNING
+  BURNOUT_PREVENTION
+  EFFORT_OPTIMIZATION
+}
+
+enum TeamDomain {
+  INVESTMENT
+  TAX_OPTIMIZATION
+  CASH_FLOW
+  BUSINESS_ADVISORY
+  COMPREHENSIVE_PLANNING
+  DEBT_MANAGEMENT
+  EMERGENCY_FUND
+  PLATFORM_ENGINEERING
+  CORE_MONEY_SYSTEM
+  HEALTH_CAPACITY
+}
+
+enum TeamAgentRole {
+  LEAD
+  MEMBER
+  SPECIALIST
+}
+
+enum TeamProductType {
+  CALCULATOR
+  TRACKER
+  TEMPLATE
+  DASHBOARD
+  TOOL
+  ANALYZER
+  PLANNER
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum RecommendationPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum UserFinancialDataType {
+  EMERGENCY_FUND
+  DEBT_INFO
+  ACCOUNT_BALANCE
+  TAX_INFO
+  INCOME_INFO
+  EXPENSE_INFO
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  EXPORT
+}
+
+enum PowerLawDomain {
+  MONEY
+  CAREER
+  BUSINESS
+  RELATIONSHIPS
+  LEADERSHIP
+  NEGOTIATION
+  ENERGY
+}
+
+enum BibleLawDomain {
+  MONEY
+  INVESTMENT
+  CAREER
+  BUSINESS
+  RELATIONSHIPS
+  LEADERSHIP
+  SPIRITUAL_GROWTH
+  STEWARDSHIP
+  GENEROSITY
+  ENERGY
+}
+
+enum IncomeStability {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum EmotionalTolerance {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DecisionDiscipline {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RebalancingFrequency {
+  ANNUAL
+  THRESHOLD_BASED
+}
+
+enum AwarenessLayerCategory {
+  ROOT
+  EXAMINE
+  REFUTE
+}
+
+enum LoadoutSlotType {
+  PRIMARY_WEAPON
+  SECONDARY_WEAPON
+  GRENADE
+  ARMOR_ABILITY
+  TACTICAL_PACKAGE
+  SUPPORT_UPGRADE
+}
+
+// Models
+model User {
+  id                         String      @id @default(uuid())
+  email                      String      @unique @db.VarChar(255)
+  username                   String      @unique @db.VarChar(100)
+  passwordHash               String      @db.VarChar(255)
+  currentSeason              Season      @default(SPRING)
+  seasonStartDate            DateTime    @default(now())
+  overallXP                  Int         @default(0)
+  overallRank                OverallRank @default(RECRUIT)
+  overallLevel               Int         @default(1)
+  hasCompletedQuestionnaire  Boolean     @default(false)
+  isAdmin                    Boolean     @default(false) // Admin access - only configurable in database
+  lastTickAt                 DateTime? // Last daily tick timestamp for energy reset and decay
+  lastWeeklyTickAt           DateTime? // Last weekly tick timestamp for over-optimisation evaluation
+  // Burnout tracking
+  isInBurnout                Boolean     @default(false)
+  burnoutTriggeredAt         DateTime? // When burnout was triggered
+  consecutiveLowCapacityDays Int         @default(0) // Consecutive daily ticks with Capacity < 20
+  // Capacity/Health System tracking
+  lastRecoveryActionAt       DateTime? // Last recovery action timestamp
+  consecutiveHighEffortDays  Int         @default(0) // Consecutive days with >80% energy expenditure
+  lastWeeklyRecoveryAt       DateTime? // Last weekly recovery application timestamp
+  recoveryActionsThisWeek    Int         @default(0) // Count of recovery actions in current week
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @updatedAt
+
+  // Relations
+  cloud                      Cloud?
+  resources                  Resources?
+  xp                         XP?
+  engines                    Engine[]
+  seasonHistory              SeasonHistory[]
+  milestones                 Milestone[]
+  activityLogs               ActivityLog[]
+  trainingProgress           TrainingProgress[]
+  investments                Investment[]
+  agentSessions              AgentSession[]
+  teamSessions               TeamSession[]
+  agentRecommendations       AgentRecommendation[]
+  teamRecommendations        TeamRecommendation[]
+  financialData              UserFinancialData[]
+  artifacts                  UserArtifact[]
+  auditLogs                  AuditLog[]
+  portfolioRebalancingConfig PortfolioRebalancingConfig?
+  sleepLogs                  SleepLog[]
+  energyBoosts               EnergyBoost[]
+  loadouts                   Loadout[]
+  blogPosts                  BlogPost[]
+
+  @@map("users")
+}
+
+model Cloud {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  capacityStrength    Int      @default(50) // 0-100
+  enginesStrength     Int      @default(50) // 0-100
+  oxygenStrength      Int      @default(50) // 0-100
+  meaningStrength     Int      @default(50) // 0-100
+  optionalityStrength Int      @default(50) // 0-100
+  lastUpdated         DateTime @default(now()) @updatedAt
+
+  @@map("clouds")
+}
+
+model Resources {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oxygen           Decimal   @default(0) @db.Decimal(10, 2) // months covered
+  water            Int       @default(50) // 0-100
+  gold             Decimal   @default(0) @db.Decimal(15, 2) // currency
+  armor            Int       @default(0) // 0-100
+  keys             Int       @default(0) // count of unlocked options
+  energy           Int       @default(100) // 0-110, daily energy budget, modified by Capacity
+  energyRestoredAt DateTime? // Timestamp when energy was last restored (for live burndown)
+  lastUpdated      DateTime  @default(now()) @updatedAt
+
+  @@map("resources")
+}
+
+model XP {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallXP     Int         @default(0)
+  overallRank   OverallRank @default(RECRUIT)
+  overallLevel  Int         @default(1)
+  capacityXP    Int         @default(0)
+  enginesXP     Int         @default(0)
+  oxygenXP      Int         @default(0)
+  meaningXP     Int         @default(0)
+  optionalityXP Int         @default(0)
+  lastUpdated   DateTime    @default(now()) @updatedAt
+
+  @@map("xp")
+}
+
+model Engine {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           EngineType
+  name           String       @db.VarChar(255)
+  description    String?      @db.Text
+  fragilityScore Int          @default(50) // 0-100, lower = more fragile
+  currentOutput  Decimal      @default(0) @db.Decimal(10, 2) // Oxygen per month
+  status         EngineStatus @default(PLANNING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@map("engines")
+}
+
+model SeasonHistory {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season           Season
+  startDate        DateTime
+  endDate          DateTime?
+  reason           String?   @db.Text
+  achievements     Json? // JSON array of achievements
+  resourcesAtStart Json? // Snapshot of resources
+  resourcesAtEnd   Json? // Snapshot of resources
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([season])
+  @@index([startDate])
+  @@map("season_history")
+}
+
+model Milestone {
+  id                 String        @id @default(uuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestoneType      MilestoneType
+  achievedDate       DateTime      @default(now())
+  valueAtAchievement Decimal?      @db.Decimal(15, 2)
+  unlockedKeys       Int           @default(0)
+  createdAt          DateTime      @default(now())
+
+  @@unique([userId, milestoneType])
+  @@index([userId])
+  @@index([milestoneType])
+  @@map("milestones")
+}
+
+model ActivityLog {
+  id               String       @id @default(uuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityType     ActivityType
+  overallXPGained  Int          @default(0)
+  categoryXPGain   Json // { capacity: 0, engines: 0, oxygen: 0, meaning: 0, optionality: 0 }
+  resourceChanges  Json? // { oxygen: 0, water: 0, gold: 0, armor: 0, keys: 0 }
+  seasonContext    Season
+  seasonMultiplier Decimal      @default(1.0) @db.Decimal(3, 2)
+  description      String?      @db.Text
+  timestamp        DateTime     @default(now())
+
+  @@index([userId])
+  @@index([activityType])
+  @@index([timestamp])
+  @@index([seasonContext])
+  @@map("activity_logs")
+}
+
+model TrainingModule {
+  id            String             @id @default(uuid())
+  type          TrainingModuleType @unique
+  title         String             @db.VarChar(255)
+  description   String             @db.Text
+  icon          String?            @db.VarChar(100)
+  order         Int                @default(0)
+  requiredRank  OverallRank? // Minimum rank to unlock
+  requiredTasks Int? // Number of previous module tasks to complete
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  tasks TrainingTask[]
+
+  @@map("training_modules")
+}
+
+model TrainingTask {
+  id                   String         @id @default(uuid())
+  moduleId             String
+  module               TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title                String         @db.VarChar(255)
+  description          String         @db.Text
+  instructions         String         @db.Text
+  order                Int            @default(0)
+  xpReward             Int            @default(10)
+  categoryXP           Json // { capacity: 0, engines: 0, oxygen: 0, meaning: 0, optionality: 0 }
+  resourceReward       Json? // { oxygen: 0, water: 0, gold: 0, armor: 0, keys: 0 }
+  requiresVerification Boolean        @default(false) // User must mark as complete
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  progress TrainingProgress[]
+
+  @@index([moduleId])
+  @@index([order])
+  @@map("training_tasks")
+}
+
+model TrainingProgress {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String
+  task        TrainingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  status      TaskStatus   @default(LOCKED)
+  completedAt DateTime?
+  notes       String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@index([taskId])
+  @@index([status])
+  @@map("training_progress")
+}
+
+model Investment {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          InvestmentType
+  name          String         @db.VarChar(255) // e.g., "Bitcoin", "S&P 500 Index", "Emergency Fund"
+  description   String?        @db.Text
+  amount        Decimal        @default(0) @db.Decimal(15, 2) // Current invested amount
+  initialAmount Decimal        @default(0) @db.Decimal(15, 2) // Original investment
+  expectedYield Decimal        @default(0) @db.Decimal(5, 2) // Annual yield percentage (e.g., 4.5 for 4.5%)
+  currentValue  Decimal        @default(0) @db.Decimal(15, 2) // Current market value
+  totalReturn   Decimal        @default(0) @db.Decimal(15, 2) // Total gains/losses
+  lastUpdated   DateTime       @default(now()) @updatedAt
+  createdAt     DateTime       @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@map("investments")
+}
+
+// Master Money System Models
+
+model Agent {
+  id          String    @id @default(uuid())
+  type        AgentType @unique
+  name        String    @db.VarChar(255)
+  description String    @db.Text
+  expertise   String    @db.Text
+  avatar      String?   @db.VarChar(255)
+  order       Int       @default(0)
+  metadata    Json? // JSON object with pro tips, what to avoid, best practices
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guides            MoneyGuide[]
+  teamAgents        TeamAgent[]
+  leadTeams         Team[]                @relation("TeamLead")
+  sessions          AgentSession[]
+  knowledgeArticles KnowledgeArticle[]
+  recommendations   AgentRecommendation[]
+
+  @@map("agents")
+}
+
+model Team {
+  id              String     @id @default(uuid())
+  name            String     @db.VarChar(255)
+  domain          TeamDomain @unique
+  description     String     @db.Text
+  icon            String?    @db.VarChar(255)
+  order           Int        @default(0)
+  teamLeadAgentId String?
+  teamLeadAgent   Agent?     @relation("TeamLead", fields: [teamLeadAgentId], references: [id], onDelete: SetNull)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  teamAgents          TeamAgent[]
+  guides              MoneyGuide[]
+  productAssociations TeamProductAssociation[]
+  sessions            TeamSession[]
+  knowledgeArticles   KnowledgeArticle[]
+  recommendations     TeamRecommendation[]
+
+  @@index([domain])
+  @@map("teams")
+}
+
+model TeamAgent {
+  id        String        @id @default(uuid())
+  teamId    String
+  team      Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  agentId   String
+  agent     Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  role      TeamAgentRole
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  @@unique([teamId, agentId])
+  @@index([teamId])
+  @@index([agentId])
+  @@map("team_agents")
+}
+
+// Organization that owns products (e.g., "Nexus Motivus")
+model Organization {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@map("organizations")
+}
+
+// Product owned by Organization, independently of teams
+model Product {
+  id                String          @id @default(uuid())
+  organizationId    String
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  name              String          @db.VarChar(255)
+  description       String          @db.Text
+  type              TeamProductType
+  icon              String?         @db.VarChar(255)
+  features          Json? // JSON object with product features
+  integrationPoints Json? // JSON object describing integration points with existing systems
+  isActive          Boolean         @default(true)
+  order             Int             @default(0)
+  // Product access and security
+  url               String?         @db.VarChar(500) // Link to actual product/app (e.g., AWS service URL)
+  accessUrl         String?         @db.VarChar(500) // User-facing access URL
+  securityLevel     String?         @db.VarChar(50) // e.g., "HIGH", "MEDIUM", "LOW"
+  requiresAuth      Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  teamAssociations TeamProductAssociation[]
+  security         ProductSecurity?
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([isActive])
+  @@index([securityLevel])
+  @@map("products")
+}
+
+// Product Security Documentation and Procedures
+// Managed by Security Specialist agents
+model ProductSecurity {
+  id                     String    @id @default(uuid())
+  productId              String    @unique
+  product                Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Security certifications and compliance
+  complianceStandards    Json? // Array of standards: ["SOC2", "GDPR", "PCI-DSS", "HIPAA"]
+  securityCertifications Json? // Array of certifications with dates
+  // Data protection
+  encryptionAtRest       Boolean   @default(true)
+  encryptionInTransit    Boolean   @default(true)
+  encryptionAlgorithm    String?   @db.VarChar(100) // e.g., "AES-256", "TLS 1.3"
+  dataRetentionPolicy    String?   @db.Text
+  // Access control
+  authenticationMethod   String?   @db.VarChar(100) // e.g., "OAuth2", "SAML", "MFA"
+  authorizationModel     String?   @db.VarChar(100) // e.g., "RBAC", "ABAC"
+  // Security procedures (documented by Security Specialist)
+  securityProcedures     Json? // Array of security procedures and protocols
+  incidentResponsePlan   String?   @db.Text
+  auditLogging           Boolean   @default(true)
+  // Security reviews
+  lastSecurityReview     DateTime?
+  nextSecurityReview     DateTime?
+  securityReviewerId     String? // Agent ID of Security Specialist who reviewed
+  // Documentation
+  securityDocumentation  String?   @db.Text // Link to security documentation
+  riskAssessment         Json? // Risk assessment details
+  vulnerabilities        Json? // Known vulnerabilities and mitigations
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([productId])
+  @@map("product_security")
+}
+
+// Many-to-many association: Teams can use Products (products exist independently)
+model TeamProductAssociation {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, productId])
+  @@index([teamId])
+  @@index([productId])
+  @@map("team_product_associations")
+}
+
+model MoneyGuide {
+  id            String        @id @default(uuid())
+  agentId       String?
+  agent         Agent?        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  title         String        @db.VarChar(255)
+  description   String        @db.Text
+  steps         Json // JSON array of guide steps with conditional logic
+  category      GuideCategory
+  difficulty    Int           @default(1) // 1-5 scale
+  estimatedTime Int? // Estimated minutes
+  prerequisites Json? // JSON array of prerequisite guide IDs or conditions
+  isTeamGuide   Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  agentSessions       AgentSession[]
+  teamSessions        TeamSession[]
+  recommendations     AgentRecommendation[]
+  teamRecommendations TeamRecommendation[]
+
+  @@index([agentId])
+  @@index([teamId])
+  @@index([category])
+  @@map("money_guides")
+}
+
+model AgentSession {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  guideId     String?
+  guide       MoneyGuide?   @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  currentStep Int           @default(0)
+  status      SessionStatus @default(ACTIVE)
+  context     Json? // JSON object with session context
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([status])
+  @@map("agent_sessions")
+}
+
+model TeamSession {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  guideId     String?
+  guide       MoneyGuide?   @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  currentStep Int           @default(0)
+  status      SessionStatus @default(ACTIVE)
+  context     Json? // JSON object with session context
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([status])
+  @@map("team_sessions")
+}
+
+model KnowledgeArticle {
+  id        String   @id @default(uuid())
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  title     String   @db.VarChar(255)
+  content   String   @db.Text
+  // embedding will be stored as vector type in PostgreSQL via migration
+  // We'll use raw SQL queries to work with pgvector embeddings
+  metadata  Json? // JSON object with additional metadata (can include embedding for application-level handling)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([teamId])
+  @@map("knowledge_articles")
+}
+
+model AgentRecommendation {
+  id          String                 @id @default(uuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       Agent                  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  guideId     String?
+  guide       MoneyGuide?            @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  priority    RecommendationPriority @default(MEDIUM)
+  reasoning   String                 @db.Text
+  userContext Json? // JSON object with user context used for recommendation
+  createdAt   DateTime               @default(now())
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([priority])
+  @@map("agent_recommendations")
+}
+
+model TeamRecommendation {
+  id          String                 @id @default(uuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  guideId     String?
+  guide       MoneyGuide?            @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  priority    RecommendationPriority @default(MEDIUM)
+  reasoning   String                 @db.Text
+  userContext Json? // JSON object with user context used for recommendation
+  createdAt   DateTime               @default(now())
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([priority])
+  @@map("team_recommendations")
+}
+
+model UserFinancialData {
+  id              String                @id @default(uuid())
+  userId          String
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataType        UserFinancialDataType
+  encryptedData   String                @db.Text
+  encryptionKeyId String                @db.VarChar(255)
+  metadata        Json? // JSON object with additional metadata
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([dataType])
+  @@map("user_financial_data")
+}
+
+// User Artifacts - Saved recommendations and outputs from products
+model UserArtifact {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String? // Optional link to specific product
+  productName String   @db.VarChar(255) // Product name for display
+  type        String   @db.VarChar(50) // RECOMMENDATION, CALCULATION, SCENARIO, REPORT, NOTE
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  data        Json // The actual artifact data (calculations, recommendations, etc.)
+  tags        String[] // Optional tags for organization
+  isFavorite  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([type])
+  @@index([isFavorite])
+  @@index([createdAt])
+  @@map("user_artifacts")
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action       AuditAction
+  resourceType String      @db.VarChar(100)
+  resourceId   String      @db.VarChar(255)
+  ipAddress    String?     @db.VarChar(45) // IPv4 or IPv6
+  userAgent    String?     @db.VarChar(500)
+  timestamp    DateTime    @default(now())
+  metadata     Json? // JSON object with additional audit information
+
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model PowerLaw {
+  id                  String         @id @default(uuid())
+  lawNumber           Int // 1-48
+  title               String         @db.VarChar(255)
+  originalDescription String         @db.Text
+  domain              PowerLawDomain
+  domainApplication   String         @db.Text // How this law applies to the specific domain
+  category            String?        @db.VarChar(50) // Category: POWER, FUNDAMENTAL, STRATEGIC, SYSTEMIC, etc.
+  strategies          Json // JSON array of strategies for applying this law
+  examples            Json? // JSON array of real-world examples
+  warnings            Json? // JSON array of warnings/things to avoid
+  counterStrategies   Json? // JSON array of how others might use this against you
+  order               Int            @default(0)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@unique([domain, lawNumber])
+  @@index([domain])
+  @@index([lawNumber])
+  @@index([category])
+  @@map("power_laws")
+}
+
+model BibleLaw {
+  id                    String         @id @default(uuid())
+  lawNumber             Int // Number for ordering
+  title                 String         @db.VarChar(255)
+  scriptureReference    String         @db.VarChar(255) // e.g., "Proverbs 22:7", "1 Timothy 6:10"
+  originalText          String?        @db.Text // Optional: the actual Bible verse text
+  domain                BibleLawDomain
+  domainApplication     String         @db.Text // How this biblical principle applies to the specific domain
+  category              String?        @db.VarChar(50) // Category: BIBLICAL, FUNDAMENTAL, STRATEGIC, SYSTEMIC, etc.
+  principles            Json // JSON array of biblical principles/teachings
+  practicalApplications Json // JSON array of practical ways to apply this in the domain
+  examples              Json? // JSON array of real-world examples
+  warnings              Json? // JSON array of warnings/things to avoid
+  relatedVerses         Json? // JSON array of related scripture references
+  order                 Int            @default(0)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@unique([domain, lawNumber])
+  @@index([domain])
+  @@index([lawNumber])
+  @@index([category])
+  @@map("bible_laws")
+}
+
+enum BoostType {
+  CAFFEINE
+  FOOD
+  SUPPLEMENT
+  OTHER
+}
+
+model SleepLog {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime  @db.Date // Date of the sleep (not when logged)
+  hoursSlept     Decimal   @db.Decimal(3, 1) // e.g., 7.5 hours
+  quality        Int // 1-10 scale (self-reported or calculated)
+  bedTime        DateTime? // When they went to bed
+  wakeTime       DateTime? // When they woke up
+  energyRestored Int // How much energy was restored (calculated)
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, date]) // One sleep log per day per user
+  @@index([userId])
+  @@index([date])
+  @@map("sleep_logs")
+}
+
+model EnergyBoost {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      BoostType
+  amount    Int // Temporary energy added
+  duration  Int // Minutes until decay starts
+  decayRate Decimal   @db.Decimal(5, 2) // Energy lost per hour
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("energy_boosts")
+}
+
+model PortfolioRebalancingConfig {
+  id                   String               @id @default(uuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeHorizonYears     Int // Investment time horizon in years
+  incomeStability      IncomeStability // HIGH, MEDIUM, LOW
+  emotionalTolerance   EmotionalTolerance // LOW, MEDIUM, HIGH - tolerance for drawdowns
+  decisionDiscipline   DecisionDiscipline // LOW, MEDIUM, HIGH - discipline under stress
+  targetStocksPercent  Decimal              @db.Decimal(5, 2) // Target allocation for stocks (0-100)
+  targetBondsPercent   Decimal              @db.Decimal(5, 2) // Target allocation for bonds (0-100)
+  rebalancingFrequency RebalancingFrequency // ANNUAL, THRESHOLD_BASED
+  driftThreshold       Decimal              @db.Decimal(5, 2) // Percentage drift before rebalancing (e.g., 5.0 for 5%)
+  preferContributions  Boolean              @default(true) // Prefer new contributions over selling
+  bondPurpose          Json // Array: ["income", "optionality", "emotional_stability"]
+  lastRebalancedAt     DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([userId])
+  @@map("portfolio_rebalancing_config")
+}
+
+model AwarenessLayer {
+  id          String                 @id @default(uuid())
+  title       String                 @db.VarChar(255)
+  description String?                @db.Text
+  category    AwarenessLayerCategory
+  parentId    String?
+  parent      AwarenessLayer?        @relation("AwarenessLayerTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    AwarenessLayer[]       @relation("AwarenessLayerTree")
+  orderIndex  Int                    @default(0)
+  isRoot      Boolean                @default(false)
+  metadata    Json? // Stores team system prompt content, indicators, protocols
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([parentId])
+  @@index([category])
+  @@index([orderIndex])
+  @@index([title])
+  @@map("awareness_layers")
+}
+
+// Travel System Models
+
+model Location {
+  id               String    @id @default(uuid())
+  name             String    @db.VarChar(255)
+  city             String?   @db.VarChar(100)
+  country          String?   @db.VarChar(100)
+  description      String?   @db.Text
+  officialUrl      String?   @db.VarChar(500)
+  category         String?   @db.VarChar(100)
+  tags             String[]
+  metadata         Json? // Additional location metadata
+  googlePlaceId    String?   @unique @db.VarChar(255) // Google Places API ID for caching
+  latitude         Decimal?  @db.Decimal(10, 8)
+  longitude        Decimal?  @db.Decimal(11, 8)
+  rating           Decimal?  @db.Decimal(3, 2)
+  userRatingsTotal Int?      @default(0)
+  cachedAt         DateTime? // Timestamp for cache invalidation
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  savedLocations  SavedLocation[]
+  locationQueries LocationQuery[]
+
+  @@index([city])
+  @@index([country])
+  @@index([category])
+  @@index([googlePlaceId])
+  @@index([cachedAt])
+  @@map("locations")
+}
+
+model LocationQuery {
+  id        String   @id @default(uuid())
+  userId    String   @db.VarChar(255)
+  queryText String   @db.Text
+  location  String?  @db.VarChar(255) // City/country context
+  results   Json? // Array of location results
+  createdAt DateTime @default(now())
+
+  locationId  String?
+  locationRef Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("location_queries")
+}
+
+model SavedLocation {
+  id         String   @id @default(uuid())
+  userId     String   @db.VarChar(255)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  notes      String?  @db.Text
+  isFavorite Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, locationId])
+  @@index([userId])
+  @@index([isFavorite])
+  @@index([createdAt])
+  @@map("saved_locations")
+}
+
+model LocationCache {
+  id            String   @id @default(uuid())
+  googlePlaceId String   @unique @db.VarChar(255)
+  data          Json // Cached Google Places API response
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([googlePlaceId])
+  @@index([expiresAt])
+  @@map("location_cache")
+}
+
+// Loadout System Models
+
+model Loadout {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(255) // e.g., "Loadout 1", "Aggressive Growth"
+  isActive  Boolean  @default(false)
+  isPreset  Boolean  @default(false) // True for preset loadouts, false for user-created custom loadouts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slots LoadoutSlot[]
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([isPreset])
+  @@map("loadouts")
+}
+
+model LoadoutItem {
+  id          String          @id @default(uuid())
+  name        String          @db.VarChar(255) // e.g., "Resilience", "Courage"
+  slotType    LoadoutSlotType
+  description String          @db.Text
+  powerLevel  Int             @default(100) // 50-500 range
+  benefits    Json // JSON object with stat modifiers: { capacity: 10, xpGain: 0.05, energyEfficiency: 0.1 }
+  icon        String?         @db.VarChar(255) // Icon identifier or URL
+  isDefault   Boolean         @default(false) // Default items available to all users
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  slots LoadoutSlot[]
+
+  @@unique([name, slotType]) // Unique item name per slot type
+  @@index([slotType])
+  @@index([isDefault])
+  @@map("loadout_items")
+}
+
+model LoadoutSlot {
+  id        String          @id @default(uuid())
+  loadoutId String
+  loadout   Loadout         @relation(fields: [loadoutId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      LoadoutItem     @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  slotType  LoadoutSlotType
+  createdAt DateTime        @default(now())
+
+  @@unique([loadoutId, slotType]) // One item per slot type per loadout
+  @@index([loadoutId])
+  @@index([itemId])
+  @@index([slotType])
+  @@map("loadout_slots")
+}
+
+// Reality Hierarchy Models
+
+enum RealityNodeType {
+  REALITY
+  UNIVERSAL_FOUNDATION
+  CATEGORY
+  LAW
+  PRINCIPLE
+  FRAMEWORK
+  AGENT
+  ENVIRONMENT
+}
+
+enum RealityNodeCategory {
+  FOUNDATIONAL
+  FUNDAMENTAL
+  POWER
+  BIBLICAL
+  STRATEGIC
+  SYSTEMIC
+  CROSS_SYSTEM
+  SYSTEM_TIER
+  SYSTEM
+  HUMAN
+  COLLECTIVE
+  ARTIFICIAL
+  ORGANISATIONAL
+  HYBRID
+  PHYSICAL
+  ECONOMIC
+  DIGITAL
+  SOCIAL
+  BIOLOGICAL
+}
+
+model RealityNode {
+  id          String               @id @default(uuid())
+  title       String               @db.VarChar(255)
+  description String?              @db.Text
+  nodeType    RealityNodeType
+  category    RealityNodeCategory?
+  parentId    String?
+  parent      RealityNode?         @relation("RealityNodeTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    RealityNode[]        @relation("RealityNodeTree")
+  orderIndex  Int                  @default(0)
+  immutable   Boolean              @default(false)
+  metadata    Json? // Additional node data, relationships, etc.
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@unique([title, parentId]) // Unique title per parent
+  @@index([parentId])
+  @@index([nodeType])
+  @@index([category])
+  @@index([orderIndex])
+  @@index([immutable])
+  @@map("reality_nodes")
+}
+
+// Chat Models for AI Guide Bot
+model ChatSession {
+  id        String        @id @default(uuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  sessionId String
+  role      String // 'user' | 'assistant' | 'system'
+  content   String      @db.Text
+  createdAt DateTime    @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model BlogPost {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  title       String   @db.VarChar(255)
+  category    String   @db.VarChar(100)
+  subcategory String?  @db.VarChar(100)
+  tags        String[] // Array of tags
+  content     String   @db.Text
+  filePath    String   @db.VarChar(500) // Path to markdown file
+  published   Boolean  @default(false) // Whether post is published
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([slug])
+  @@index([published])
+  @@map("blog_posts")
+}

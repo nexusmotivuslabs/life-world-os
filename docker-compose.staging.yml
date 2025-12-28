@@ -1,0 +1,100 @@
+version: '3.8'
+
+# Staging Environment
+# Use this for staging/testing environments (cloud-ready)
+
+services:
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: ${STAGING_DB_CONTAINER_NAME:-life-db-staging}
+    environment:
+      POSTGRES_USER: ${STAGING_DB_USER:-lifeworld_staging}
+      POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD:-lifeworld_staging_secure}
+      POSTGRES_DB: ${STAGING_DB_NAME:-lifeworld_staging}
+    ports:
+      - "${STAGING_DB_PORT:-5434}:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${STAGING_DB_USER:-lifeworld_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+    # Cloud-ready: Can be replaced with managed database service
+
+  backend-staging:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.staging
+      args:
+        NODE_ENV: staging
+        BUILD_VERSION: ${BUILD_VERSION:-staging-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: ${STAGING_BACKEND_IMAGE_NAME:-life-world-os-backend-staging}:${BUILD_VERSION:-latest}
+    container_name: ${STAGING_BACKEND_CONTAINER_NAME:-life-world-os-backend-staging}
+    env_file:
+      - .env.staging
+    environment:
+      - NODE_ENV=staging
+      - DATABASE_URL=${STAGING_DATABASE_URL:-postgresql://${STAGING_DB_USER:-lifeworld_staging}:${STAGING_DB_PASSWORD:-lifeworld_staging_secure}@postgres-staging:5432/${STAGING_DB_NAME:-lifeworld_staging}}
+      - PORT=${STAGING_BACKEND_PORT:-3002}
+      - JWT_SECRET=${STAGING_JWT_SECRET:-staging-jwt-secret-min-32-characters-change-in-production}
+      - JWT_EXPIRES_IN=${STAGING_JWT_EXPIRES_IN:-7d}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${STAGING_LOG_LEVEL:-info}
+    ports:
+      - "0.0.0.0:${STAGING_BACKEND_PORT:-3002}:${STAGING_BACKEND_PORT:-3002}"
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${STAGING_BACKEND_PORT:-3002}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+    command: sh -c "node dist/index.js 2>/dev/null || npx tsx src/index.ts"
+    # Cloud-ready: Can be deployed to ECS, Cloud Run, App Service, etc.
+
+  frontend-staging:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.staging
+      args:
+        VITE_API_URL: ${STAGING_API_URL:-http://localhost:3002}
+        NODE_ENV: staging
+        BUILD_VERSION: ${BUILD_VERSION:-staging-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_BRANCH: ${BUILD_BRANCH:-unknown}
+        BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-unknown}
+    image: ${STAGING_FRONTEND_IMAGE_NAME:-life-world-os-frontend-staging}:${BUILD_VERSION:-latest}
+    container_name: ${STAGING_FRONTEND_CONTAINER_NAME:-life-world-os-frontend-staging}
+    ports:
+      - "0.0.0.0:${STAGING_FRONTEND_PORT:-5174}:5174"
+    environment:
+      - VITE_API_URL=${STAGING_API_URL:-http://localhost:3002}
+    depends_on:
+      - backend-staging
+    networks:
+      - life-world-os-staging-network
+    restart: unless-stopped
+    # Cloud-ready: Can be deployed to S3+CloudFront, Cloud Storage+CDN, etc.
+
+networks:
+  life-world-os-staging-network:
+    driver: bridge
+
+volumes:
+  postgres_staging_data:
+    # Cloud-ready: Can be replaced with managed storage (EBS, Persistent Disk, etc.)

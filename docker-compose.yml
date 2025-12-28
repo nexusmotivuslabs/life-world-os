@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: life-world-os-db
+    environment:
+      POSTGRES_USER: lifeworld
+      POSTGRES_PASSWORD: lifeworld_dev
+      POSTGRES_DB: lifeworld
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifeworld"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-network
+
+networks:
+  life-world-os-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+

@@ -1,0 +1,163 @@
+{
+  "dashboard": {
+    "title": "Backend Metrics",
+    "tags": ["backend", "metrics", "api"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Backend Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"backend-dev|backend-local\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Total Requests/sec",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total{job=~\"backend-dev|backend-local\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (4xx + 5xx)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_4xx_errors{job=~\"backend-dev|backend-local\"}[5m])) + sum(rate(http_5xx_errors{job=~\"backend-dev|backend-local\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Response Time (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\"}[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Request Rate Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total{job=~\"backend-dev|backend-local\"}[5m])) by (method)",
+            "refId": "A",
+            "legendFormat": "{{method}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Response Time Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\"}[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\"}[5m])) by (le))",
+            "refId": "B",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_ms_bucket{job=~\"backend-dev|backend-local\"}[5m])) by (le))",
+            "refId": "C",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Response Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Error Breakdown",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(http_4xx_errors{job=~\"backend-dev|backend-local\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "4xx Errors"
+          },
+          {
+            "expr": "sum(rate(http_5xx_errors{job=~\"backend-dev|backend-local\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "5xx Errors"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Status Code Distribution",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_total{job=~\"backend-dev|backend-local\"}[5m])) by (status)",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}

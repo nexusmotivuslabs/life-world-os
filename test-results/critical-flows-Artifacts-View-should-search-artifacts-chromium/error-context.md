@@ -1,0 +1,314 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Life World OS" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e9]:
+          - link "Login" [ref=e10] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e11]
+            - text: Login
+          - link "Sign Up" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - img [ref=e15]
+            - text: Sign Up
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - navigation "Breadcrumb" [ref=e20]:
+          - link "Home" [ref=e22] [cursor=pointer]:
+            - /url: /
+            - img [ref=e23]
+            - generic [ref=e26]: Home
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - link "Choose Mode" [ref=e30] [cursor=pointer]:
+              - /url: /choose-plane
+              - generic [ref=e31]: Choose Mode
+          - generic [ref=e32]:
+            - img [ref=e33]
+            - link "Systems" [ref=e35] [cursor=pointer]:
+              - /url: /systems
+              - img [ref=e36]
+              - generic [ref=e38]: Systems
+          - generic [ref=e39]:
+            - img [ref=e40]
+            - generic [ref=e42]:
+              - img [ref=e43]
+              - generic [ref=e45]: Artifacts
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - img [ref=e49]
+              - heading "System Tiers" [level=1] [ref=e53]
+            - paragraph [ref=e54]: "Navigate systems organized by the universal tier hierarchy: Survival, Stability, Growth, Leverage, Expression"
+            - paragraph [ref=e55]: Switch between Tier View, List View, System Tree, and Artifacts to explore all available systems
+          - generic [ref=e57]:
+            - button "Tier View" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e64]: Tier View
+            - button "List View" [ref=e65] [cursor=pointer]:
+              - generic [ref=e66]:
+                - img [ref=e67]
+                - generic [ref=e68]: List View
+            - button "Artifacts" [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]:
+                - img [ref=e71]
+                - generic [ref=e73]: Artifacts
+            - button "System Tree" [ref=e75] [cursor=pointer]:
+              - generic [ref=e76]:
+                - img [ref=e77]
+                - generic [ref=e81]: System Tree
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - heading "Artifacts" [level=1] [ref=e85]
+                - generic [ref=e86]: Artifacts
+              - paragraph [ref=e87]: Tools and concepts that support your systems. View resources, stats, concepts, laws, principles, frameworks, and weapons. Optional but valuable for understanding how to optimize system performance.
+              - paragraph [ref=e88]: Each system leverages artifacts for better outcomes • Explore how they enhance your operations
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e91]
+                - textbox "Search artifacts by name, description, tags, or details..." [active] [ref=e94]: energy
+                - button [ref=e95] [cursor=pointer]:
+                  - img [ref=e96]
+              - generic [ref=e99]:
+                - heading "Filter by Category" [level=3] [ref=e101]
+                - generic [ref=e102]:
+                  - button "🌐 All 31 items" [ref=e103] [cursor=pointer]:
+                    - generic [ref=e104]:
+                      - generic [ref=e106]: 🌐
+                      - generic [ref=e107]: All
+                      - generic [ref=e108]: 31 items
+                  - button "Resources 6" [ref=e109] [cursor=pointer]:
+                    - generic [ref=e110]:
+                      - generic [ref=e113]: Resources
+                      - generic [ref=e114]: "6"
+                  - button "Stats 4" [ref=e115] [cursor=pointer]:
+                    - generic [ref=e116]:
+                      - generic [ref=e119]: Stats
+                      - generic [ref=e120]: "4"
+                  - button "Concepts 1" [ref=e121] [cursor=pointer]:
+                    - generic [ref=e122]:
+                      - generic [ref=e125]: Concepts
+                      - generic [ref=e126]: "1"
+                  - button "Laws 2" [ref=e127] [cursor=pointer]:
+                    - generic [ref=e128]:
+                      - generic [ref=e131]: Laws
+                      - generic [ref=e132]: "2"
+                  - button "Principles 15" [ref=e133] [cursor=pointer]:
+                    - generic [ref=e134]:
+                      - generic [ref=e137]: Principles
+                      - generic [ref=e138]: "15"
+                  - button "Frameworks 3" [ref=e139] [cursor=pointer]:
+                    - generic [ref=e140]:
+                      - generic [ref=e143]: Frameworks
+                      - generic [ref=e144]: "3"
+            - generic [ref=e145]:
+              - generic [ref=e146] [cursor=pointer]:
+                - generic [ref=e147]:
+                  - img [ref=e149]
+                  - generic [ref=e151]: Resources
+                - heading "Energy" [level=3] [ref=e153]
+                - paragraph [ref=e154]: Daily budget that enables all system operations. Energy powers Finance, Health, and other systems, forcing prioritization of high-value activities across competing demands.
+                - list [ref=e156]:
+                  - listitem [ref=e157]:
+                    - generic [ref=e158]: •
+                    - generic [ref=e159]: Enables actions across all systems
+                  - listitem [ref=e160]:
+                    - generic [ref=e161]: •
+                    - generic [ref=e162]: Systems consume energy for operations
+                  - listitem [ref=e163]:
+                    - generic [ref=e164]: •
+                    - generic [ref=e165]: Resets at daily tick
+                  - listitem [ref=e166]: +4 more
+                - generic [ref=e167]:
+                  - generic [ref=e168]: Click to learn more
+                  - img [ref=e169]
+              - generic [ref=e171] [cursor=pointer]:
+                - generic [ref=e172]:
+                  - img [ref=e174]
+                  - generic [ref=e177]: Stats
+                - heading "Capacity" [level=3] [ref=e179]
+                - paragraph [ref=e180]: Foundation for system performance. High Capacity enables sustained operation across Finance, Health, and Energy systems. Low Capacity degrades all system effectiveness and increases burnout risk.
+                - list [ref=e182]:
+                  - listitem [ref=e183]:
+                    - generic [ref=e184]: •
+                    - generic [ref=e185]: "Range: 0-100"
+                  - listitem [ref=e186]:
+                    - generic [ref=e187]: •
+                    - generic [ref=e188]: Modifies usable Energy cap across all systems
+                  - listitem [ref=e189]:
+                    - generic [ref=e190]: •
+                    - generic [ref=e191]: Low Capacity = degraded system performance
+                  - listitem [ref=e192]: +3 more
+                - generic [ref=e193]:
+                  - generic [ref=e194]: Click to learn more
+                  - img [ref=e195]
+              - generic [ref=e197] [cursor=pointer]:
+                - generic [ref=e198]:
+                  - img [ref=e200]
+                  - generic [ref=e203]: Laws
+                - heading "48 Laws of Power" [level=3] [ref=e205]
+                - paragraph [ref=e206]: "Strategic principles applied across domains: Money, Career, Business, Relationships, Leadership."
+                - list [ref=e208]:
+                  - listitem [ref=e209]:
+                    - generic [ref=e210]: •
+                    - generic [ref=e211]: 48 strategic principles
+                  - listitem [ref=e212]:
+                    - generic [ref=e213]: •
+                    - generic [ref=e214]: Applied across multiple domains
+                  - listitem [ref=e215]:
+                    - generic [ref=e216]: •
+                    - generic [ref=e217]: Money, Career, Business domains
+                  - listitem [ref=e218]: +2 more
+                - generic [ref=e219]:
+                  - generic [ref=e220]: Click to learn more
+                  - img [ref=e221]
+              - generic [ref=e223] [cursor=pointer]:
+                - generic [ref=e224]:
+                  - img [ref=e226]
+                  - generic [ref=e228]: Principles
+                - heading "Energy Conservation Principle" [level=3] [ref=e230]
+                - paragraph [ref=e231]: Total energy in a system remains constant; it can only be transferred or transformed, never created or destroyed.
+                - list [ref=e233]:
+                  - listitem [ref=e234]:
+                    - generic [ref=e235]: •
+                    - generic [ref=e236]: First law of thermodynamics
+                  - listitem [ref=e237]:
+                    - generic [ref=e238]: •
+                    - generic [ref=e239]: Energy transfers between forms
+                  - listitem [ref=e240]:
+                    - generic [ref=e241]: •
+                    - generic [ref=e242]: Efficiency matters in transformations
+                  - listitem [ref=e243]: +2 more
+                - generic [ref=e244]:
+                  - generic [ref=e245]: Click to learn more
+                  - img [ref=e246]
+              - generic [ref=e248] [cursor=pointer]:
+                - generic [ref=e249]:
+                  - img [ref=e251]
+                  - generic [ref=e253]: Principles
+                - heading "Recovery > Depletion" [level=3] [ref=e255]
+                - paragraph [ref=e256]: Long-term performance requires that recovery consistently exceeds depletion.
+                - list [ref=e258]:
+                  - listitem [ref=e259]:
+                    - generic [ref=e260]: •
+                    - generic [ref=e261]: Sustainable performance equation
+                  - listitem [ref=e262]:
+                    - generic [ref=e263]: •
+                    - generic [ref=e264]: Sleep is non-negotiable
+                  - listitem [ref=e265]:
+                    - generic [ref=e266]: •
+                    - generic [ref=e267]: Active recovery strategies
+                  - listitem [ref=e268]: +2 more
+                - generic [ref=e269]:
+                  - generic [ref=e270]: Click to learn more
+                  - img [ref=e271]
+              - generic [ref=e273] [cursor=pointer]:
+                - generic [ref=e274]:
+                  - img [ref=e276]
+                  - generic [ref=e278]: Principles
+                - heading "Energy Conservation Law" [level=3] [ref=e280]
+                - paragraph [ref=e281]: You have finite energy; allocate it strategically to high-leverage activities.
+                - list [ref=e283]:
+                  - listitem [ref=e284]:
+                    - generic [ref=e285]: •
+                    - generic [ref=e286]: Energy is your scarcest resource
+                  - listitem [ref=e287]:
+                    - generic [ref=e288]: •
+                    - generic [ref=e289]: Prioritization is essential
+                  - listitem [ref=e290]:
+                    - generic [ref=e291]: •
+                    - generic [ref=e292]: Say no to protect energy
+                  - listitem [ref=e293]: +2 more
+                - generic [ref=e294]:
+                  - generic [ref=e295]: Click to learn more
+                  - img [ref=e296]
+              - generic [ref=e298] [cursor=pointer]:
+                - generic [ref=e299]:
+                  - img [ref=e301]
+                  - generic [ref=e303]: Principles
+                - heading "Sustainable Rhythm" [level=3] [ref=e305]
+                - paragraph [ref=e306]: Establish consistent, repeatable rhythms for work, rest, and recovery to maximize long-term output.
+                - list [ref=e308]:
+                  - listitem [ref=e309]:
+                    - generic [ref=e310]: •
+                    - generic [ref=e311]: Consistency > Heroic bursts
+                  - listitem [ref=e312]:
+                    - generic [ref=e313]: •
+                    - generic [ref=e314]: Circadian rhythm optimization
+                  - listitem [ref=e315]:
+                    - generic [ref=e316]: •
+                    - generic [ref=e317]: Weekly/daily cycles
+                  - listitem [ref=e318]: +2 more
+                - generic [ref=e319]:
+                  - generic [ref=e320]: Click to learn more
+                  - img [ref=e321]
+              - generic [ref=e323] [cursor=pointer]:
+                - generic [ref=e324]:
+                  - img [ref=e326]
+                  - generic [ref=e328]: Principles
+                - heading "Capacity Building" [level=3] [ref=e330]
+                - paragraph [ref=e331]: Systematically increase your energy capacity through progressive overload and recovery.
+                - list [ref=e333]:
+                  - listitem [ref=e334]:
+                    - generic [ref=e335]: •
+                    - generic [ref=e336]: Train your capacity like a muscle
+                  - listitem [ref=e337]:
+                    - generic [ref=e338]: •
+                    - generic [ref=e339]: Stress + Recovery = Growth
+                  - listitem [ref=e340]:
+                    - generic [ref=e341]: •
+                    - generic [ref=e342]: Physical & mental capacity
+                  - listitem [ref=e343]: +2 more
+                - generic [ref=e344]:
+                  - generic [ref=e345]: Click to learn more
+                  - img [ref=e346]
+              - generic [ref=e348] [cursor=pointer]:
+                - generic [ref=e349]:
+                  - img [ref=e351]
+                  - generic [ref=e353]: Principles
+                - heading "Burnout Prevention" [level=3] [ref=e355]
+                - paragraph [ref=e356]: Proactively manage energy depletion before it becomes chronic and leads to burnout.
+                - list [ref=e358]:
+                  - listitem [ref=e359]:
+                    - generic [ref=e360]: •
+                    - generic [ref=e361]: Early warning signs matter
+                  - listitem [ref=e362]:
+                    - generic [ref=e363]: •
+                    - generic [ref=e364]: Prevention > Recovery
+                  - listitem [ref=e365]:
+                    - generic [ref=e366]: •
+                    - generic [ref=e367]: Chronic depletion = burnout
+                  - listitem [ref=e368]: +2 more
+                - generic [ref=e369]:
+                  - generic [ref=e370]: Click to learn more
+                  - img [ref=e371]
+              - generic [ref=e373] [cursor=pointer]:
+                - generic [ref=e374]:
+                  - img [ref=e376]
+                  - generic [ref=e381]: Frameworks
+                - heading "Energy Frameworks" [level=3] [ref=e383]
+                - paragraph [ref=e384]: Structured approaches for capacity management, recovery planning, and performance optimization.
+                - list [ref=e386]:
+                  - listitem [ref=e387]:
+                    - generic [ref=e388]: •
+                    - generic [ref=e389]: Capacity Management Framework
+                  - listitem [ref=e390]:
+                    - generic [ref=e391]: •
+                    - generic [ref=e392]: Recovery Planning Framework
+                  - listitem [ref=e393]:
+                    - generic [ref=e394]: •
+                    - generic [ref=e395]: Performance Optimization Model
+                  - listitem [ref=e396]: +2 more
+                - generic [ref=e397]:
+                  - generic [ref=e398]: Click to learn more
+                  - img [ref=e399]
+  - button "Open Guide Bot" [ref=e401] [cursor=pointer]:
+    - img [ref=e404]
+```

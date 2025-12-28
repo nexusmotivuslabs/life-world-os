@@ -1,0 +1,42 @@
+# Development Dockerfile for Backend
+# Supports hot reload with volume mounts
+
+FROM node:20-alpine
+
+# Update npm to latest version (optional but recommended)
+RUN npm install -g npm@latest
+
+# Install OpenSSL and required libraries for Prisma
+RUN apk add --no-cache \
+    libc6-compat \
+    openssl \
+    openssl-dev \
+    openssl-libs-static \
+    ca-certificates
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Copy Prisma schema (needed for generate)
+COPY prisma ./prisma
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Copy source (will be mounted as volume for hot reload)
+COPY . .
+
+# Expose port
+EXPOSE 3001
+
+# Set OpenSSL path for Prisma
+ENV OPENSSL_CONF=/dev/null
+ENV PRISMA_ENGINES_MIRROR=https://binaries.prisma.sh
+
+# Run with hot reload (tsx watch)
+CMD ["npm", "run", "dev"]
+
+

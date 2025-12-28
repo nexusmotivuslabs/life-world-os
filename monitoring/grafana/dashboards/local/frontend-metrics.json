@@ -1,0 +1,136 @@
+{
+  "dashboard": {
+    "title": "Frontend Metrics",
+    "tags": ["frontend", "metrics", "ui"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Frontend Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"frontend-dev|frontend-local\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Uptime (seconds)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "frontend_uptime_seconds{job=~\"frontend-dev|frontend-local\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Total Requests/sec",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=~\"frontend-dev|frontend-local\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_4xx_total{job=~\"frontend-dev|frontend-local\"}[5m])) + sum(rate(http_requests_5xx_total{job=~\"frontend-dev|frontend-local\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Request Rate Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=~\"frontend-dev|frontend-local\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Error Rate Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_4xx_total{job=~\"frontend-dev|frontend-local\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "4xx Errors"
+          },
+          {
+            "expr": "sum(rate(http_requests_5xx_total{job=~\"frontend-dev|frontend-local\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "5xx Errors"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Uptime Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "frontend_uptime_seconds{job=~\"frontend-dev|frontend-local\"}",
+            "refId": "A",
+            "legendFormat": "Uptime"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Seconds"},
+          {"format": "short"}
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}
