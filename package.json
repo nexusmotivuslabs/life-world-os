@@ -101,6 +101,8 @@
     "sonar:setup": "./scripts/setup-sonarqube.sh",
     "sonar:analyze": "./scripts/run-sonarqube.sh",
     "sonar:analyze:docker": "./scripts/sonar-docker-analyze.sh",
+    "git:push": "./scripts/setup-github-remote.sh",
+    "git:push:all": "git push origin --all && git push origin --tags",
     "sonar:start": "./scripts/start-sonarqube.sh",
     "sonar:up": "docker-compose -f docker-compose.sonarqube.yml up -d",
     "sonar:down": "docker-compose -f docker-compose.sonarqube.yml down",
