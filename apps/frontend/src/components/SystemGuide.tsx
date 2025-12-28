@@ -10,7 +10,7 @@ export default function SystemGuide() {
       {/* Help Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-30 p-3 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg text-white transition-all hover:scale-110"
+        className="fixed bottom-6 right-28 z-30 p-3 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg text-white transition-all hover:scale-110"
         aria-label="Open system guide"
       >
         <HelpCircle className="w-6 h-6" />

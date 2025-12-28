@@ -27,7 +27,8 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "ollama:debug": "tsx scripts/ollama-debug.ts",
-    "fix:hierarchy": "./scripts/fix-hierarchy.sh"
+    "fix:hierarchy": "./scripts/fix-hierarchy.sh",
+    "test:chat": "tsx scripts/smoke-test-chat.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

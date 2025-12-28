@@ -131,7 +131,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
             ActivityType.EXERCISE,
             ActivityType.LEARNING,
             ActivityType.SAVE_EXPENSES,
-            ActivityType.REST,
+            // REST is not in Prisma schema enum yet - will be added in future migration
           ],
         },
         timestamp: {
@@ -158,6 +158,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Get last recovery action
+    // Note: REST is not in Prisma schema yet, so we exclude it from the query
     const lastRecoveryAction = await prisma.activityLog.findFirst({
       where: {
         userId,
@@ -166,7 +167,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
             ActivityType.EXERCISE,
             ActivityType.LEARNING,
             ActivityType.SAVE_EXPENSES,
-            ActivityType.REST,
+            // REST is not in Prisma schema enum yet - will be added in future migration
           ],
         },
       },
@@ -210,7 +211,14 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
     })
   } catch (error) {
     console.error('Error getting health status:', error)
-    res.status(500).json({ error: 'Failed to get health status' })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { errorMessage, errorStack })
+    res.status(500).json({ 
+      error: 'Failed to get health status',
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { stack: errorStack })
+    })
   }
 })
 

@@ -43,7 +43,7 @@ dotenv.config()
 dotenv.config({ path: '.env.local' })
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 5001
 
 // Middleware
 // CORS configuration - allow both local and dev frontends

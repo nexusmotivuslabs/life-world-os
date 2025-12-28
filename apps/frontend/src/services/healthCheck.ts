@@ -5,7 +5,7 @@
  * Caches health status with TTL to avoid excessive checks.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy'

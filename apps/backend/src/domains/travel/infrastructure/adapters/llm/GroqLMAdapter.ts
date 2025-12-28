@@ -43,7 +43,7 @@ export class GroqLMAdapter implements LLMServicePort {
           content: m.content,
         })),
         temperature: options?.temperature ?? 0.7,
-        max_tokens: options?.maxTokens ?? 2000, // Groq allows higher limits
+        max_tokens: options?.maxTokens ?? 8192, // Maximum token count for Groq models
       })
 
       const choice = response.choices[0]
