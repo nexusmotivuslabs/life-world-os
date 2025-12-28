@@ -34,7 +34,7 @@ function GuideBot() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+        const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:5001';
         const response = await fetch(`${API_URL}/api/health`, {
           method: 'GET',
           signal: AbortSignal.timeout(3000), // 3 second timeout
