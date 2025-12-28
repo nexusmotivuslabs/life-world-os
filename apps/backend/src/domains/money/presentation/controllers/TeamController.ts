@@ -37,7 +37,7 @@ const knowledgeBase = new PgVectorKnowledgeAdapter(prisma, embeddingService, vec
 // Use Ollama for local LLM, or switch to OpenAI if preferred
 const llmService = new OllamaLMAdapter(
   process.env.OLLAMA_URL || 'http://localhost:11434',
-  process.env.OLLAMA_MODEL || 'llama3.2'
+    process.env.OLLAMA_MODEL || 'deepseek-r1:1.5b'
 )
 // Alternative: const llmService = new OpenAILMAdapter()
 const userContext = new UserContextAdapter(prisma)

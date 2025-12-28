@@ -16,7 +16,7 @@
 import { LLMServicePort, LLMMessage, LLMResponse } from '../../../application/ports/LLMServicePort.js'
 
 const DEFAULT_OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434'
-const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'llama3.2'
+const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'deepseek-r1:1.5b'
 
 export class OllamaLMAdapter implements LLMServicePort {
   private ollamaUrl: string

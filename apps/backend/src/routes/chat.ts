@@ -2,12 +2,17 @@ import express from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { aiService } from '../services/aiService.js';
+import { decisionEngine, SystemState } from '../services/decisionEngine.js';
+import { policyChecker } from '../services/policyChecker.js';
+import { actionExecutor } from '../services/actionExecutor.js';
 import { calculateCategoryLevel } from '../services/rankService.js';
 import { calculateBalance } from '../services/balanceService.js';
 import { getXPForNextRank, getRankProgress } from '../services/rankService.js';
 import { ensureDailyTick } from '../services/tickService.js';
 import { getEffectiveEnergy } from '../services/energyService.js';
 import { isInBurnout } from '../services/burnoutService.js';
+import { trackQueryRequest } from '../services/queryMetrics.js';
+import { CustomInstructions } from '../services/customInstructions.js';
 
 const router = express.Router();
 
@@ -223,38 +228,190 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Fetch user dashboard data for context
+    // Fetch user dashboard data for context and system state
     let userContext: string | undefined;
+    let systemState: SystemState | null = null;
     try {
       const dashboardData = await fetchUserDashboardData(userId);
       if (dashboardData) {
         userContext = formatUserContext(dashboardData);
+        // Convert dashboard data to system state format
+        systemState = {
+          user: dashboardData.user,
+          resources: dashboardData.resources,
+          season: dashboardData.season,
+          clouds: dashboardData.clouds,
+          xp: dashboardData.xp,
+          balance: dashboardData.balance,
+          engines: dashboardData.engines,
+          isInBurnout: dashboardData.isInBurnout,
+        };
       }
     } catch (error) {
       console.error('Error fetching user context:', error);
       // Continue without context if fetch fails
     }
 
-    // Generate AI response with context
-    const response = await aiService.generateResponse(
-      message,
-      history.map(msg => ({ role: msg.role as 'user' | 'assistant' | 'system', content: msg.content })),
-      userContext
+    // MVP Architecture: Decision Engine → Policy Check → Execute or Reject
+    let actionResult: any = null;
+    let actionProposed = false;
+
+    // Only run decision engine if explicitly enabled
+    // Disabled by default to avoid breaking normal chat
+    const enableDecisionEngine = process.env.ENABLE_DECISION_ENGINE === 'true';
+    
+    if (systemState && enableDecisionEngine) {
+      try {
+        // Step 1: Decision Engine - Propose action based on system state
+        const proposedAction = await decisionEngine.proposeAction(
+          message,
+          systemState,
+          history.map(msg => ({ role: msg.role, content: msg.content }))
+        );
+
+        actionProposed = proposedAction.actionType !== 'NONE';
+
+        if (actionProposed) {
+          // Step 2: Policy Check - Validate proposed action
+          const policyCheck = await policyChecker.checkPolicy(
+            proposedAction,
+            systemState,
+            userId
+          );
+
+          if (policyCheck.allowed) {
+            // Step 3: Execute action
+            const executionResult = await actionExecutor.execute(userId, proposedAction);
+            actionResult = {
+              proposed: proposedAction,
+              policyCheck,
+              execution: executionResult,
+            };
+
+            // Refresh system state after execution
+            const updatedDashboardData = await fetchUserDashboardData(userId);
+            if (updatedDashboardData) {
+              systemState = {
+                user: updatedDashboardData.user,
+                resources: updatedDashboardData.resources,
+                season: updatedDashboardData.season,
+                clouds: updatedDashboardData.clouds,
+                xp: updatedDashboardData.xp,
+                balance: updatedDashboardData.balance,
+                engines: updatedDashboardData.engines,
+                isInBurnout: updatedDashboardData.isInBurnout,
+              };
+              userContext = formatUserContext(updatedDashboardData);
+            }
+          } else {
+            // Action rejected by policy
+            actionResult = {
+              proposed: proposedAction,
+              policyCheck,
+              execution: null,
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error in decision engine flow:', error);
+        // Continue with normal chat response if decision engine fails
+        // Don't let decision engine errors break the chat
+      }
+    }
+
+    // Generate AI response with context and action result
+    const startTime = Date.now();
+    let responseMessage = '';
+    let queryError: { type: string; message: string } | undefined;
+    
+    // Get persona and provider for metrics
+    const persona = CustomInstructions.getPersonaFromEnv();
+    const provider = process.env.OLLAMA_URL ? 'ollama' : (process.env.GROQ_API_KEY ? 'groq' : 'unknown');
+    
+    try {
+      if (actionResult && actionResult.execution?.success) {
+        // Include action execution result in response
+        responseMessage = await aiService.generateResponse(
+          `${message}\n\n[Action executed: ${actionResult.proposed.actionType}]`,
+          history.map(msg => ({ role: msg.role as 'user' | 'assistant' | 'system', content: msg.content })),
+          userContext
+        );
+      } else if (actionResult && !actionResult.policyCheck.allowed) {
+        // Action was rejected
+        responseMessage = await aiService.generateResponse(
+          `${message}\n\n[Action rejected: ${actionResult.policyCheck.reason}]`,
+          history.map(msg => ({ role: msg.role as 'user' | 'assistant' | 'system', content: msg.content })),
+          userContext
+        );
+      } else {
+        // Normal chat response
+        responseMessage = await aiService.generateResponse(
+          message,
+          history.map(msg => ({ role: msg.role as 'user' | 'assistant' | 'system', content: msg.content })),
+          userContext
+        );
+      }
+    } catch (aiError) {
+      console.error('AI Service error in chat route:', aiError);
+      const errorDetails = aiError instanceof Error ? aiError.message : String(aiError);
+      
+      queryError = {
+        type: errorDetails.includes('Ollama') ? 'provider_unavailable' : 
+               errorDetails.includes('API key') ? 'auth_error' : 
+               'unknown_error',
+        message: errorDetails,
+      };
+      
+      // Return a helpful error message instead of crashing
+      if (errorDetails.includes('Ollama') || errorDetails.includes('Cannot connect')) {
+        responseMessage = "I'm sorry, I cannot connect to Ollama. Please make sure Ollama is running locally. Install from https://ollama.ai and run 'ollama serve'.";
+      } else if (errorDetails.includes('API key') || errorDetails.includes('GROQ')) {
+        responseMessage = "I'm sorry, there's an issue with the AI service configuration. Please check your API keys.";
+      } else {
+        responseMessage = `I'm sorry, I'm having trouble generating a response. Error: ${errorDetails}. Please try again or check your AI service configuration.`;
+      }
+    }
+
+    // Track Query metrics
+    const responseTime = Date.now() - startTime;
+    
+    // Extract artifacts from response (simple detection)
+    const artifactNames = ['Capacity', 'Engines', 'Oxygen', 'Meaning', 'Optionality', 'Energy', 'Water', 'Gold', 'Armor', 'Keys'];
+    const detectedArtifacts = artifactNames.filter(artifact => 
+      responseMessage.toLowerCase().includes(artifact.toLowerCase())
     );
+    
+    trackQueryRequest({
+      persona,
+      provider: provider as 'ollama' | 'groq',
+      responseTime,
+      tokens: undefined, // TODO: Extract from AI response if available
+      error: queryError,
+      artifacts: detectedArtifacts.length > 0 ? detectedArtifacts : undefined,
+    });
 
     // Save assistant message
     await prisma.chatMessage.create({
       data: {
         sessionId: session.id,
         role: 'assistant',
-        content: response,
+        content: responseMessage,
       },
     });
 
     res.json({
-      response,
+      response: responseMessage,
       sessionId: session.id,
       id: session.id,
+      ...(actionResult && {
+        action: {
+          proposed: actionResult.proposed.actionType,
+          allowed: actionResult.policyCheck.allowed,
+          executed: actionResult.execution?.success || false,
+          result: actionResult.execution?.data || null,
+          rejectionReason: actionResult.policyCheck.reason || null,
+        },
+      }),
     });
   } catch (error) {
     console.error('Error processing chat message:', error);

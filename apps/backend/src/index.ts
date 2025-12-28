@@ -33,13 +33,14 @@ import loadoutRoutes from './routes/loadouts.js'
 import blogRoutes from './routes/blog.js'
 import chatRoutes from './routes/chat.js'
 import metricsRoutes from './routes/metrics.js'
+import unifiedArtifactRoutes from './routes/artifacts.js'
 import { metricsMiddleware } from './middleware/metrics.js'
 import { validateAndExit } from './utils/startupValidation.js'
 import { enforceKnowledgePlaneReadOnly } from './middleware/planeGuard.js'
 
-// Load .env.local first (for local development), then .env
-dotenv.config({ path: '.env.local' })
+// Load .env first, then .env.local (so .env.local overrides .env)
 dotenv.config()
+dotenv.config({ path: '.env.local' })
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -90,6 +91,7 @@ app.use('/api/power-laws', enforceKnowledgePlaneReadOnly, powerLawRoutes)
 app.use('/api/bible-laws', enforceKnowledgePlaneReadOnly, bibleLawRoutes)
 app.use('/api/awareness-layers', enforceKnowledgePlaneReadOnly, awarenessLayerRoutes)
 app.use('/api/reality-nodes', enforceKnowledgePlaneReadOnly, realityNodeRoutes)
+app.use('/api/unified-artifacts', enforceKnowledgePlaneReadOnly, unifiedArtifactRoutes)
 
 // Systems Plane routes - executable, state-changing (go through physics engine)
 app.use('/api/products', productRoutes)

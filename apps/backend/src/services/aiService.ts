@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
 import { OllamaLMAdapter } from '../domains/money/infrastructure/adapters/llm/OllamaLMAdapter.js';
+import { CustomInstructions, InstructionContext, PersonaType, ProviderType } from './customInstructions.js';
 
+// Load .env.local first (for local development), then .env
+dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 interface ChatMessage {
@@ -30,23 +33,21 @@ function selectProvider(): AIProvider | null {
 async function generateWithOllama(
   userMessage: string,
   history: ChatMessage[],
-  userContext?: string
+  userContext?: string,
+  instructionContext?: InstructionContext
 ): Promise<string> {
   const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
-  const model = process.env.OLLAMA_MODEL || 'llama3.2';
+  const model = process.env.OLLAMA_MODEL || 'deepseek-r1:1.5b';
   
-  const systemPrompt = `You are a helpful guide for the Life World Operating System. Life World OS is a gamified life management system that helps users allocate effort, energy, and resources sustainably across time using game mechanics.
-
-The system includes:
-- 🌥️ Clouds of Life: Five persistent background systems (Capacity, Engines, Oxygen, Meaning, Optionality)
-- 🍂 Seasons of Life: Four cyclical modes (Spring, Summer, Autumn, Winter)
-- 💎 Resources: Oxygen, Water, Gold, Armor, and Keys
-- ⚙️ Engines: Career, Business, Investment, and Learning engines
-- 🎮 XP System: Overall rank and category XP progression
-
-${userContext ? `\n\nCurrent User Status:\n${userContext}\n\nUse this information to provide personalized answers about the user's current state, resources, progress, and recommendations.` : ''}
-
-Provide helpful, accurate answers about the Life World OS system, game mechanics, and how to optimize life management. Be conversational and friendly. If you don't know something, say so.`;
+  // Get persona from environment or default to 'query'
+  const persona: PersonaType = CustomInstructions.getPersonaFromEnv();
+  
+  // Use CustomInstructions to get system prompt
+  const systemPrompt = CustomInstructions.getSystemPrompt(
+    persona,
+    'ollama',
+    { ...instructionContext, userContext }
+  );
 
   const messages = [
     { role: 'system' as const, content: systemPrompt },
@@ -63,7 +64,10 @@ Provide helpful, accurate answers about the Life World OS system, game mechanics
       temperature: 0.7,
       maxTokens: 1000,
     });
-    return response.content;
+    
+    // Use CustomInstructions response cleaner
+    const cleaner = CustomInstructions.getResponseCleaner('ollama');
+    return cleaner(response.content);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes('Cannot connect to Ollama')) {
@@ -79,25 +83,23 @@ Provide helpful, accurate answers about the Life World OS system, game mechanics
 async function generateWithGroq(
   userMessage: string,
   history: ChatMessage[],
-  userContext?: string
+  userContext?: string,
+  instructionContext?: InstructionContext
 ): Promise<string> {
   const groqApiKey = process.env.GROQ_API_KEY;
   if (!groqApiKey) {
     throw new Error('GROQ_API_KEY not found in environment variables');
   }
 
-  const systemPrompt = `You are a helpful guide for the Life World Operating System. Life World OS is a gamified life management system that helps users allocate effort, energy, and resources sustainably across time using game mechanics.
-
-The system includes:
-- 🌥️ Clouds of Life: Five persistent background systems (Capacity, Engines, Oxygen, Meaning, Optionality)
-- 🍂 Seasons of Life: Four cyclical modes (Spring, Summer, Autumn, Winter)
-- 💎 Resources: Oxygen, Water, Gold, Armor, and Keys
-- ⚙️ Engines: Career, Business, Investment, and Learning engines
-- 🎮 XP System: Overall rank and category XP progression
-
-${userContext ? `\n\nCurrent User Status:\n${userContext}\n\nUse this information to provide personalized answers about the user's current state, resources, progress, and recommendations.` : ''}
-
-Provide helpful, accurate answers about the Life World OS system, game mechanics, and how to optimize life management. Be conversational and friendly. If you don't know something, say so.`;
+  // Get persona from environment or default to 'query'
+  const persona: PersonaType = CustomInstructions.getPersonaFromEnv();
+  
+  // Use CustomInstructions to get system prompt
+  const systemPrompt = CustomInstructions.getSystemPrompt(
+    persona,
+    'groq',
+    { ...instructionContext, userContext }
+  );
 
   const messages = [
     { role: 'system' as const, content: systemPrompt },
@@ -117,7 +119,10 @@ Provide helpful, accurate answers about the Life World OS system, game mechanics
       maxTokens: 2000,
       model: 'llama-3.1-8b-instant', // Fast Groq model
     });
-    return response.content;
+    
+    // Use CustomInstructions response cleaner
+    const cleaner = CustomInstructions.getResponseCleaner('groq');
+    return cleaner(response.content);
   } catch (error: any) {
     if (error.message?.includes('Groq SDK not installed')) {
       throw new Error('Groq SDK not installed. Please install it: npm install groq-sdk');
@@ -133,7 +138,8 @@ export const aiService = {
   async generateResponse(
     userMessage: string,
     history: ChatMessage[],
-    userContext?: string
+    userContext?: string,
+    instructionContext?: InstructionContext
   ): Promise<string> {
     try {
       const provider = selectProvider();
@@ -143,9 +149,9 @@ export const aiService = {
       }
 
       if (provider === 'ollama') {
-        return await generateWithOllama(userMessage, history, userContext);
+        return await generateWithOllama(userMessage, history, userContext, instructionContext);
       } else if (provider === 'groq') {
-        return await generateWithGroq(userMessage, history, userContext);
+        return await generateWithGroq(userMessage, history, userContext, instructionContext);
       }
 
       // Fallback (should not reach here)

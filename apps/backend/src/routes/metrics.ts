@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express'
 import { getPrometheusMetrics, metricsCollector } from '../middleware/metrics.js'
 import { prisma } from '../lib/prisma.js'
+import { getQueryMetricsSummary } from '../services/queryMetrics.js'
 
 const router = Router()
 
@@ -124,6 +125,42 @@ router.get('/health', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting health metrics:', error)
     res.status(500).json({ error: 'Failed to get health metrics' })
+  }
+})
+
+/**
+ * GET /api/metrics/query
+ * Query-specific metrics summary
+ */
+router.get('/query', async (req: Request, res: Response) => {
+  try {
+    const summary = getQueryMetricsSummary()
+    const allMetrics = metricsCollector.getMetrics()
+    
+    // Get Query-specific metrics
+    const queryMetrics = allMetrics.filter(m => m.name.startsWith('query_'))
+    
+    // Group by metric name
+    const grouped: Record<string, any[]> = {}
+    queryMetrics.forEach(m => {
+      if (!grouped[m.name]) {
+        grouped[m.name] = []
+      }
+      grouped[m.name].push({
+        labels: m.labels,
+        value: m.value,
+        timestamp: m.timestamp,
+      })
+    })
+
+    res.json({
+      summary,
+      metrics: grouped,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error getting Query metrics:', error)
+    res.status(500).json({ error: 'Failed to get Query metrics' })
   }
 })
 

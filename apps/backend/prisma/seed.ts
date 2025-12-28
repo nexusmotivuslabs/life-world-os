@@ -104,6 +104,12 @@ async function main() {
     await runScriptFile('src/scripts/seedHealthKnowledge.ts', 'Health Knowledge')
     await runScriptFile('src/scripts/seedAwarenessLayers.ts', 'Awareness Layers')
 
+    // Phase 7: Unified Artifacts (must run after all systems are seeded)
+    console.log('\n🎨 PHASE 7: Unified Artifacts')
+    console.log('─'.repeat(60))
+    const { seedArtifacts } = await import('../src/scripts/seedArtifacts')
+    await seedArtifacts()
+
     // Phase 7: Development Data (dev only)
     if (env === 'development') {
       console.log('\n🧪 PHASE 7: Development Test Data')

@@ -1137,6 +1137,17 @@ enum RealityNodeCategory {
   BIOLOGICAL
 }
 
+enum ArtifactCategory {
+  RESOURCE
+  STAT
+  SYSTEM
+  CONCEPT
+  LAW
+  PRINCIPLE
+  FRAMEWORK
+  WEAPON
+}
+
 model RealityNode {
   id          String               @id @default(uuid())
   title       String               @db.VarChar(255)
@@ -1152,6 +1163,9 @@ model RealityNode {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
+  // Link to artifacts
+  artifacts Artifact[]
+
   @@unique([title, parentId]) // Unique title per parent
   @@index([parentId])
   @@index([nodeType])
@@ -1159,6 +1173,84 @@ model RealityNode {
   @@index([orderIndex])
   @@index([immutable])
   @@map("reality_nodes")
+}
+
+// Unified Artifact Model - Central repository for all artifacts
+model Artifact {
+  id String @id @default(uuid())
+
+  // Core identity
+  title       String           @db.VarChar(255)
+  description String?          @db.Text
+  category    ArtifactCategory
+
+  // Links to source systems
+  systemId   String? @db.VarChar(100) // Which system owns this (e.g., 'money', 'health', 'energy', 'loadout', 'reality')
+  systemType String? @db.VarChar(100) // Type within system (e.g., 'product', 'agent', 'weapon', 'resource', 'law')
+  sourceId   String? @db.VarChar(255) // ID in source system (e.g., productId, agentId, loadoutItemId, realityNodeId)
+
+  // Link to Reality Hierarchy
+  realityNodeId String?
+  realityNode   RealityNode? @relation(fields: [realityNodeId], references: [id], onDelete: SetNull)
+
+  // Rich metadata
+  metadata Json? // Flexible structure for system-specific data (icon, route, details, etc.)
+  tags     String[] // Searchable tags
+
+  // Display
+  iconName String? @db.VarChar(100) // Icon identifier (e.g., 'Zap', 'DollarSign', 'Sword')
+  route    String? @db.VarChar(500) // Navigation route
+
+  // Search optimization
+  searchVector Json? // Full-text search vector (for PostgreSQL full-text search)
+  // Note: pgvector embedding will be added via migration when pgvector extension is enabled
+  // embedding    Unsupported("vector(1536)")? // Vector embedding for semantic search (pgvector)
+
+  // Relationships (graph structure)
+  references   ArtifactReference[] @relation("FromArtifact")
+  referencedBy ArtifactReference[] @relation("ToArtifact")
+
+  // Ordering
+  orderIndex Int     @default(0)
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([systemId, systemType, sourceId]) // Unique per source system
+  @@index([category])
+  @@index([systemId])
+  @@index([systemType])
+  @@index([sourceId])
+  @@index([realityNodeId])
+  @@index([tags]) // GIN index for array search
+  @@index([isActive])
+  @@index([orderIndex])
+  @@map("artifacts")
+}
+
+// Artifact relationships (graph edges)
+model ArtifactReference {
+  id       String @id @default(uuid())
+  fromId   String
+  toId     String
+  type     String @db.VarChar(50) // 'synergy', 'counter', 'prerequisite', 'related', 'enhances', 'requires'
+  strength Float? // 0.0-1.0, weight of relationship
+
+  fromArtifact Artifact @relation("FromArtifact", fields: [fromId], references: [id], onDelete: Cascade)
+  toArtifact   Artifact @relation("ToArtifact", fields: [toId], references: [id], onDelete: Cascade)
+
+  metadata Json? // Additional relationship metadata
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fromId, toId, type]) // Unique relationship type per pair
+  @@index([fromId, type])
+  @@index([toId, type])
+  @@index([type])
+  @@map("artifact_references")
 }
 
 // Chat Models for AI Guide Bot
