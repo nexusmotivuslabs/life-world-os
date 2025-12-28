@@ -17,6 +17,8 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+config/environments/*.env
+!config/environments/*.env.example
 
 # Dev secrets and API key setup (hidden from main view)
 .dev-secrets/
