@@ -78,6 +78,38 @@ if ! docker info > /dev/null 2>&1; then
 fi
 test_passed "Docker is running"
 
+# Check Observability Stack (Prometheus, Grafana, SonarQube)
+test_info "Checking observability stack..."
+OBSERVABILITY_RUNNING=true
+
+# Check Prometheus
+if docker ps | grep -q "life-world-os-prometheus\|prometheus"; then
+  test_passed "Prometheus is running"
+else
+  test_info "Prometheus not running (optional for local)"
+  OBSERVABILITY_RUNNING=false
+fi
+
+# Check Grafana
+if docker ps | grep -q "life-world-os-grafana\|grafana"; then
+  test_passed "Grafana is running"
+else
+  test_info "Grafana not running (optional for local)"
+  OBSERVABILITY_RUNNING=false
+fi
+
+# Check SonarQube
+if docker ps | grep -q "life-world-os-sonarqube\|sonarqube"; then
+  test_passed "SonarQube is running"
+else
+  test_info "SonarQube not running (optional for local)"
+  OBSERVABILITY_RUNNING=false
+fi
+
+if [ "$OBSERVABILITY_RUNNING" = true ]; then
+  test_passed "Observability stack is running"
+fi
+
 # Check Node.js
 if ! command -v node &> /dev/null; then
   test_failed "Node.js is not installed"
