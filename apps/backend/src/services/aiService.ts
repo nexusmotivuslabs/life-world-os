@@ -49,9 +49,11 @@ async function generateWithOllama(
     { ...instructionContext, userContext }
   );
 
+  // Use maximum conversation history (up to 100 messages for full context)
+  const maxHistoryMessages = 100;
   const messages = [
     { role: 'system' as const, content: systemPrompt },
-    ...history.slice(-10).map((msg) => ({
+    ...history.slice(-maxHistoryMessages).map((msg) => ({
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content,
     })),
@@ -62,7 +64,7 @@ async function generateWithOllama(
     const adapter = new OllamaLMAdapter(ollamaUrl, model);
     const response = await adapter.generateResponse(messages, {
       temperature: 0.7,
-      maxTokens: 1000,
+      maxTokens: 4096, // Maximum safe token count for most Ollama models
     });
     
     // Use CustomInstructions response cleaner
@@ -101,9 +103,11 @@ async function generateWithGroq(
     { ...instructionContext, userContext }
   );
 
+  // Use maximum conversation history (up to 100 messages for full context)
+  const maxHistoryMessages = 100;
   const messages = [
     { role: 'system' as const, content: systemPrompt },
-    ...history.slice(-10).map((msg) => ({
+    ...history.slice(-maxHistoryMessages).map((msg) => ({
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content,
     })),
@@ -116,7 +120,7 @@ async function generateWithGroq(
     const adapter = new GroqLMAdapter(groqApiKey);
     const response = await adapter.generateResponse(messages, {
       temperature: 0.7,
-      maxTokens: 2000,
+      maxTokens: 8192, // Maximum token count for llama-3.1-8b-instant
       model: 'llama-3.1-8b-instant', // Fast Groq model
     });
     

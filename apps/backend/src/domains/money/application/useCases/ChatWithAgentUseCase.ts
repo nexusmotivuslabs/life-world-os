@@ -101,7 +101,7 @@ export class ChatWithAgentUseCase {
       },
       {
         temperature: 0.7,
-        maxTokens: 500,
+        maxTokens: 4096, // Maximum token count for comprehensive responses
       }
     )
 

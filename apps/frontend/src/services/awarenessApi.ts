@@ -4,7 +4,7 @@
  * TypeScript service for interacting with the Awareness Layer API endpoints.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
 
 // Type definitions
 export type AwarenessLayerCategory = 'ROOT' | 'EXAMINE' | 'REFUTE'

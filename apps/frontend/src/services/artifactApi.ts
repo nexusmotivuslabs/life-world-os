@@ -4,7 +4,7 @@
  * Frontend API client for user artifacts (saved recommendations, calculations, etc.)
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 async function apiRequest<T>(endpoint: string, method: string = 'GET', body?: any): Promise<T> {
   const url = `${API_BASE}${endpoint}`

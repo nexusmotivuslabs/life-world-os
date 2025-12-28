@@ -51,6 +51,11 @@ seeds/dumps/*.metadata.json
 # Vite
 .vite/
 
+# SonarQube
+.sonarqube.env
+.sonar/
+.scannerwork/
+
 # Dev Hub (old location - migrated to apps/dev-hub-app)
 dev-hub/
 DEV_HUB_REFERENCE.md

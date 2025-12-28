@@ -37,7 +37,7 @@ export class OllamaLMAdapter implements LLMServicePort {
   ): Promise<LLMResponse> {
     const model = options?.model || this.defaultModel
     const temperature = options?.temperature ?? 0.7
-    const maxTokens = options?.maxTokens ?? 500
+    const maxTokens = options?.maxTokens ?? 4096 // Maximum safe token count for most Ollama models
 
     try {
       const response = await fetch(`${this.ollamaUrl}/api/chat`, {

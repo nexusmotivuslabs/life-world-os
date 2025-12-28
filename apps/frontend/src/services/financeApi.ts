@@ -3,7 +3,7 @@
 import { handleFetchError, logApiSuccess, createApiError } from './errorHandler'
 import { logger } from '../lib/logger'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 // Simple in-memory cache for Reality nodes
 // Cache expires after 5 minutes
