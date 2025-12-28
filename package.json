@@ -1,6 +1,6 @@
 {
   "name": "life-world-os",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Life World Operating System - A gamified life operating system with XP, seasons, clouds, and resources",
   "private": true,
   "workspaces": [
