@@ -18,6 +18,10 @@ build/
 .env.test.local
 .env.production.local
 
+# Environment config files with actual secrets (keep .example files)
+config/environments/*.env
+!config/environments/*.env.example
+
 # Dev secrets and API key setup (hidden from main view)
 .dev-secrets/
 apps/backend/.dev-secrets/
