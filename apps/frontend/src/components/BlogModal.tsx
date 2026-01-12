@@ -81,7 +81,7 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-gray-700"
+              className="bg-gray-800 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-gray-700"
               role="dialog"
               aria-modal="true"
               aria-labelledby="blog-modal-title"
@@ -154,7 +154,7 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-6 lg:p-8">
                 {loading ? (
                   <div className="space-y-4 animate-pulse">
                     <div className="h-4 bg-gray-700 rounded w-full"></div>
@@ -174,6 +174,13 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
                   </div>
                 ) : post ? (
                   <div className="prose prose-invert prose-lg max-w-none">
+                    {/* Reading Progress Indicator */}
+                    <div className="mb-6 pb-4 border-b border-gray-700">
+                      <div className="flex items-center justify-between text-sm text-gray-400 mb-2">
+                        <span>Estimated reading time: {Math.ceil(post.content.split(/\s+/).length / 200)} min</span>
+                        <span>{post.content.split(/\s+/).length.toLocaleString()} words</span>
+                      </div>
+                    </div>
                     <ReactMarkdown
                       components={{
                         h1: ({ children }) => (
@@ -192,7 +199,7 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
                           </h3>
                         ),
                         p: ({ children }) => (
-                          <p className="text-gray-300 mb-4 leading-relaxed">
+                          <p className="text-gray-300 mb-6 leading-relaxed text-lg">
                             {children}
                           </p>
                         ),

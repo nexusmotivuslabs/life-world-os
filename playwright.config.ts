@@ -63,11 +63,15 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+  /* Note: For local testing, start services manually with: npm run dev:local */
+  /* Or use: npm run test:e2e:local which handles setup automatically */
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev:local',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
 

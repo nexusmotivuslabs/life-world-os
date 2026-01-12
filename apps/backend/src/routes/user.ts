@@ -14,6 +14,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
         id: true,
         email: true,
         username: true,
+        firstName: true,
         currentSeason: true,
         seasonStartDate: true,
         overallXP: true,

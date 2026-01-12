@@ -86,3 +86,6 @@ export class PrismaLocationQueryRepositoryAdapter implements LocationQueryReposi
 }
 
 
+
+
+

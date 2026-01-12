@@ -5,12 +5,14 @@
  * This structure supports artifacts and provides a complete ontological view.
  */
 
-import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, AlertTriangle } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react'
 import { realityNodeApi, RealityNode } from '../../services/financeApi'
 import { getCategoryDisplayName, getCategoryDescription, getNodeTypeDisplayName } from '../../utils/realityNodeDisplay'
 import { enumToDisplayName } from '../../utils/enumDisplayNames'
 import { motion, AnimatePresence } from 'framer-motion'
+import { hierarchyCache } from '../../lib/hierarchyCache'
 
 interface TreeNode {
   id: string
@@ -25,9 +27,12 @@ interface TreeNode {
 interface HierarchyTreeViewProps {
   rootNodeId?: string // Optional: start from a specific node instead of REALITY root
   overrideParentId?: string // Optional: override parent for child entities (makes them appear under a different parent)
+  onArtifactClick?: (artifactId: string) => void // Optional: callback when artifact is clicked (for embedded use)
+  refreshTrigger?: number // Optional: increment this to trigger a refresh
 }
 
-export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId }: HierarchyTreeViewProps = {}) {
+export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId, onArtifactClick, refreshTrigger }: HierarchyTreeViewProps = {}) {
+  const navigate = useNavigate()
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,10 +41,70 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([rootNodeId]))
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(true)
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Refresh tree data (used for periodic updates and manual refresh)
+  // Using useCallback to ensure stable reference and avoid stale closures
+  const refreshTreeData = useCallback(async () => {
+    if (isRefreshing) return // Prevent concurrent refreshes
+    
+    try {
+      setIsRefreshing(true)
+      
+      // Determine the actual root node ID to use
+      const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
+      
+      // Preserve expanded nodes state before refresh
+      const preservedExpandedNodes = new Set(expandedNodes)
+      
+      // Clear caches to ensure fresh data
+      realityNodeApi.clearCache()
+      
+      // Load fresh data from database
+      const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
+      
+      // Update cache
+      await hierarchyCache.set(actualRootId, rootTree)
+      
+      // Update tree data
+      setTreeData([rootTree])
+      setLastRefreshTime(new Date())
+      
+      // Restore expanded nodes
+      setExpandedNodes(preservedExpandedNodes)
+    } catch (err) {
+      console.error('Failed to refresh tree data:', err)
+      // Don't show error on background refresh, just log it
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [rootNodeId, overrideParentId, expandedNodes, isRefreshing])
+
+  // Load tree data on mount and when dependencies change
   useEffect(() => {
     loadTreeData()
-  }, [rootNodeId, overrideParentId])
+    
+    // Set up periodic refresh every 30 seconds to keep tree live
+    refreshIntervalRef.current = setInterval(() => {
+      refreshTreeData()
+    }, 30000) // Refresh every 30 seconds
+
+    // Cleanup interval on unmount
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current)
+      }
+    }
+  }, [rootNodeId, overrideParentId, refreshTreeData])
+
+  // Refresh when refreshTrigger changes (allows parent to trigger refresh)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      refreshTreeData()
+    }
+  }, [refreshTrigger, refreshTreeData])
 
   // Ensure root (REALITY) is expanded when tree data loads
   useEffect(() => {
@@ -119,15 +184,35 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     return node
   }
 
-  const loadTreeData = async () => {
+  const loadTreeData = async (clearCacheFirst = false) => {
     try {
-      setLoading(true)
       setError(null)
       setHasDataIssues(false)
       
       // Determine the actual root node ID to use
       const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
       
+      // Clear cache if requested
+      if (clearCacheFirst) {
+        realityNodeApi.clearCache()
+        hierarchyCache.invalidate(actualRootId)
+      }
+      
+      // STALE-WHILE-REVALIDATE: Try to load from cache first
+      const cached = await hierarchyCache.get(actualRootId)
+      if (cached && !clearCacheFirst) {
+        // Show cached data immediately (instant load)
+        setTreeData([cached.rootNode])
+        setLastRefreshTime(new Date(cached.metadata.timestamp))
+        setLoading(false) // Don't show loading spinner for cached data
+        
+        // Then refresh in background (revalidate)
+        refreshTreeDataInBackground(actualRootId)
+        return
+      }
+      
+      // No cache or cache cleared, load fresh
+      setLoading(true)
       console.log(`Loading hierarchy tree from root: ${actualRootId}`)
       
       // Load root and all its children recursively from database
@@ -135,19 +220,92 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
       console.log(`Loaded tree data:`, rootTree)
       
-      // Set the loaded tree (purely from database)
+      // Cache the result for future use
+      await hierarchyCache.set(actualRootId, rootTree)
+      
+      // Set the loaded tree
       setTreeData([rootTree])
-    } catch (err) {
+      setLastRefreshTime(new Date())
+    } catch (err: any) {
       console.error('Failed to load tree from backend:', err)
       
-      // Set both error state and data issues flag
-      setError('Unable to load hierarchy data. Please ensure the backend server is running and the database is seeded.')
-      setHasDataIssues(true)
-      setTreeData([])
+      // Determine error type
+      const isNetworkError = err?.message?.includes('fetch') || 
+                            err?.message?.includes('network') ||
+                            err?.message?.includes('Failed to fetch') ||
+                            err?.code === 'ECONNREFUSED' ||
+                            err?.name === 'TypeError'
+      
+      const isBackendError = err?.status >= 500 || err?.status === 404
+      const errorMessage = isNetworkError 
+        ? 'Cannot connect to backend server. Please ensure the backend is running on port 5001.'
+        : isBackendError
+        ? 'Backend server error. Please check server logs.'
+        : err?.message || 'Unable to load hierarchy data.'
+      
+      // Try to use stale cache if available (offline support)
+      const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
+      const staleCache = await hierarchyCache.get(actualRootId)
+      if (staleCache) {
+        console.log('Using stale cache due to network error')
+        setTreeData([staleCache.rootNode])
+        setLastRefreshTime(new Date(staleCache.metadata.timestamp))
+        setError(`Using cached data (${new Date(staleCache.metadata.timestamp).toLocaleString()}). ${errorMessage}`)
+        setHasDataIssues(true) // Still show warning even with cached data
+      } else {
+        setError(errorMessage + ' No cached data available.')
+        setHasDataIssues(true)
+        setTreeData([])
+      }
     } finally {
       setLoading(false)
     }
   }
+
+  // Background refresh (doesn't block UI) - stale-while-revalidate pattern
+  const refreshTreeDataInBackground = async (actualRootId: string) => {
+    try {
+      // Clear API cache to ensure fresh data
+      realityNodeApi.clearCache()
+      
+      // Load fresh data
+      const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
+      
+      // Update cache
+      await hierarchyCache.set(actualRootId, rootTree)
+      
+      // Only update UI if tree structure actually changed (by checksum)
+      setTreeData(prev => {
+        if (prev.length === 0) {
+          return [rootTree]
+        }
+        
+        // Check if structure changed by comparing checksums
+        const cached = hierarchyCache.getFromMemory(actualRootId)
+        if (cached) {
+          const oldChecksum = cached.metadata.checksum
+          const newChecksum = hierarchyCache.calculateChecksum(rootTree)
+          
+          if (oldChecksum !== newChecksum) {
+            // Structure changed, update UI
+            setLastRefreshTime(new Date())
+            return [rootTree]
+          }
+        }
+        
+        // No change, keep existing (but update timestamp silently)
+        return prev
+      })
+    } catch (err) {
+      console.error('Background refresh failed:', err)
+      // Don't show error, just log it - user still has cached data
+    }
+  }
+
+  // Manual refresh handler
+  const handleManualRefresh = useCallback(async () => {
+    await refreshTreeData()
+  }, [refreshTreeData])
 
   // Helper function to find a node by ID in the tree
   const findNodeById = (node: TreeNode, id: string): TreeNode | null => {
@@ -247,11 +405,26 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     return !hasDescription && !hasChildren && !hasMetadata
   }
 
+  // Navigate to artifacts view with artifact ID or call callback if provided
+  const navigateToArtifact = (node: TreeNode) => {
+    // Construct artifact ID from node ID (for reality nodes, it's reality-node-{nodeId})
+    const artifactId = `reality-node-${node.id}`
+    
+    // If callback is provided (tree is embedded), use it to open modal directly
+    if (onArtifactClick) {
+      onArtifactClick(artifactId)
+    } else {
+      // Otherwise, navigate to artifacts view with the specific artifact ID
+      navigate(`/knowledge/artifacts?id=${encodeURIComponent(artifactId)}`)
+    }
+  }
+
   const renderTreeNode = (node: TreeNode, level: number = 0): JSX.Element => {
     const hasChildren = node.children && node.children.length > 0
     const isExpanded = expandedNodes.has(node.id)
     const isSelected = selectedNode?.id === node.id
-    const indent = level * 24
+    // Reduced indent for better mobile experience (20px per level, max 160px)
+    const indent = Math.min(level * 20, 160)
     const showLock = node.immutable || hasNoData(node)
     const lockTitle = node.immutable ? 'Immutable' : 'No data available'
     const displayName = getDisplayName(node.label)
@@ -260,8 +433,24 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       // If clicking the chevron area, toggle expansion
       if (hasChildren && (e.target as HTMLElement).closest('button[data-chevron]')) {
         toggleNode(node.id)
+        return
+      }
+      // If clicking the info button, show details modal
+      if ((e.target as HTMLElement).closest('button[title="View details"]')) {
+        setSelectedNode(node)
+        return
+      }
+      // If clicking the external link button, navigate to artifacts
+      if ((e.target as HTMLElement).closest('button[title="View artifact"]')) {
+        navigateToArtifact(node)
+        return
+      }
+      // For leaf nodes (laws, principles, etc.), navigate to artifacts view
+      // For parent nodes, toggle expansion or show details
+      if (!hasChildren && (node.type === 'law' || node.type === 'principle' || node.type === 'framework')) {
+        navigateToArtifact(node)
       } else {
-        // Otherwise, select the node
+        // Otherwise, select the node (shows details modal)
         setSelectedNode(node)
       }
     }
@@ -270,15 +459,15 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       <div key={node.id} className="select-none">
         <div
           onClick={handleRowClick}
-          className={`flex items-center gap-2 py-1.5 px-2 rounded transition-colors group cursor-pointer ${
+          className={`flex items-center gap-1 sm:gap-2 py-1.5 px-1 sm:px-2 rounded transition-colors group cursor-pointer ${
             isSelected 
               ? 'bg-blue-500/20 border border-blue-500/50' 
               : 'hover:bg-gray-700/50'
           } ${
-            level === 0 ? 'font-bold text-lg bg-purple-500/10 border border-purple-500/30' : 
-            level === 1 ? 'font-semibold' : ''
+            level === 0 ? 'font-bold text-base sm:text-lg bg-purple-500/10 border border-purple-500/30' : 
+            level === 1 ? 'font-semibold text-sm sm:text-base' : 'text-sm sm:text-base'
           }`}
-          style={{ paddingLeft: `${indent + 8}px` }}
+          style={{ paddingLeft: `${Math.min(indent + 8, 200)}px` }}
         >
           {hasChildren ? (
             <button
@@ -298,10 +487,10 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           ) : (
             <div className="w-4 h-4 flex-shrink-0" />
           )}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {getNodeIcon(node.type)}
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+            <div className="flex-shrink-0">{getNodeIcon(node.type)}</div>
             <span
-              className={`truncate ${
+              className={`truncate flex-1 ${
                 isSelected
                   ? 'text-blue-300'
                   : node.type === 'reality'
@@ -316,22 +505,35 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             >
               {displayName}
               {hasChildren && (
-                <span className="text-gray-500 ml-1">(I)</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">(I)</span>
               )}
             </span>
-            <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+            <span className="text-xs text-gray-500 ml-1 sm:ml-2 flex-shrink-0 hidden sm:inline">
               min 1 max 3
             </span>
             {showLock && (
-              <Lock className="w-3 h-3 text-purple-400 flex-shrink-0" title={lockTitle} />
+              <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" title={lockTitle} />
             )}
-            {getCategoryBadge(node.category)}
+            <div className="hidden sm:block">{getCategoryBadge(node.category)}</div>
             {node.data?.description && (
-              <span className="text-xs text-gray-500 ml-2 italic truncate">
+              <span className="text-xs text-gray-500 ml-1 sm:ml-2 italic truncate hidden md:inline">
                 - {node.data.description}
               </span>
             )}
           </div>
+          {/* Show external link button for laws, principles, frameworks */}
+          {(node.type === 'law' || node.type === 'principle' || node.type === 'framework') && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                navigateToArtifact(node)
+              }}
+              className="p-1 rounded hover:bg-green-500/20 text-gray-400 hover:text-green-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+              title="View artifact"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -393,17 +595,33 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             <div className="flex-1">
               <h4 className="text-yellow-400 font-semibold mb-1">Data Connection Issue</h4>
               <p className="text-yellow-200/80 text-sm mb-2">
-                We're experiencing issues connecting to the data service. Some information may be unavailable or incomplete.
+                {error || "We're experiencing issues connecting to the data service. Some information may be unavailable or incomplete."}
               </p>
-              <button
-                onClick={() => {
-                  setHasDataIssues(false)
-                  loadTreeData()
-                }}
-                className="px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 rounded border border-yellow-500/30 text-sm transition-colors"
-              >
-                Retry Connection
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    setHasDataIssues(false)
+                    setError(null)
+                    // Clear cache and force fresh load
+                    await loadTreeData(true)
+                  }}
+                  className="px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 rounded border border-yellow-500/30 text-sm transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Retry Connection
+                </button>
+                {error?.includes('port 5001') && (
+                  <a
+                    href="http://localhost:5001/api/health"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded border border-blue-500/30 text-sm transition-colors flex items-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Check Backend Health
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -414,8 +632,22 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           <div className="flex items-center gap-3">
             <Layers className="w-6 h-6 text-purple-400" />
             <h2 className="text-2xl font-bold">Reality</h2>
+            {lastRefreshTime && (
+              <span className="text-xs text-gray-500">
+                Last updated: {lastRefreshTime.toLocaleTimeString()}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded border border-green-500/30 text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh tree data (auto-refreshes every 30 seconds)"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
             <button
               onClick={expandAll}
               className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 text-sm flex items-center gap-2 transition-colors"
@@ -438,7 +670,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         </p>
       </div>
 
-      <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700 max-h-[800px] overflow-y-auto">
+      <div className="bg-gray-900/50 rounded-lg p-2 sm:p-4 border border-gray-700 max-h-[600px] sm:max-h-[800px] overflow-y-auto">
         {loading ? (
           <div className="text-center py-8 text-gray-400">
             <p>Loading hierarchy tree...</p>
@@ -558,18 +790,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-800 rounded-lg border-2 border-blue-500/30 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-gray-800 rounded-lg border-2 border-blue-500/30 max-w-[95vw] sm:max-w-2xl lg:max-w-3xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex items-start justify-between">
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
+              <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-4 sm:p-6 flex items-start justify-between">
+                <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
+                  <div className="p-2 sm:p-3 bg-blue-500/20 rounded-lg flex-shrink-0">
                     {getNodeIcon(selectedNode.type)}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h2 className="text-2xl font-bold text-white">{getDisplayName(selectedNode.label)}</h2>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <h2 className="text-xl sm:text-2xl font-bold text-white break-words">{getDisplayName(selectedNode.label)}</h2>
                       {(selectedNode.immutable || hasNoData(selectedNode)) && (
                         <Lock 
                           className="w-5 h-5 text-purple-400" 

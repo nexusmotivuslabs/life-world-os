@@ -63,11 +63,37 @@ async function createNode(data: {
   orderIndex?: number
   metadata?: any
 }) {
-  // Get existing node if it exists
-  const existing = await prisma.realityNode.findUnique({
+  // First, try to find by ID
+  let existing = await prisma.realityNode.findUnique({
     where: { id: data.id },
     select: { metadata: true },
   })
+
+  // If not found by ID, check if a node with same title and parentId exists (unique constraint)
+  if (!existing) {
+    const existingByTitle = await prisma.realityNode.findFirst({
+      where: {
+        title: data.title,
+        parentId: data.parentId,
+      },
+      select: { id: true, metadata: true },
+    })
+    
+    if (existingByTitle) {
+      // Node exists with same title/parentId but different ID - update it
+      existing = existingByTitle
+      // Update the ID to match what we want
+      await prisma.realityNode.update({
+        where: { id: existingByTitle.id },
+        data: { id: data.id },
+      })
+      // Re-fetch with new ID
+      existing = await prisma.realityNode.findUnique({
+        where: { id: data.id },
+        select: { metadata: true },
+      })
+    }
+  }
 
   // Merge metadata if node exists
   const finalMetadata = existing
@@ -397,6 +423,19 @@ const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
   ],
   GROWTH_TIER: [
     {
+      id: 'education',
+      name: 'EDUCATION',
+      description: 'Education System (Tier 0). Learning, knowledge acquisition, and skill development across all domains.',
+      mantra: 'Learning is the foundation of all growth.',
+      route: '/master/education',
+      orderIndex: 0,
+      subSystems: [
+        { name: 'LEARNING', description: 'Learning systems and methods' },
+        { name: 'KNOWLEDGE', description: 'Knowledge acquisition and retention' },
+        { name: 'SKILLS', description: 'Skill development and mastery' },
+      ],
+    },
+    {
       id: 'investment',
       name: 'INVESTMENT',
       description: 'Portfolio management, rebalancing, and investment strategies.',
@@ -479,6 +518,405 @@ function getTierOrderIndex(tierName: string): number {
     CROSS_SYSTEM_STATES: 6,
   }
   return tierOrder[tierName] || 99
+}
+
+// Get Universal Concept title for each system
+function getUniversalConceptForSystem(systemId: string): string {
+  const conceptMap: Record<string, string> = {
+    'health': 'BIOLOGY',
+    'money': 'MONEY',
+    'energy': 'ENERGY',
+    'investment': 'INVESTMENT',
+    'training': 'TRAINING',
+    'education': 'LEARNING',
+    'travel': 'TRAVEL',
+    'meaning': 'MEANING',
+  }
+  return conceptMap[systemId] || 'CONCEPT'
+}
+
+// Seed system-specific pathways
+async function seedSystemPathways(systemId: string, universalConceptId: string, systemNodeId: string) {
+  // Health System Pathways
+  if (systemId === 'health') {
+    const healthPathways = [
+      {
+        title: 'ENERGY',
+        description: 'Mitochondrial function, Sleep, Hormones, Metabolic efficiency',
+        children: [
+          { title: 'MITOCHONDRIAL_FUNCTION', description: 'Cellular energy production' },
+          { title: 'SLEEP', description: 'Sleep quality and recovery' },
+          { title: 'HORMONES', description: 'Hormonal balance and regulation' },
+          { title: 'METABOLIC_EFFICIENCY', description: 'Metabolic health and efficiency' },
+        ],
+      },
+      {
+        title: 'NEUROSCIENCE',
+        description: 'Stress, Cognition, Mental Health',
+        children: [
+          { title: 'STRESS', description: 'Stress management and response' },
+          { title: 'COGNITION', description: 'Cognitive function and performance' },
+          { title: 'MENTAL_HEALTH', description: 'Mental health and wellbeing' },
+          {
+            title: 'NUTRITION',
+            description: 'Nutrition and brain health',
+            children: [
+              {
+                title: 'MACRONUTRIENTS',
+                description: 'Protein, Carbs, Fats',
+                children: [
+                  { title: 'PROTEIN', description: 'Protein sources and requirements' },
+                  { title: 'CARBS', description: 'Carbohydrate sources and metabolism' },
+                  { title: 'FATS', description: 'Fat sources and essential fatty acids' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'RESPIRATORY',
+        description: 'Air Quality, Breathing, Oxygen delivery',
+        children: [
+          { title: 'AIR_QUALITY', description: 'Environmental air quality' },
+          { title: 'BREATHING', description: 'Breathing techniques and patterns' },
+          { title: 'OXYGEN_DELIVERY', description: 'Oxygen transport and utilization' },
+        ],
+      },
+      {
+        title: 'MUSCULOSKELETAL',
+        description: 'Exercise, Movement, Posture',
+        children: [
+          { title: 'EXERCISE', description: 'Physical exercise and training' },
+          { title: 'MOVEMENT', description: 'Movement patterns and mobility' },
+          { title: 'POSTURE', description: 'Postural alignment and health' },
+        ],
+      },
+      {
+        title: 'CARDIOVASCULAR',
+        description: 'Heart Health, Blood Pressure, Circulation',
+        children: [
+          { title: 'HEART_HEALTH', description: 'Cardiovascular health' },
+          { title: 'BLOOD_PRESSURE', description: 'Blood pressure regulation' },
+          { title: 'CIRCULATION', description: 'Circulatory system health' },
+        ],
+      },
+      {
+        title: 'IMMUNE_SYSTEM',
+        description: 'Inflammation, Recovery, Social Connection',
+        children: [
+          { title: 'INFLAMMATION', description: 'Inflammatory response and management' },
+          { title: 'RECOVERY', description: 'Recovery and healing processes' },
+          { title: 'SOCIAL_CONNECTION', description: 'Social connections and immune health' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < healthPathways.length; i++) {
+      const pathway = healthPathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.BIOLOGICAL,
+        immutable: true,
+        orderIndex: i + 1,
+        metadata: {
+          isPathway: true,
+          systemId: 'health',
+          seededAt: new Date().toISOString(),
+        },
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j] as any // Type assertion for nested children
+          const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
+          await createNode({
+            id: childId,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.BIOLOGICAL,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: {
+              isPathway: true,
+              systemId: 'health',
+              seededAt: new Date().toISOString(),
+            },
+          })
+
+          // Add grandchildren if they exist (e.g., MACRONUTRIENTS -> Protein, Carbs, Fats -> FRUIT/Protein)
+          if (child.children && Array.isArray(child.children)) {
+            for (let k = 0; k < child.children.length; k++) {
+              const grandchild = child.children[k]
+              const grandchildId = `${childId}-${grandchild.title.toLowerCase().replace(/_/g, '-')}`
+              await createNode({
+                id: grandchildId,
+                title: grandchild.title,
+                description: grandchild.description,
+                parentId: childId,
+                nodeType: RealityNodeType.CATEGORY,
+                category: RealityNodeCategory.BIOLOGICAL,
+                immutable: true,
+                orderIndex: k + 1,
+                metadata: {
+                  isPathway: true,
+                  systemId: 'health',
+                  seededAt: new Date().toISOString(),
+                },
+              })
+
+              // Add great-grandchildren for Protein (FRUIT/Protein)
+              if (child.title === 'MACRONUTRIENTS' && grandchild.title === 'PROTEIN') {
+                await createNode({
+                  id: `${grandchildId}-fruit-protein`,
+                  title: 'FRUIT_PROTEIN',
+                  description: 'Fruit-based protein sources and plant proteins',
+                  parentId: grandchildId,
+                  nodeType: RealityNodeType.CATEGORY,
+                  category: RealityNodeCategory.BIOLOGICAL,
+                  immutable: true,
+                  orderIndex: 1,
+                  metadata: {
+                    isPathway: true,
+                    systemId: 'health',
+                    seededAt: new Date().toISOString(),
+                  },
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+    console.log(`        → Seeded Health pathways under BIOLOGY`)
+  }
+
+  // Finance System Pathways
+  if (systemId === 'money' || systemId === 'finance') {
+    const financePathways = [
+      {
+        title: 'INVESTMENT',
+        description: 'Investment strategies and asset management',
+        children: [
+          {
+            title: 'EQUITY_MARKETS',
+            description: 'Stock market investments',
+            children: [
+              { title: 'S&P_500', description: 'S&P 500 index investments' },
+              { title: 'INDIVIDUAL_STOCKS', description: 'Individual stock selection' },
+            ],
+          },
+          {
+            title: 'ASSET_ALLOCATION',
+            description: 'Portfolio allocation strategies',
+            children: [
+              { title: 'STOCKS', description: 'Stock allocation' },
+              { title: 'BONDS', description: 'Bond allocation' },
+              { title: 'CASH', description: 'Cash allocation' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'CASH_FLOW',
+        description: 'Income, Expenses, Savings Rate',
+        children: [
+          { title: 'INCOME', description: 'Income sources and management' },
+          { title: 'EXPENSES', description: 'Expense tracking and optimization' },
+          { title: 'SAVINGS_RATE', description: 'Savings rate and accumulation' },
+        ],
+      },
+      {
+        title: 'CAPITAL',
+        description: 'Debt, Leverage, Net Worth',
+        children: [
+          { title: 'DEBT', description: 'Debt management and optimization' },
+          { title: 'LEVERAGE', description: 'Strategic use of leverage' },
+          { title: 'NET_WORTH', description: 'Net worth tracking and growth' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < financePathways.length; i++) {
+      const pathway = financePathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.ECONOMIC,
+        immutable: true,
+        orderIndex: i + 1,
+        metadata: {
+          isPathway: true,
+          systemId: 'finance',
+          seededAt: new Date().toISOString(),
+        },
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
+          await createNode({
+            id: childId,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.ECONOMIC,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: {
+              isPathway: true,
+              systemId: 'finance',
+              seededAt: new Date().toISOString(),
+            },
+          })
+
+          // Add grandchildren if they exist
+          if (child.children) {
+            for (let k = 0; k < child.children.length; k++) {
+              const grandchild = child.children[k]
+              await createNode({
+                id: `${childId}-${grandchild.title.toLowerCase().replace(/_/g, '-')}`,
+                title: grandchild.title,
+                description: grandchild.description,
+                parentId: childId,
+                nodeType: RealityNodeType.CATEGORY,
+                category: RealityNodeCategory.ECONOMIC,
+                immutable: true,
+                orderIndex: k + 1,
+                metadata: {
+                  isPathway: true,
+                  systemId: 'finance',
+                  seededAt: new Date().toISOString(),
+                },
+              })
+            }
+          }
+        }
+      }
+    }
+    console.log(`        → Seeded Finance pathways under MONEY`)
+  }
+
+  // Education System Pathways
+  if (systemId === 'education') {
+    const educationPathways = [
+      {
+        title: 'TECHNICAL_KNOWLEDGE',
+        description: 'Computer Science, Mathematics, Physics',
+        children: [
+          { title: 'COMPUTER_SCIENCE', description: 'Programming, algorithms, systems' },
+          { title: 'MATHEMATICS', description: 'Mathematical concepts and applications' },
+          { title: 'PHYSICS', description: 'Physical principles and laws' },
+        ],
+      },
+      {
+        title: 'FINANCIAL_KNOWLEDGE',
+        description: 'Investing, Markets, Economics',
+        children: [
+          { title: 'INVESTING', description: 'Investment strategies and principles' },
+          { title: 'MARKETS', description: 'Market dynamics and analysis' },
+          { title: 'ECONOMICS', description: 'Economic principles and systems' },
+        ],
+      },
+      {
+        title: 'DOMAIN_KNOWLEDGE',
+        description: 'Health Science, Business, Psychology',
+        children: [
+          { title: 'HEALTH_SCIENCE', description: 'Health and medical knowledge' },
+          { title: 'BUSINESS', description: 'Business principles and practices' },
+          { title: 'PSYCHOLOGY', description: 'Psychological principles and behavior' },
+        ],
+      },
+      {
+        title: 'META_LEARNING',
+        description: 'Study Systems, Memory, Skill Acquisition',
+        children: [
+          { title: 'STUDY_SYSTEMS', description: 'Effective study methods and systems' },
+          { title: 'MEMORY', description: 'Memory techniques and retention' },
+          { title: 'SKILL_ACQUISITION', description: 'Skill learning and mastery' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < educationPathways.length; i++) {
+      const pathway = educationPathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: true,
+        orderIndex: i + 1,
+        metadata: {
+          isPathway: true,
+          systemId: 'education',
+          seededAt: new Date().toISOString(),
+        },
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          await createNode({
+            id: `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.FOUNDATIONAL,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: {
+              isPathway: true,
+              systemId: 'education',
+              seededAt: new Date().toISOString(),
+            },
+          })
+        }
+      }
+    }
+    console.log(`        → Seeded Education pathways under LEARNING`)
+  }
+
+  // For other systems, create a basic universal concept structure
+  if (!['health', 'money', 'finance', 'education'].includes(systemId)) {
+    // Create at least one pathway node to ensure the system has universal concepts
+    await createNode({
+      id: `${universalConceptId}-concepts`,
+      title: 'CONCEPTS',
+      description: `Universal concepts and principles for ${systemId} system.`,
+      parentId: universalConceptId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 1,
+      metadata: {
+        isPathway: true,
+        systemId: systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+    console.log(`        → Created basic universal concepts for ${systemId}`)
+  }
 }
 
 // Pareto-selected top 5 frameworks
@@ -1032,6 +1470,155 @@ export async function seedRealityHierarchy() {
       orderIndex: 3,
     })
 
+    // Create DERIVED_CONDITIONS under CONSTRAINTS_OF_REALITY
+    const derivedConditionsId = `${CONSTRAINTS_OF_REALITY_ID}-derived-conditions`
+    const derivedConditionsNode = await createNode({
+      id: derivedConditionsId,
+      title: 'DERIVED_CONDITIONS',
+      description: 'Conditions that emerge from the fundamental constraints of reality. Scarcity, trade-offs, opportunity costs, irreversibility, and degrees of freedom.',
+      parentId: CONSTRAINTS_OF_REALITY_ID,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 4,
+    })
+
+    // Create SCARCITY under DERIVED_CONDITIONS
+    const scarcityId = `${derivedConditionsId}-scarcity`
+    const scarcityNode = await createNode({
+      id: scarcityId,
+      title: 'SCARCITY',
+      description: 'The fundamental condition that resources are limited. All forms of scarcity constrain possibilities and create trade-offs.',
+      parentId: derivedConditionsId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 1,
+    })
+
+    // Create scarcity types
+    const scarcityTypes = [
+      { title: 'TIME_SCARCITY', description: 'Time is finite and cannot be created or stored. Every moment spent is an opportunity cost.' },
+      { title: 'ENERGY_SCARCITY', description: 'Energy is limited. Physical, mental, and emotional energy must be managed and conserved.' },
+      { title: 'ATTENTION_SCARCITY', description: 'Attention is a finite cognitive resource. Focus on one thing means ignoring others.' },
+      { title: 'RESOURCE_SCARCITY', description: 'Material resources are finite. Money, materials, and physical assets are limited.' },
+    ]
+
+    for (let i = 0; i < scarcityTypes.length; i++) {
+      await createNode({
+        id: `${scarcityId}-${scarcityTypes[i].title.toLowerCase().replace(/_/g, '-')}`,
+        title: scarcityTypes[i].title,
+        description: scarcityTypes[i].description,
+        parentId: scarcityId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: true,
+        orderIndex: i + 1,
+      })
+    }
+
+    // Create TRADE_OFFS under DERIVED_CONDITIONS
+    await createNode({
+      id: `${derivedConditionsId}-trade-offs`,
+      title: 'TRADE_OFFS',
+      description: 'The fundamental reality that choosing one option means forgoing others. Every decision involves trade-offs.',
+      parentId: derivedConditionsId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 2,
+    })
+
+    // Create OPPORTUNITY_COST under DERIVED_CONDITIONS
+    await createNode({
+      id: `${derivedConditionsId}-opportunity-cost`,
+      title: 'OPPORTUNITY_COST',
+      description: 'The value of the next best alternative that must be forgone when making a choice. The true cost of any decision.',
+      parentId: derivedConditionsId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 3,
+    })
+
+    // Create IRREVERSIBILITY under DERIVED_CONDITIONS
+    await createNode({
+      id: `${derivedConditionsId}-irreversibility`,
+      title: 'IRREVERSIBILITY',
+      description: 'Some actions and decisions cannot be undone. Time flows in one direction, and some consequences are permanent.',
+      parentId: derivedConditionsId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 4,
+    })
+
+    // Create DEGREES_OF_FREEDOM under DERIVED_CONDITIONS
+    const degreesOfFreedomId = `${derivedConditionsId}-degrees-of-freedom`
+    const degreesOfFreedomNode = await createNode({
+      id: degreesOfFreedomId,
+      title: 'DEGREES_OF_FREEDOM',
+      description: 'The number of independent parameters that can vary within constraints. Freedom exists within boundaries.',
+      parentId: derivedConditionsId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 5,
+    })
+
+    // Create FREEDOM under DEGREES_OF_FREEDOM
+    const freedomId = `${degreesOfFreedomId}-freedom`
+    await createNode({
+      id: freedomId,
+      title: 'FREEDOM',
+      description: 'The capacity to act within available degrees of freedom. True freedom exists within constraints, not in their absence.',
+      parentId: degreesOfFreedomId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 1,
+    })
+
+    // Create children of FREEDOM
+    const freedomChildren = [
+      {
+        title: 'AUTONOMY',
+        description: 'The ability to act independently without external control or influence. Self-directed action within available degrees of freedom.',
+        orderIndex: 1,
+      },
+      {
+        title: 'AGENCY',
+        description: 'The power to make choices and take action. The capacity to cause change through intentional behavior.',
+        orderIndex: 2,
+      },
+      {
+        title: 'CHOICE',
+        description: 'The availability of options to act upon. The range of alternatives available within constraints.',
+        orderIndex: 3,
+      },
+      {
+        title: 'CAPABILITY',
+        description: 'The skills, resources, and competencies needed to act. The practical means to exercise freedom.',
+        orderIndex: 4,
+      },
+    ]
+
+    for (const child of freedomChildren) {
+      await createNode({
+        id: `${freedomId}-${child.title.toLowerCase().replace(/_/g, '-')}`,
+        title: child.title,
+        description: child.description,
+        parentId: freedomId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: true,
+        orderIndex: child.orderIndex,
+      })
+    }
+
+    console.log('  → Created DERIVED_CONDITIONS hierarchy with Scarcity, Trade-offs, Opportunity Cost, Irreversibility, and Degrees of Freedom')
+    console.log('  → Created FREEDOM with children: Autonomy, Agency, Choice, and Capability')
+
     // Seed Fundamental Laws (5 Pareto-selected)
     console.log('  → Seeding Fundamental Laws...')
     for (let i = 0; i < FUNDAMENTAL_LAWS.length; i++) {
@@ -1283,6 +1870,28 @@ export async function seedRealityHierarchy() {
     })
     console.log('  → Created FINANCE system')
 
+    // Create Universal Concept for Finance (MONEY)
+    const financeUniversalConceptId = `${FINANCE_ID}-universal-concept`
+    const financeUniversalConcept = await createNode({
+      id: financeUniversalConceptId,
+      title: 'MONEY',
+      description: 'Universal concept for Finance system. The foundational domain knowledge that governs financial systems.',
+      parentId: FINANCE_ID,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 1, // First index - root artifact
+      metadata: {
+        isUniversalConcept: true,
+        systemId: 'finance',
+        seededAt: new Date().toISOString(),
+      },
+    })
+    console.log('  → Created Universal Concept: MONEY')
+
+    // Add Finance-specific pathways
+    await seedSystemPathways('finance', financeUniversalConceptId, FINANCE_ID)
+
     // Create finance category nodes and their children
     const financeGrandchildrenMap = new Map<string, Array<{ title: string; description: string; category?: RealityNodeCategory }>>()
     financeGrandchildrenMap.set('MONEY', MONEY_CHILDREN)
@@ -1362,6 +1971,29 @@ export async function seedRealityHierarchy() {
         })
         console.log(`    → Created ${system.name} system`)
 
+        // Create Universal Concept for this system (system-specific root)
+        const universalConceptTitle = getUniversalConceptForSystem(system.id)
+        const universalConceptId = `${systemNode.id}-universal-concept`
+        const universalConceptNode = await createNode({
+          id: universalConceptId,
+          title: universalConceptTitle,
+          description: `Universal concept for ${system.name} system. The foundational domain knowledge that governs this system.`,
+          parentId: systemNode.id,
+          nodeType: RealityNodeType.CATEGORY,
+          category: RealityNodeCategory.FOUNDATIONAL,
+          immutable: true,
+          orderIndex: 1, // First index - root artifact
+          metadata: {
+            isUniversalConcept: true,
+            systemId: system.id,
+            seededAt: new Date().toISOString(),
+          },
+        })
+        console.log(`      → Created Universal Concept: ${universalConceptTitle}`)
+
+        // Add system-specific pathways
+        await seedSystemPathways(system.id, universalConceptId, systemNode.id)
+
         // Create sub-systems if they exist (limit to 3 per system, level 4)
         if (system.subSystems && system.subSystems.length > 0) {
           const subSystemsToSeed = system.subSystems.slice(0, 3)
@@ -1375,7 +2007,7 @@ export async function seedRealityHierarchy() {
               nodeType: RealityNodeType.CATEGORY,
               category: RealityNodeCategory.SYSTEM as any, // Type assertion for newly added enum
               immutable: false,
-              orderIndex: i + 1,
+              orderIndex: i + 2, // After universal concept
               metadata: {
                 isSubSystem: true,
                 parentSystem: system.id,

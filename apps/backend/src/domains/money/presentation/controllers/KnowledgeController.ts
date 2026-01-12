@@ -11,8 +11,12 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
 const router = Router()
+
+// All knowledge routes require authentication (even though read-only)
+router.use(authenticateToken)
 
 // Initialize adapters and use cases
 // Use Ollama for local embeddings
@@ -29,7 +33,7 @@ const searchKnowledgeUseCase = new SearchKnowledgeUseCase(knowledgeBase, embeddi
  * GET /api/knowledge/search
  * Search knowledge base
  */
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/search', async (req: AuthRequest, res: Response) => {
   try {
     const query = req.query.q as string
     const agentId = req.query.agentId as string | undefined

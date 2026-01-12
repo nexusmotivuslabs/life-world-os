@@ -15,8 +15,12 @@ import {
 import { ScenarioAnalysisUseCase } from '../../application/useCases/ScenarioAnalysisUseCase.js'
 import { ExpenseCategoryType } from '../../domain/valueObjects/ExpenseCategory.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
 const router = Router()
+
+// All expense routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters and use cases
 const expenseRepository = new MonthlyExpenseRepositoryAdapter(prisma as PrismaClient)
@@ -30,10 +34,9 @@ const scenarioAnalysisUseCase = new ScenarioAnalysisUseCase()
  * POST /api/expenses
  * Create or update monthly expenses
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = (req.body.userId || req.query.userId || 'demo-user-id') as string
+    const userId = req.userId!
     const { monthlyIncome, expenses, month, year } = req.body
 
     if (!monthlyIncome || monthlyIncome <= 0) {
@@ -84,10 +87,9 @@ router.post('/', async (req: Request, res: Response) => {
  * GET /api/expenses
  * Get monthly expenses for user
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = (req.query.userId || 'demo-user-id') as string
+    const userId = req.userId!
     const month = req.query.month ? parseInt(req.query.month as string) : undefined
     const year = req.query.year ? parseInt(req.query.year as string) : undefined
 
@@ -110,7 +112,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/expenses/suggestions
  * Get expense suggestions based on income
  */
-router.get('/suggestions', async (req: Request, res: Response) => {
+router.get('/suggestions', async (req: AuthRequest, res: Response) => {
   try {
     const monthlyIncome = req.query.monthlyIncome
       ? parseFloat(req.query.monthlyIncome as string)
@@ -140,10 +142,9 @@ router.get('/suggestions', async (req: Request, res: Response) => {
  * POST /api/expenses/calculate-emergency-fund
  * Calculate emergency fund required based on expenses
  */
-router.post('/calculate-emergency-fund', async (req: Request, res: Response) => {
+router.post('/calculate-emergency-fund', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = (req.body.userId || req.query.userId || 'demo-user-id') as string
+    const userId = req.userId!
     const { monthsCoverage = 6, month, year } = req.body
 
     const requiredAmount = await calculateEmergencyFundUseCase.execute(
@@ -173,7 +174,7 @@ router.post('/calculate-emergency-fund', async (req: Request, res: Response) => 
  * POST /api/expenses/analyze-scenario
  * Analyze financial scenarios based on expense ranges
  */
-router.post('/analyze-scenario', async (req: Request, res: Response) => {
+router.post('/analyze-scenario', async (req: AuthRequest, res: Response) => {
   try {
     const { monthlyIncome, expenseRanges, goalType, goalAmount, timeHorizon } = req.body
 

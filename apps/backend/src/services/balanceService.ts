@@ -54,3 +54,6 @@ export function calculateBalance(categoryXP: CategoryXP): BalanceIndicator {
 }
 
 
+
+
+

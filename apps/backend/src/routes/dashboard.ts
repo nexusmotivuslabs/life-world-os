@@ -69,6 +69,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        firstName: user.firstName,
         overallXP: user.overallXP,
         overallRank: user.overallRank,
         overallLevel: user.overallLevel,

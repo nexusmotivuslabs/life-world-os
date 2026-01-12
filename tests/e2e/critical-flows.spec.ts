@@ -212,7 +212,8 @@ test.describe('Plane Labels Design', () => {
 
 test.describe('Backend Health', () => {
   test('should have healthy backend', async ({ request }) => {
-    const response = await request.get('http://localhost:3001/api/health');
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    const response = await request.get(`${backendUrl}/api/health`);
     
     expect(response.ok()).toBeTruthy();
     

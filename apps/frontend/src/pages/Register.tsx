@@ -1,17 +1,26 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../services/api'
 import Header from '../components/Header'
 import { useNavigation } from '../hooks/useNavigation'
 import { routes } from '../config/routes'
+
+declare global {
+  interface Window {
+    google: any
+  }
+}
 
 export default function Register() {
   const { navigateTo } = useNavigation()
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const googleButtonRef = useRef<HTMLDivElement>(null)
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,9 +28,9 @@ export default function Register() {
     setLoading(true)
 
     try {
-      const { token } = await authApi.register(email, username, password)
+      const { token } = await authApi.register(email, username, password, firstName || undefined)
       localStorage.setItem('token', token)
-      navigateTo(routes.choosePlane.path)
+      navigateTo('/choose-plane')
     } catch (err) {
       let errorMessage = 'Registration failed'
       
@@ -46,6 +55,74 @@ export default function Register() {
       setLoading(false)
     }
   }
+
+  const handleGoogleSignIn = async (credential: string) => {
+    setError('')
+    setLoading(true)
+
+    try {
+      const { token } = await authApi.googleLogin(credential)
+      localStorage.setItem('token', token)
+      // Redirect to choose-plane after successful Google login
+      navigate('/choose-plane', { replace: true })
+    } catch (err) {
+      let errorMessage = 'Google sign-in failed'
+      if (err instanceof Error) {
+        errorMessage = err.message
+        // Check if it's a "requires sign-up" error
+        if (err.message.includes('Account not found') || err.message.includes('sign up')) {
+          errorMessage = 'Account not found. Please create an account first using the form above, then you can use Google Sign-In.'
+        }
+      }
+      setError(errorMessage)
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return
+
+    // Wait for Google Identity Services to load
+    const initGoogleSignIn = () => {
+      if (window.google && googleButtonRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response: any) => {
+            if (response.credential) {
+              handleGoogleSignIn(response.credential)
+            }
+          },
+        })
+
+        window.google.accounts.id.renderButton(
+          googleButtonRef.current,
+          {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            width: '100%',
+          }
+        )
+      }
+    }
+
+    // Check if Google Identity Services is already loaded
+    if (window.google) {
+      initGoogleSignIn()
+    } else {
+      // Wait for script to load
+      const checkGoogle = setInterval(() => {
+        if (window.google) {
+          clearInterval(checkGoogle)
+          initGoogleSignIn()
+        }
+      }, 100)
+
+      // Cleanup after 10 seconds
+      setTimeout(() => clearInterval(checkGoogle), 10000)
+    }
+  }, [googleClientId])
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
@@ -74,6 +151,19 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
+                First Name (Optional)
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="John"
               />
             </div>
             <div>
@@ -112,6 +202,24 @@ export default function Register() {
           >
             {loading ? 'Creating account...' : 'Register'}
           </button>
+
+          {/* Divider */}
+          {googleClientId && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Google Sign-In Button */}
+              <div ref={googleButtonRef} className="w-full flex justify-center"></div>
+            </>
+          )}
+
           <p className="text-center text-sm text-gray-400">
             Already have an account?{' '}
             <Link to="/login" className="text-blue-400 hover:text-blue-300 underline">

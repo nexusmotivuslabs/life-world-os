@@ -114,3 +114,6 @@ Life World OS uses **Planes** as interaction modes. Planes are not pages—they 
 - "Browse systems"
 
 
+
+
+

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import LandingPage from './pages/LandingPage'
 import Admin from './pages/Admin'
 import ProductDetailView from './components/ProductDetailView'
 import ExploreSystems from './components/ExploreSystems'
@@ -19,167 +20,250 @@ import InsightPlane from './pages/InsightPlane'
 import ConfigurationPlane from './pages/ConfigurationPlane'
 import LoadoutPageLoader from './components/LoadoutPageLoader'
 import GuideBot from './components/GuideBot'
+import ProtectedRoute from './components/ProtectedRoute'
+import PublicRoute from './components/PublicRoute'
+import { useCacheWarming } from './hooks/useCacheWarming'
 
 function App() {
+  // Warm cache on app startup
+  useCacheWarming()
   return (
     <ErrorBoundary level="app">
       <BrowserRouter>
         <Routes>
-          {/* Public routes - no layout */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Public landing page - redirects authenticated users */}
+          <Route path="/" element={
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          } />
           
-          {/* Home - Root landing page (Choose Your Mode) */}
-          <Route path="/" element={<PlaneChoice />} />
+          {/* Auth routes - redirects authenticated users */}
+          <Route path="/login" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } />
+          <Route path="/register" element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          } />
           
-          {/* Alias for choose-plane */}
-          <Route path="/choose-plane" element={<PlaneChoice />} />
+          {/* Choose plane - after authentication */}
+          <Route path="/choose-plane" element={
+            <ProtectedRoute>
+              <PlaneChoice />
+            </ProtectedRoute>
+          } />
           
           {/* Knowledge routes - read-only */}
           <Route path="/knowledge" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/laws" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/constraints" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/overview" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/meaning" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/finance" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/search" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/artifacts" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/glossary" element={
-            <Layout>
-              <KnowledgePlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <KnowledgePlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/knowledge/awareness" element={<Navigate to="/knowledge/meaning" replace />} />
           
           {/* Systems routes - executable, state-changing */}
           {/* /systems shows list view by default (no redirect) */}
           <Route path="/systems" element={
-            <Layout>
-              <TierView defaultViewMode={'list' as const} />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView defaultViewMode={'list' as const} />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/systems/list" element={
-            <Layout>
-              <TierView defaultViewMode={'list' as const} />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView defaultViewMode={'list' as const} />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/systems/tiers" element={
-            <Layout>
-              <TierView defaultViewMode={'tiers' as const} />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView defaultViewMode={'tiers' as const} />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/systems/artifacts" element={
-            <Layout>
-              <TierView defaultViewMode={'artifacts' as const} />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView defaultViewMode={'artifacts' as const} />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/systems/tree" element={
-            <Layout>
-              <TierView defaultViewMode={'tree' as const} />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView defaultViewMode={'tree' as const} />
+              </Layout>
+            </ProtectedRoute>
           } />
           {/* Systems dashboard - accessible via direct navigation */}
           <Route path="/systems/dashboard" element={
-            <Layout>
-              <SystemsPlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <SystemsPlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           
           {/* Legacy dashboard route - redirect to systems/list */}
-          <Route path="/dashboard" element={<Navigate to="/systems/list" replace />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Navigate to="/systems/list" replace />
+            </ProtectedRoute>
+          } />
           
           {/* Insight routes - reflect */}
           <Route path="/insight" element={
-            <Layout>
-              <InsightPlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <InsightPlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           
           {/* Configuration routes - configure */}
           <Route path="/configuration" element={
-            <Layout>
-              <ConfigurationPlane />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ConfigurationPlane />
+              </Layout>
+            </ProtectedRoute>
           } />
           
           {/* Shared routes - accessible from both planes */}
           {/* Redirect /explore to /tiers (default view) */}
-          <Route path="/explore" element={<Navigate to="/tiers" replace />} />
+          <Route path="/explore" element={
+            <ProtectedRoute>
+              <Navigate to="/tiers" replace />
+            </ProtectedRoute>
+          } />
           {/* Legacy /tiers/systems route - redirect to /systems/tiers */}
-          <Route path="/tiers/systems" element={<Navigate to="/systems/tiers" replace />} />
+          <Route path="/tiers/systems" element={
+            <ProtectedRoute>
+              <Navigate to="/systems/tiers" replace />
+            </ProtectedRoute>
+          } />
           <Route path="/tiers" element={
-            <Layout>
-              <TierView />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TierView />
+              </Layout>
+            </ProtectedRoute>
           } />
           {/* Artifacts route - accessible from root */}
           <Route path="/artifacts" element={
-            <Layout>
-              <ArtifactsView />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ArtifactsView />
+              </Layout>
+            </ProtectedRoute>
           } />
           {/* Legacy explore view - accessible via direct navigation */}
           <Route path="/explore/all" element={
-            <Layout>
-              <ExploreSystems />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ExploreSystems />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/master/:domain" element={
-            <Layout>
-              <MasterDomainRouter />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <MasterDomainRouter />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/master/:domain/products/:productId" element={
-            <Layout>
-              <ProductDetailView />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ProductDetailView />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/system-health/:systemId/:view" element={
-            <Layout>
-              <SystemHealth />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <SystemHealth />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <Layout>
-              <Admin />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Admin />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route path="/loadouts" element={
-            <Layout>
-              <LoadoutPageLoader />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <LoadoutPageLoader />
+              </Layout>
+            </ProtectedRoute>
           } />
           {/* Root redirects to home */}
           <Route path="/home" element={<Navigate to="/" replace />} />

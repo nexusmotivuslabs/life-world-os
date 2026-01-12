@@ -128,3 +128,6 @@ Identify UI contradictions with Phase 1 mechanics and fix them to ensure UI trut
 Total fixes: 3 minimal changes to align truth.
 
 
+
+
+

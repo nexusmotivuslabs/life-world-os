@@ -223,3 +223,6 @@ Energy cannot be hoarded or bypassed.
 Energy is the foundation of all decisions.
 
 
+
+
+

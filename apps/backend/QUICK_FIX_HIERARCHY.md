@@ -55,3 +55,6 @@ Then refresh your frontend - the hierarchy should load!
 
 See detailed guide: `HIERARCHY_TROUBLESHOOTING.md`
 
+
+
+

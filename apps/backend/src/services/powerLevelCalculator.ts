@@ -146,3 +146,6 @@ function calculateSynergyBonus(itemsBySlot: Record<string, LoadoutItemData>): nu
 }
 
 
+
+
+

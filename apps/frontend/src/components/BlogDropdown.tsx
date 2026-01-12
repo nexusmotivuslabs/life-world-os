@@ -22,6 +22,13 @@ export default function BlogDropdown({ onPostSelect }: BlogDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Check authentication before loading blog posts
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     Promise.all([
       getAllBlogPosts(),
@@ -33,7 +40,11 @@ export default function BlogDropdown({ onPostSelect }: BlogDropdownProps) {
       })
       .catch((error) => {
         console.error('Error loading blog data:', error)
-        // Error will be handled by the UI (empty state)
+        // If authentication error, clear posts
+        if (error instanceof Error && error.message.includes('Authentication required')) {
+          setPosts([])
+          setCategories([])
+        }
       })
       .finally(() => setLoading(false))
   }, [])

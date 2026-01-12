@@ -1,16 +1,25 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../services/api'
 import Header from '../components/Header'
 import { useNavigation } from '../hooks/useNavigation'
 import { routes } from '../config/routes'
 
+declare global {
+  interface Window {
+    google: any
+  }
+}
+
 export default function Login() {
+  const navigate = useNavigate()
   const { navigateTo } = useNavigation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const googleButtonRef = useRef<HTMLDivElement>(null)
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,13 +29,82 @@ export default function Login() {
     try {
       const { token } = await authApi.login(email, password)
       localStorage.setItem('token', token)
-      navigateTo(routes.choosePlane.path)
+      // Redirect to choose-plane after successful login
+      navigate('/choose-plane', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }
   }
+
+  const handleGoogleSignIn = async (credential: string) => {
+    setError('')
+    setLoading(true)
+
+    try {
+      const { token } = await authApi.googleLogin(credential)
+      localStorage.setItem('token', token)
+      // Redirect to choose-plane after successful Google login
+      navigate('/choose-plane', { replace: true })
+    } catch (err) {
+      let errorMessage = 'Google sign-in failed'
+      if (err instanceof Error) {
+        errorMessage = err.message
+        // Check if it's a "requires sign-up" error
+        if (err.message.includes('Account not found') || err.message.includes('sign up')) {
+          errorMessage = 'Account not found. Please sign up first before using Google Sign-In.'
+        }
+      }
+      setError(errorMessage)
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return
+
+    // Wait for Google Identity Services to load
+    const initGoogleSignIn = () => {
+      if (window.google && googleButtonRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response: any) => {
+            if (response.credential) {
+              handleGoogleSignIn(response.credential)
+            }
+          },
+        })
+
+        window.google.accounts.id.renderButton(
+          googleButtonRef.current,
+          {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            width: '100%',
+          }
+        )
+      }
+    }
+
+    // Check if Google Identity Services is already loaded
+    if (window.google) {
+      initGoogleSignIn()
+    } else {
+      // Wait for script to load
+      const checkGoogle = setInterval(() => {
+        if (window.google) {
+          clearInterval(checkGoogle)
+          initGoogleSignIn()
+        }
+      }, 100)
+
+      // Cleanup after 10 seconds
+      setTimeout(() => clearInterval(checkGoogle), 10000)
+    }
+  }, [googleClientId])
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
@@ -78,6 +156,24 @@ export default function Login() {
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
+
+          {/* Divider */}
+          {googleClientId && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Google Sign-In Button */}
+              <div ref={googleButtonRef} className="w-full flex justify-center"></div>
+            </>
+          )}
+
           <p className="text-center text-sm text-gray-400">
             Don't have an account?{' '}
             <Link to="/register" className="text-blue-400 hover:text-blue-300 underline">

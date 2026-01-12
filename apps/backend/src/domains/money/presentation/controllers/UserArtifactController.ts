@@ -9,8 +9,12 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaUserArtifactRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaUserArtifactRepositoryAdapter.js'
 import { SaveUserArtifactUseCase } from '../../application/useCases/SaveUserArtifactUseCase.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
 const router = Router()
+
+// All artifact routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters
 const artifactRepository = new PrismaUserArtifactRepositoryAdapter(prisma)
@@ -20,10 +24,9 @@ const saveArtifactUseCase = new SaveUserArtifactUseCase(artifactRepository)
  * POST /api/artifacts
  * Save a new artifact (recommendation, calculation, etc.)
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.body.userId || 'demo-user-id' // Temporary for development
+    const userId = req.userId!
 
     const { productId, productName, type, title, data, description, tags } = req.body
 
@@ -68,10 +71,9 @@ router.post('/', async (req: Request, res: Response) => {
  * GET /api/artifacts
  * List all artifacts for the user
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.query.userId as string || 'demo-user-id' // Temporary for development
+    const userId = req.userId!
     const type = req.query.type as string | undefined
     const favorites = req.query.favorites === 'true'
     const productId = req.query.productId as string | undefined
@@ -114,10 +116,9 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/artifacts/search
  * Search artifacts
  */
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/search', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.query.userId as string || 'demo-user-id'
+    const userId = req.userId!
     const query = req.query.q as string
 
     if (!query) {
@@ -152,12 +153,18 @@ router.get('/search', async (req: Request, res: Response) => {
  * GET /api/artifacts/:id
  * Get artifact by ID
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.userId!
     const artifact = await artifactRepository.findById(req.params.id)
 
     if (!artifact) {
       return res.status(404).json({ error: 'Artifact not found' })
+    }
+
+    // Verify artifact belongs to user
+    if (artifact.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' })
     }
 
     res.json({
@@ -186,12 +193,18 @@ router.get('/:id', async (req: Request, res: Response) => {
  * PUT /api/artifacts/:id/favorite
  * Toggle favorite status
  */
-router.put('/:id/favorite', async (req: Request, res: Response) => {
+router.put('/:id/favorite', async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.userId!
     const artifact = await artifactRepository.findById(req.params.id)
 
     if (!artifact) {
       return res.status(404).json({ error: 'Artifact not found' })
+    }
+
+    // Verify artifact belongs to user
+    if (artifact.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' })
     }
 
     const updated = artifact.isFavorite
@@ -216,8 +229,20 @@ router.put('/:id/favorite', async (req: Request, res: Response) => {
  * DELETE /api/artifacts/:id
  * Delete artifact
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.userId!
+    const artifact = await artifactRepository.findById(req.params.id)
+    
+    if (!artifact) {
+      return res.status(404).json({ error: 'Artifact not found' })
+    }
+
+    // Verify artifact belongs to user
+    if (artifact.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
+
     await artifactRepository.delete(req.params.id)
     res.json({ message: 'Artifact deleted successfully' })
   } catch (error: any) {
@@ -227,5 +252,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
 })
 
 export default router
+
+
+
 
 

@@ -418,3 +418,6 @@ export const investmentDomainBibleLaws: BibleLawData[] = [
 ]
 
 
+
+
+

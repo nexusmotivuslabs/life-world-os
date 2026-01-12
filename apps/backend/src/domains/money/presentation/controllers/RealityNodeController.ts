@@ -14,6 +14,7 @@ const router = Router()
 /**
  * GET /api/reality-nodes
  * List all reality nodes with optional filters
+ * Supports HTTP cache headers for efficient caching
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -64,6 +65,20 @@ router.get('/', async (req: Request, res: Response) => {
       },
     })
 
+    // Add cache headers
+    res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
+    
+    // Generate ETag based on query params and node count
+    const cacheKey = `${parentId || 'null'}-${nodeType || 'all'}-${category || 'all'}-${immutable || 'all'}-${nodes.length}`
+    const etag = `"${Buffer.from(cacheKey).toString('base64').substring(0, 16)}"`
+    res.setHeader('ETag', etag)
+
+    // Check if client has cached version
+    const ifNoneMatch = req.headers['if-none-match']
+    if (ifNoneMatch === etag) {
+      return res.status(304).end() // Not Modified
+    }
+
     res.json({
       nodes,
       count: nodes.length,
@@ -112,6 +127,7 @@ router.get('/roots', async (req: Request, res: Response) => {
 /**
  * GET /api/reality-nodes/:id
  * Get a specific node by ID with full hierarchy context
+ * Supports HTTP cache headers (ETag, Last-Modified) for efficient caching
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -146,6 +162,29 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     if (!node) {
       return res.status(404).json({ error: 'Node not found' })
+    }
+
+    // Add cache headers for efficient client-side caching
+    const lastModified = node.updatedAt || node.createdAt
+    const etag = `"${node.id}-${lastModified.getTime()}"`
+    
+    res.setHeader('Last-Modified', lastModified.toUTCString())
+    res.setHeader('ETag', etag)
+    res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
+
+    // Check if client has cached version (304 Not Modified)
+    const ifNoneMatch = req.headers['if-none-match']
+    const ifModifiedSince = req.headers['if-modified-since']
+    
+    if (ifNoneMatch === etag) {
+      return res.status(304).end() // Not Modified
+    }
+    
+    if (ifModifiedSince) {
+      const clientDate = new Date(ifModifiedSince)
+      if (lastModified <= clientDate) {
+        return res.status(304).end() // Not Modified
+      }
     }
 
     res.json({ node })
@@ -223,6 +262,7 @@ router.get('/:id/ancestors', async (req: Request, res: Response) => {
 /**
  * GET /api/reality-nodes/:id/children
  * Get all children of a node
+ * Supports HTTP cache headers for efficient caching
  */
 router.get('/:id/children', async (req: Request, res: Response) => {
   try {
@@ -248,6 +288,28 @@ router.get('/:id/children', async (req: Request, res: Response) => {
       },
     })
 
+    // Calculate cache headers based on most recent child update
+    let maxUpdatedAt: Date | null = null
+    children.forEach(child => {
+      const updated = (child as any).updatedAt || (child as any).createdAt
+      if (updated && (!maxUpdatedAt || updated > maxUpdatedAt)) {
+        maxUpdatedAt = updated
+      }
+    })
+
+    if (maxUpdatedAt) {
+      const etag = `"children-${id}-${maxUpdatedAt.getTime()}"`
+      res.setHeader('Last-Modified', maxUpdatedAt.toUTCString())
+      res.setHeader('ETag', etag)
+      res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
+
+      // Check if client has cached version
+      const ifNoneMatch = req.headers['if-none-match']
+      if (ifNoneMatch === etag) {
+        return res.status(304).end() // Not Modified
+      }
+    }
+
     res.json({
       children,
       count: children.length,
@@ -261,6 +323,7 @@ router.get('/:id/children', async (req: Request, res: Response) => {
 /**
  * GET /api/reality-nodes/:id/hierarchy
  * Get full hierarchy context: ancestors + node + children
+ * Supports HTTP cache headers for efficient caching
  */
 router.get('/:id/hierarchy', async (req: Request, res: Response) => {
   try {
@@ -310,6 +373,20 @@ router.get('/:id/hierarchy', async (req: Request, res: Response) => {
       })
 
       currentNode = parent
+    }
+
+    // Calculate cache headers based on most recent update
+    const lastModified = node.updatedAt || node.createdAt
+    const etag = `"hierarchy-${id}-${lastModified.getTime()}"`
+    
+    res.setHeader('Last-Modified', lastModified.toUTCString())
+    res.setHeader('ETag', etag)
+    res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
+
+    // Check if client has cached version
+    const ifNoneMatch = req.headers['if-none-match']
+    if (ifNoneMatch === etag) {
+      return res.status(304).end() // Not Modified
     }
 
     res.json({

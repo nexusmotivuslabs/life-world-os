@@ -133,6 +133,7 @@ export interface DashboardData {
     id: string
     username: string
     email: string
+    firstName?: string | null // First name from Google or registration
     overallXP: number
     overallRank: OverallRank
     overallLevel: number

@@ -178,3 +178,6 @@ life-world-os/
 - `OPERATING_LOOPS.md` - Operating procedures
 
 
+
+
+

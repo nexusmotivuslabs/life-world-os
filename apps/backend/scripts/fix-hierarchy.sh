@@ -71,3 +71,6 @@ else
     echo "   3. Check CORS configuration"
 fi
 
+
+
+

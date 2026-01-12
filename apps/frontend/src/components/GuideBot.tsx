@@ -35,6 +35,7 @@ function GuideBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Check backend connection status
   useEffect(() => {
@@ -82,6 +83,33 @@ function GuideBot() {
       scrollToBottom();
     }
   }, [chatMessages, isBotMinimized]);
+
+  // Handle click outside to minimize chat
+  useEffect(() => {
+    if (isBotMinimized) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is outside the chat container
+      if (
+        chatContainerRef.current &&
+        !chatContainerRef.current.contains(target)
+      ) {
+        setIsBotMinimized(true);
+      }
+    };
+
+    // Add event listener with a small delay to avoid immediate triggering
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isBotMinimized]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -178,7 +206,7 @@ function GuideBot() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col h-[600px]">
+    <div ref={chatContainerRef} className="fixed bottom-6 right-6 z-[100] w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col h-[600px]">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
