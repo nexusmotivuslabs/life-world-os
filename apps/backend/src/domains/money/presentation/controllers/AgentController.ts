@@ -18,10 +18,12 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
 
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
+
 const router = Router()
 
-// Note: In production, add authentication middleware here
-// router.use(authenticateToken)
+// All agent routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters and use cases
 const agentRepository = new PrismaAgentRepositoryAdapter(prisma)
@@ -55,7 +57,7 @@ const chatWithAgentUseCase = new ChatWithAgentUseCase(
  * RESILIENCE: Returns 200 with empty array instead of 500 error to prevent cascading failures.
  * This allows the frontend to handle gracefully and show appropriate empty states.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const agentsList = await prisma.agent.findMany({
       orderBy: { order: 'asc' },
@@ -87,7 +89,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/agents/:agentId
  * Get agent details
  */
-router.get('/:agentId', async (req: Request, res: Response) => {
+router.get('/:agentId', async (req: AuthRequest, res: Response) => {
   try {
     const agentData = await prisma.agent.findUnique({
       where: { id: req.params.agentId },
@@ -123,13 +125,9 @@ router.get('/:agentId', async (req: Request, res: Response) => {
  * POST /api/agents/:agentId/chat
  * Chat with an agent
  */
-router.post('/:agentId/chat', async (req: Request, res: Response) => {
+router.post('/:agentId/chat', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Add proper authentication middleware
-    const userId = (req as any).userId || 'demo-user' // Temporary for development
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+    const userId = req.userId!
 
     const { query, conversationHistory } = req.body
 

@@ -22,8 +22,8 @@ export default function Header() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   const isAuthenticated = !isDemo && token && dashboard
   
-  // Get display name (email or username)
-  const displayName = dashboard?.user.email || dashboard?.user.username || ''
+  // Get display name - priority: firstName > username > email
+  const displayName = dashboard?.user.firstName || dashboard?.user.username || dashboard?.user.email || ''
   
   // Fetch dashboard on mount if token exists
   useEffect(() => {
@@ -34,6 +34,9 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    // Clear any cached dashboard data
+    useGameStore.setState({ dashboard: null, isDemo: false })
+    // Use window.location to ensure full page reload and clear state
     window.location.href = '/login'
   }
 
@@ -53,7 +56,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
-              to={routes.home.path}
+              to={isAuthenticated ? "/choose-plane" : routes.home.path}
               className="text-2xl font-bold hover:text-blue-400 transition-colors"
             >
               Life World OS
@@ -65,11 +68,9 @@ export default function Header() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            {isAuthenticated && (
-              <BlogDropdown onPostSelect={handleBlogPostSelect} />
-            )}
-            {isAuthenticated ? (
+            {isAuthenticated && token && !isDemo && dashboard ? (
               <>
+                <BlogDropdown onPostSelect={handleBlogPostSelect} />
                 <Link
                   to={routes.configuration.path}
                   className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white text-sm font-medium flex items-center gap-2 transition-colors"
@@ -115,12 +116,14 @@ export default function Header() {
             )}
           </div>
           
-          {/* Blog Modal */}
-          <BlogModal
-            slug={selectedBlogSlug}
-            isOpen={isBlogModalOpen}
-            onClose={handleCloseBlogModal}
-          />
+          {/* Blog Modal - only show when authenticated */}
+          {isAuthenticated && token && !isDemo && dashboard && (
+            <BlogModal
+              slug={selectedBlogSlug}
+              isOpen={isBlogModalOpen}
+              onClose={handleCloseBlogModal}
+            />
+          )}
         </div>
       </div>
     </header>

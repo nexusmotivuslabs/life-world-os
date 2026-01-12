@@ -42,6 +42,11 @@ OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 # Set to 'false' to use Google Places API (more accurate but expensive)
 # Defaults to 'true' if GOOGLE_PLACES_API_KEY is not set
 # USE_LLM_FOR_LOCATIONS=true
+
+# Google OAuth Configuration (Optional)
+# Get Client ID from: https://console.cloud.google.com/
+# See docs/GOOGLE_OAUTH_SETUP.md for setup instructions
+# GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
 ## Frontend .env File
@@ -50,6 +55,11 @@ Create `apps/frontend/.env` with the following:
 
 ```env
 VITE_API_URL=http://localhost:3001
+
+# Google OAuth Configuration (Optional)
+# Get Client ID from: https://console.cloud.google.com/
+# See docs/GOOGLE_OAUTH_SETUP.md for setup instructions
+# VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
 ## Security Notes
@@ -58,7 +68,13 @@ VITE_API_URL=http://localhost:3001
 - **DATABASE_URL**: Matches the credentials in `docker-compose.yml`
 - **OLLAMA_URL**: Default is `http://localhost:11434`. Change if Ollama runs on a different host/port.
 - **OLLAMA_MODEL**: Default is `llama3.2`. Change to use a different model (e.g., `mistral`, `qwen2.5`).
+- **GOOGLE_CLIENT_ID**: Required only if using Google OAuth. Get from Google Cloud Console.
 - Never commit `.env` files to version control
+
+## Authentication Setup
+
+- **Email/Password**: Configured by default with JWT authentication
+- **Google OAuth**: Optional. See [GOOGLE_OAUTH_SETUP.md](../docs/GOOGLE_OAUTH_SETUP.md) for setup instructions
 
 ## Ollama Setup
 

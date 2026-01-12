@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { prisma } from '../../../../lib/prisma.js'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 import { PrismaLocationRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaLocationRepositoryAdapter.js'
 import { PrismaLocationQueryRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaLocationQueryRepositoryAdapter.js'
 import { PrismaSavedLocationRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaSavedLocationRepositoryAdapter.js'
@@ -24,6 +25,35 @@ import { LocationRecommendationService } from '../../domain/services/LocationRec
 import { OpenAILMAdapter } from '../../../money/infrastructure/adapters/llm/OpenAILMAdapter.js'
 
 const router = Router()
+
+// Health check is public, all other routes require authentication
+router.get('/health', async (req: Request, res: Response) => {
+  // Health check handler (moved here to be before auth middleware)
+  try {
+    const useLLM = process.env.USE_LLM_FOR_LOCATIONS === 'true' || !process.env.GOOGLE_PLACES_API_KEY
+    const hasGroq = !!process.env.GROQ_API_KEY
+    const hasOpenAI = !!process.env.OPENAI_API_KEY
+    const hasGooglePlaces = !!process.env.GOOGLE_PLACES_API_KEY
+
+    res.json({
+      status: 'ok',
+      locationService: {
+        useLLM,
+        hasGroq,
+        hasOpenAI,
+        hasGooglePlaces,
+        provider: useLLM 
+          ? (hasGroq ? 'Groq' : hasOpenAI ? 'OpenAI' : 'None')
+          : (hasGooglePlaces ? 'Google Places' : 'None'),
+      },
+    })
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Health check failed' })
+  }
+})
+
+// All other travel routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters
 const locationRepository = new PrismaLocationRepositoryAdapter(prisma)
@@ -92,53 +122,17 @@ const getLocationAlternativesUseCase = new GetLocationAlternativesUseCase(
 const searchLocationsUseCase = new SearchLocationsUseCase(locationRepository, travelApi)
 const getLocationDetailsUseCase = new GetLocationDetailsUseCase(locationRepository, travelApi)
 
-/**
- * GET /api/travel/health
- * Health check endpoint
- */
-router.get('/health', async (req: Request, res: Response) => {
-  try {
-    const useLLM = process.env.USE_LLM_FOR_LOCATIONS === 'true' || !process.env.GOOGLE_PLACES_API_KEY
-    const hasGroq = !!process.env.GROQ_API_KEY
-    const hasOpenAI = !!process.env.OPENAI_API_KEY
-    const hasGooglePlaces = !!process.env.GOOGLE_PLACES_API_KEY
-
-    let apiStatus = 'not-configured'
-    if (useLLM) {
-      if (hasGroq) {
-        apiStatus = 'using-groq-llm'
-      } else if (hasOpenAI) {
-        apiStatus = 'using-openai-llm'
-      } else {
-        apiStatus = 'llm-not-configured'
-      }
-    } else if (hasGooglePlaces) {
-      try {
-        const isConnected = await travelApi.testConnection?.()
-        apiStatus = isConnected ? 'using-google-places' : 'google-places-unavailable'
-      } catch (error) {
-        apiStatus = 'google-places-unavailable'
-      }
-    }
-
-    res.json({
-      status: 'ok',
-      locationService: apiStatus,
-      timestamp: new Date().toISOString(),
-    })
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Health check failed' })
-  }
-})
+// Health check route is defined above (before auth middleware) - it's public
+// All other routes below require authentication via router.use(authenticateToken)
 
 /**
  * POST /api/travel/locations/query
  * Query for similar locations based on description
  */
-router.post('/locations/query', async (req: Request, res: Response) => {
+router.post('/locations/query', async (req: AuthRequest, res: Response) => {
   try {
     console.log('📍 Location query received:', { description: req.body.description, location: req.body.location })
-    const userId = req.body.userId || 'demo-user-id' // TODO: Extract from auth token
+    const userId = req.userId!
     const { description, location, limit } = req.body
 
     if (!description) {
@@ -227,7 +221,7 @@ router.post('/locations/query', async (req: Request, res: Response) => {
  * GET /api/travel/locations
  * List locations
  */
-router.get('/locations', async (req: Request, res: Response) => {
+router.get('/locations', async (req: AuthRequest, res: Response) => {
   try {
     const city = req.query.city as string | undefined
     const country = req.query.country as string | undefined
@@ -268,7 +262,7 @@ router.get('/locations', async (req: Request, res: Response) => {
  * GET /api/travel/locations/:id
  * Get location details
  */
-router.get('/locations/:id', async (req: Request, res: Response) => {
+router.get('/locations/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const refresh = req.query.refresh === 'true'
@@ -308,7 +302,7 @@ router.get('/locations/:id', async (req: Request, res: Response) => {
  * GET /api/travel/locations/:id/alternatives
  * Get alternative locations
  */
-router.get('/locations/:id/alternatives', async (req: Request, res: Response) => {
+router.get('/locations/:id/alternatives', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const radius = req.query.radius ? parseInt(req.query.radius as string) : undefined
@@ -344,9 +338,9 @@ router.get('/locations/:id/alternatives', async (req: Request, res: Response) =>
  * POST /api/travel/locations/:id/save
  * Save location to user's list
  */
-router.post('/locations/:id/save', async (req: Request, res: Response) => {
+router.post('/locations/:id/save', async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.body.userId || 'demo-user-id' // TODO: Extract from auth token
+    const userId = req.userId!
     const { id } = req.params
     const { notes, isFavorite } = req.body
 
@@ -376,9 +370,9 @@ router.post('/locations/:id/save', async (req: Request, res: Response) => {
  * GET /api/travel/saved
  * Get user's saved locations
  */
-router.get('/saved', async (req: Request, res: Response) => {
+router.get('/saved', async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.query.userId as string || 'demo-user-id' // TODO: Extract from auth token
+    const userId = req.userId!
     const favorites = req.query.favorites === 'true'
 
     let savedLocations
@@ -424,7 +418,7 @@ router.get('/saved', async (req: Request, res: Response) => {
  * POST /api/travel/locations/search
  * Search locations via Google Places API
  */
-router.post('/locations/search', async (req: Request, res: Response) => {
+router.post('/locations/search', async (req: AuthRequest, res: Response) => {
   try {
     const { query, location, limit } = req.body
 

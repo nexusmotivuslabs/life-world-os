@@ -5,6 +5,7 @@
  */
 
 import { Router, Request, Response } from 'express'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 import { StartGuideUseCase } from '../../application/useCases/StartGuideUseCase.js'
 import { ExecuteGuideStepUseCase } from '../../application/useCases/ExecuteGuideStepUseCase.js'
 import { PrismaGuideRepositoryAdapter } from '../../infrastructure/adapters/database/PrismaGuideRepositoryAdapter.js'
@@ -12,6 +13,9 @@ import { PrismaSessionRepositoryAdapter } from '../../infrastructure/adapters/da
 import { prisma } from '../../../../lib/prisma.js'
 
 const router = Router()
+
+// All guide routes require authentication
+router.use(authenticateToken)
 
 // Note: In production, add authentication middleware here
 // router.use(authenticateToken)
@@ -109,13 +113,9 @@ router.get('/:guideId', async (req: Request, res: Response) => {
  * POST /api/guides/:guideId/start
  * Start a guide workflow
  */
-router.post('/:guideId/start', async (req: Request, res: Response) => {
+router.post('/:guideId/start', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Add proper authentication middleware
-    const userId = (req as any).userId || 'demo-user' // Temporary for development
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+    const userId = req.userId!
 
     const { agentId, teamId } = req.body
 
@@ -137,13 +137,9 @@ router.post('/:guideId/start', async (req: Request, res: Response) => {
  * POST /api/guides/sessions/:sessionId/step
  * Execute a guide step
  */
-router.post('/sessions/:sessionId/step', async (req: Request, res: Response) => {
+router.post('/sessions/:sessionId/step', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Add proper authentication middleware
-    const userId = (req as any).userId || 'demo-user' // Temporary for development
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+    const userId = req.userId!
 
     const { stepData } = req.body
 

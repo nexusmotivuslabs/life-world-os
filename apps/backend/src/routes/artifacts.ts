@@ -8,14 +8,18 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { ArtifactCategory } from '@prisma/client'
+import { authenticateToken, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
+
+// All artifact routes require authentication
+router.use(authenticateToken)
 
 /**
  * GET /api/artifacts
  * List all artifacts with optional filters
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const category = req.query.category as ArtifactCategory | undefined
     const systemId = req.query.systemId as string | undefined
@@ -96,7 +100,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/artifacts/:id
  * Get a single artifact by ID with full relationships
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
 
@@ -162,7 +166,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * GET /api/artifacts/by-category/:category
  * Get all artifacts in a specific category
  */
-router.get('/by-category/:category', async (req: Request, res: Response) => {
+router.get('/by-category/:category', async (req: AuthRequest, res: Response) => {
   try {
     const category = req.params.category as ArtifactCategory
 
@@ -204,7 +208,7 @@ router.get('/by-category/:category', async (req: Request, res: Response) => {
  * GET /api/artifacts/:id/relationships
  * Get all relationships for an artifact
  */
-router.get('/:id/relationships', async (req: Request, res: Response) => {
+router.get('/:id/relationships', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const relationshipType = req.query.type as string | undefined
@@ -254,4 +258,7 @@ router.get('/:id/relationships', async (req: Request, res: Response) => {
 })
 
 export default router
+
+
+
 

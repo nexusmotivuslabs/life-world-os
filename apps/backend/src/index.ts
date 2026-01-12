@@ -37,6 +37,7 @@ import unifiedArtifactRoutes from './routes/artifacts.js'
 import { metricsMiddleware } from './middleware/metrics.js'
 import { validateAndExit } from './utils/startupValidation.js'
 import { enforceKnowledgePlaneReadOnly } from './middleware/planeGuard.js'
+import { authenticateToken } from './middleware/auth.js'
 
 // Load .env first, then .env.local (so .env.local overrides .env)
 dotenv.config()
@@ -85,13 +86,13 @@ app.use('/api/portfolio-rebalancing', portfolioRebalancingRoutes)
 app.use('/api/agents', agentRoutes)
 app.use('/api/teams', teamRoutes)
 app.use('/api/guides', guideRoutes)
-// Knowledge Plane routes - read-only (GET only)
-app.use('/api/knowledge', enforceKnowledgePlaneReadOnly, knowledgeRoutes)
-app.use('/api/power-laws', enforceKnowledgePlaneReadOnly, powerLawRoutes)
-app.use('/api/bible-laws', enforceKnowledgePlaneReadOnly, bibleLawRoutes)
-app.use('/api/awareness-layers', enforceKnowledgePlaneReadOnly, awarenessLayerRoutes)
-app.use('/api/reality-nodes', enforceKnowledgePlaneReadOnly, realityNodeRoutes)
-app.use('/api/unified-artifacts', enforceKnowledgePlaneReadOnly, unifiedArtifactRoutes)
+// Knowledge Plane routes - read-only (GET only) but require authentication
+app.use('/api/knowledge', authenticateToken, enforceKnowledgePlaneReadOnly, knowledgeRoutes)
+app.use('/api/power-laws', authenticateToken, enforceKnowledgePlaneReadOnly, powerLawRoutes)
+app.use('/api/bible-laws', authenticateToken, enforceKnowledgePlaneReadOnly, bibleLawRoutes)
+app.use('/api/awareness-layers', authenticateToken, enforceKnowledgePlaneReadOnly, awarenessLayerRoutes)
+app.use('/api/reality-nodes', authenticateToken, enforceKnowledgePlaneReadOnly, realityNodeRoutes)
+app.use('/api/unified-artifacts', authenticateToken, enforceKnowledgePlaneReadOnly, unifiedArtifactRoutes)
 
 // Systems Plane routes - executable, state-changing (go through physics engine)
 app.use('/api/products', productRoutes)

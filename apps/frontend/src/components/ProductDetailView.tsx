@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { X, Shield, Lock, ChevronRight, Calculator, BarChart3, TrendingUp, BookOpen, Package } from 'lucide-react'
+import { X, Shield, Lock, ChevronRight, Calculator, BarChart3, TrendingUp, BookOpen, Package, Smartphone } from 'lucide-react'
 import { productsApi, Product } from '../services/financeApi'
 import { useToastStore } from '../store/useToastStore'
 import EmergencyFundTracker from './EmergencyFundTracker'
@@ -21,7 +21,7 @@ interface ProductDetailViewProps {
 
 export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
   const { productId } = useParams<{ productId: string }>()
-  const { navigateToMaster } = useNavigation()
+  const { navigateToMaster, navigateTo } = useNavigation()
   const { addToast } = useToastStore()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -164,8 +164,15 @@ export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
           {/* Product Access */}
           {product.accessUrl && (
             <div className="bg-blue-500/10 border border-blue-500 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">This product is available in the app</p>
-              <p className="text-xs text-gray-500">Route: {product.accessUrl}</p>
+              <p className="text-sm text-gray-400 mb-3">This product is available in the app</p>
+              <button
+                onClick={() => navigateTo(product.accessUrl!)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-medium transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Smartphone className="w-5 h-5" />
+                <span>Open in App</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>

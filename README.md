@@ -76,20 +76,23 @@ dev-hub/domains/platform-engineering/implementation/deployment-strategy.md
 
 ## Setup Guides
 
-- [Quick Start - Docker](./QUICK_START_DOCKER.md) - 5-minute Docker setup
-- [Docker Environment Setup](./DOCKER_ENVIRONMENT_SETUP.md) - Comprehensive Docker guide
-- [Prerequisites](./PREREQUISITES.md) - Required software and installation
+- [Quick Start - Docker](./dev/setup/QUICK_START_DOCKER.md) - 5-minute Docker setup
+- [Docker Environment Setup](./dev/setup/DOCKER_ENVIRONMENT_SETUP.md) - Comprehensive Docker guide
+- [Prerequisites](./dev/setup/PREREQUISITES.md) - Required software and installation
+- [Local Database Setup](./dev/setup/LOCAL_DB_SETUP.md) - Database connection guide
+- [E2E Testing](./dev/testing/RUN_E2E_LOCAL.md) - End-to-end testing guide
 - [Platform Decision Framework](./docs/confluence/domains/platform-engineering/PLATFORM_DECISION_FRAMEWORK.md) - How decisions are made
+
+**📚 [All Developer Documentation](./dev/README.md)** - Complete technical documentation index
 
 ## Documentation
 
 📚 **[Documentation Index](./docs/INDEX.md)** - Complete documentation index
 
 ### V1 Release & Orchestration
-- [V1 Orchestration Guide](./V1_ORCHESTRATION_GUIDE.md) - Complete orchestration system
-- [V1 Setup Complete](./V1_SETUP_COMPLETE.md) - Quick start for V1 release
-- [Navigation Assessment](./NAVIGATION_ASSESSMENT.md) - Navigation architecture review
-- **[Git Flow Strategy](./GIT_FLOW_STRATEGY.md)** - Decision document (GitLab Flow selected)
+- [V1 Release Notes](./dev/releases/V1.0.0_RELEASE.md) - V1.0.0 release documentation
+- [Navigation Assessment](./dev/NAVIGATION_ASSESSMENT.md) - Navigation architecture review
+- **[GitLab Flow Guide](./docs/confluence/domains/platform-engineering/implementation/gitlab-flow-guide.md)** - Implementation guide
 - **[GitLab Flow Guide](./docs/confluence/domains/platform-engineering/implementation/gitlab-flow-guide.md)** - Implementation guide ⭐
 - **[GitLab Flow Best Practices](./docs/confluence/domains/platform-engineering/implementation/gitlab-flow-best-practices.md)** - Best practices ⭐
 
@@ -108,7 +111,7 @@ npm run v1:orchestrate # Full orchestrator
 - npm 9+
 - Docker and Docker Compose (for database)
 
-See [PREREQUISITES.md](./PREREQUISITES.md) for detailed requirements.
+See [PREREQUISITES.md](./dev/setup/PREREQUISITES.md) for detailed requirements.
 
 ### Setup
 

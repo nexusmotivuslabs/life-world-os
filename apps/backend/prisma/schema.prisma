@@ -243,7 +243,9 @@ model User {
   id                         String      @id @default(uuid())
   email                      String      @unique @db.VarChar(255)
   username                   String      @unique @db.VarChar(100)
-  passwordHash               String      @db.VarChar(255)
+  firstName                  String?     @db.VarChar(100) // First name from Google or registration
+  passwordHash               String?     @db.VarChar(255)
+  googleId                   String?     @unique @db.VarChar(255)
   currentSeason              Season      @default(SPRING)
   seasonStartDate            DateTime    @default(now())
   overallXP                  Int         @default(0)

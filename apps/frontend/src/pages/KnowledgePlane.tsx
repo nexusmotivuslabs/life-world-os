@@ -236,14 +236,14 @@ export default function KnowledgePlane() {
   // If on landing page, show plane selection
   if (!isInView) {
     return (
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-12 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 bg-blue-500/20 rounded-lg">
               <BookOpen className="w-8 h-8 text-blue-400" />
             </div>
-            <h1 className="text-5xl font-bold">Knowledge</h1>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold">Knowledge</h1>
           </div>
         </div>
 
@@ -412,7 +412,7 @@ export default function KnowledgePlane() {
           onClick={() => setShowFocusSystemModal(false)}
         >
           <div 
-            className="bg-gray-800 rounded-xl p-8 border-2 border-gray-700 max-w-4xl w-full shadow-2xl" 
+            className="bg-gray-800 rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-gray-700 max-w-[95vw] sm:max-w-2xl lg:max-w-4xl w-full shadow-2xl" 
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">

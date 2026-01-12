@@ -399,6 +399,122 @@ async function seedRealityNodeArtifacts() {
   }
 
   console.log(`  ✅ Seeded ${lawsAndPrinciples.length} reality node artifacts`)
+
+  // Create artifacts for first-level branch nodes (root artifacts describing each branch)
+  // The first index (orderIndex 1) of all branches should have its own artifact
+  console.log('\n📚 Creating root artifacts for first-level branch nodes...')
+  
+  // Get all nodes with orderIndex 1 (first index of each branch)
+  // These represent the root artifacts for each branch
+  const firstLevelNodes = await prisma.realityNode.findMany({
+    where: {
+      orderIndex: 1,
+      parentId: {
+        not: null, // Not the root REALITY node
+      },
+    },
+    include: {
+      parent: true, // Include parent for context
+    },
+    orderBy: { orderIndex: 'asc' },
+  })
+
+  // Create artifacts for all first-level nodes (they describe the branch)
+  for (const node of firstLevelNodes) {
+    // Determine appropriate category based on node type
+    let artifactCategory = ArtifactCategory.CONCEPT
+    let iconName = 'BookOpen'
+    
+    if (node.nodeType === 'LAW') {
+      artifactCategory = ArtifactCategory.LAW
+      iconName = 'BookOpen'
+    } else if (node.nodeType === 'PRINCIPLE') {
+      artifactCategory = ArtifactCategory.PRINCIPLE
+      iconName = 'Lightbulb'
+    } else if (node.nodeType === 'FRAMEWORK') {
+      artifactCategory = ArtifactCategory.CONCEPT
+      iconName = 'Target'
+    } else {
+      // For categories and other types, use CONCEPT
+      artifactCategory = ArtifactCategory.CONCEPT
+      iconName = 'Layers'
+    }
+
+    await upsertArtifact({
+      systemId: 'reality',
+      systemType: node.nodeType.toLowerCase(),
+      sourceId: node.id,
+      title: node.title,
+      description: node.description || `Root artifact describing ${node.title}. This is the foundational concept for this branch of the reality hierarchy.`,
+      category: artifactCategory,
+      iconName,
+      tags: [
+        'reality',
+        'branch-root',
+        node.nodeType.toLowerCase(),
+        node.title.toLowerCase().replace(/_/g, '-'),
+        ...(node.category ? [node.category.toLowerCase()] : []),
+        ...(node.parent ? [`parent-${node.parent.title.toLowerCase().replace(/_/g, '-')}`] : []),
+      ],
+      metadata: {
+        ...(node.metadata || {}),
+        isBranchRoot: true,
+        branchDescription: node.description,
+        parentTitle: node.parent?.title,
+      },
+      realityNodeId: node.id,
+      orderIndex: node.orderIndex, // Keep original order
+    })
+  }
+
+  console.log(`  ✅ Created ${firstLevelNodes.length} root branch artifacts (first index of each branch)`)
+
+  // Also create artifacts for major category nodes under CONSTRAINTS_OF_REALITY
+  // (LAWS, PRINCIPLES, FRAMEWORKS, DERIVED_CONDITIONS)
+  const majorCategoryNodes = await prisma.realityNode.findMany({
+    where: {
+      nodeType: 'CATEGORY',
+      parentId: 'constraints-of-reality',
+    },
+    orderBy: { orderIndex: 'asc' },
+  })
+
+  for (const node of majorCategoryNodes) {
+    // Check if artifact already exists (might have been created above if orderIndex is 1)
+    const existing = await prisma.artifact.findFirst({
+      where: {
+        realityNodeId: node.id,
+      },
+    })
+
+    if (!existing) {
+      await upsertArtifact({
+        systemId: 'reality',
+        systemType: 'concept',
+        sourceId: node.id,
+        title: node.title,
+        description: node.description || `Root artifact describing ${node.title}. This category contains fundamental ${node.title.toLowerCase()} that govern reality.`,
+        category: ArtifactCategory.CONCEPT,
+        iconName: 'Layers',
+        tags: [
+          'reality',
+          'concept',
+          'category-root',
+          node.title.toLowerCase().replace(/_/g, '-'),
+          ...(node.category ? [node.category.toLowerCase()] : []),
+        ],
+        metadata: {
+          ...(node.metadata || {}),
+          isCategoryRoot: true,
+          categoryDescription: node.description,
+        },
+        realityNodeId: node.id,
+        orderIndex: node.orderIndex,
+      })
+    }
+  }
+
+  console.log(`  ✅ Ensured ${majorCategoryNodes.length} major category artifacts exist`)
 }
 
 /**

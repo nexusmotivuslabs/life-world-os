@@ -15,6 +15,7 @@ import ArtifactsView from '../components/ArtifactsView'
 import HierarchyTreeView from '../components/knowledge/HierarchyTreeView'
 import GenericTierView, { TierItem } from '../components/GenericTierView'
 import { SystemTier } from '../types'
+import { realityNodeApi } from '../services/financeApi'
 
 type ViewMode = 'tiers' | 'list' | 'artifacts' | 'tree'
 
@@ -27,6 +28,18 @@ export default function TierView({ defaultViewMode = 'list' }: TierViewProps) {
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode)
   const [searchQuery, setSearchQuery] = useState('')
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  // Set up periodic refresh for tree view (every 30 seconds)
+  useEffect(() => {
+    if (viewMode === 'tree') {
+      const interval = setInterval(() => {
+        setRefreshTrigger(prev => prev + 1)
+      }, 30000) // 30 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [viewMode])
 
   // Sync viewMode with route
   useEffect(() => {
@@ -157,7 +170,10 @@ export default function TierView({ defaultViewMode = 'list' }: TierViewProps) {
       ) : viewMode === 'artifacts' ? (
         <ArtifactsView />
       ) : viewMode === 'tree' ? (
-        <HierarchyTreeView rootNodeId="constraints-of-reality" />
+        <HierarchyTreeView 
+          rootNodeId="constraints-of-reality" 
+          refreshTrigger={refreshTrigger}
+        />
       ) : (
         <div className="overflow-auto max-h-[calc(100vh-400px)]">
           <GenericTierView

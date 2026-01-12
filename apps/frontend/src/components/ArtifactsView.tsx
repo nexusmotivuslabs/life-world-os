@@ -18,8 +18,8 @@
  * - Cross-system navigation: Links to system-specific management interfaces
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap,
@@ -82,6 +82,7 @@ interface Artifact {
   icon: React.ComponentType<{ className?: string }>
   route?: string
   details?: string[] // Generic details about what this artifact is
+  examples?: string[] // Real-world practical examples for readers to take action
   tags?: string[] // Additional metadata tags for filtering
   // Extended fields for System artifacts
   systemOverview?: string[]
@@ -297,6 +298,16 @@ const artifacts: Artifact[] = [
       'Relationships, Leadership, Negotiation',
       'Energy domain applications'
     ],
+    examples: [
+      'Law 1: Never Outshine the Master - Let your boss take credit, build trust, then advance',
+      'Law 3: Conceal Your Intentions - Keep your plans private until ready to execute',
+      'Law 6: Court Attention at All Costs - Build your personal brand through consistent visibility',
+      'Law 13: When Asking for Help, Appeal to Self-Interest - Frame requests to benefit the other party',
+      'Law 15: Crush Your Enemy Totally - In business, eliminate competition completely when possible',
+      'Law 20: Do Not Commit to Anyone - Keep options open, avoid premature commitments',
+      'Law 29: Plan All the Way to the End - Think through consequences before acting',
+      'Law 48: Assume Formlessness - Stay flexible, adapt to circumstances'
+    ],
     references: ['money', 'engines', 'optionality', 'bible-laws', 'compound-growth-principle', 'asymmetric-risk-reward']
   },
   {
@@ -313,6 +324,16 @@ const artifacts: Artifact[] = [
       'Money, Investment, Career',
       'Business, Relationships, Leadership',
       'Spiritual Growth, Stewardship'
+    ],
+    examples: [
+      'Stewardship: Tithe 10%, save 20%, invest for long-term (Parable of the Talents)',
+      'Debt management: Avoid unnecessary debt, pay debts promptly (Romans 13:8)',
+      'Hard work: Consistent effort leads to provision (Proverbs 14:23)',
+      'Generosity: Give first, then receive (Luke 6:38)',
+      'Contentment: Avoid greed, find satisfaction in what you have (Hebrews 13:5)',
+      'Planning: Count the cost before starting projects (Luke 14:28)',
+      'Integrity: Honest business practices build trust and reputation',
+      'Sabbath rest: Take regular breaks to maintain capacity and perspective'
     ],
     references: ['money', 'meaning', 'engines', 'laws-power', 'time-value-of-money', 'sustainable-balance']
   },
@@ -331,6 +352,16 @@ const artifacts: Artifact[] = [
       'Long-term mindset required',
       'Exponential growth curves'
     ],
+    examples: [
+      'Reading 20 pages daily: 7,300 pages/year = 36 books, builds knowledge exponentially over 10 years',
+      'Saving £200/month at 7%: £24K invested becomes £350K in 30 years (14x return)',
+      'Learning coding 1 hour/day: In 2 years, skill level exceeds most professionals',
+      'Writing daily: 365 blog posts/year builds authority and career opportunities over time',
+      'Exercise 30 min/day: Small daily investment prevents major health costs and increases lifespan',
+      'Networking: One meaningful connection/month compounds into powerful network over years',
+      'Learning a language 15 min/day: Fluent in 2-3 years without intensive study',
+      'Investing in relationships: Regular check-ins compound into deep, supportive networks'
+    ],
     references: ['engines', 'money', 'optionality', 'keys', 'time-value-of-money', 'compound-interest', 'tier-system']
   },
   {
@@ -346,6 +377,16 @@ const artifacts: Artifact[] = [
       'Efficiency matters in transformations',
       'No perpetual motion',
       'Zero-sum in closed systems'
+    ],
+    examples: [
+      'Work-life balance: Energy spent on work must come from personal time - manage the tradeoff',
+      'Decision fatigue: Making many small decisions depletes energy for important ones later',
+      'Task batching: Group similar tasks to reduce energy lost in context switching',
+      'Morning routine: Use peak energy for high-value work, save low-energy tasks for afternoon',
+      'Social energy: Time with extroverts recharges them but drains introverts - plan accordingly',
+      'Exercise timing: Physical energy investment can increase mental energy through improved circulation',
+      'Meal planning: Reduces daily decision energy, freeing mental capacity for important work',
+      'Automation: Systems that run themselves preserve your energy for higher-leverage activities'
     ],
     references: ['energy', 'capacity', 'water', 'sustainable-balance']
   },
@@ -363,6 +404,16 @@ const artifacts: Artifact[] = [
       'Risk management is critical',
       'Diversification reduces risk'
     ],
+    examples: [
+      'Stocks vs Bonds: Stocks average 10% returns but can drop 50%, bonds are safer at 3-5%',
+      'Starting a business: High income potential but risk of losing investment and time',
+      'Switching careers: Higher salary potential but risk of starting over and income gap',
+      'Real estate: Rental properties offer cash flow but require maintenance and vacancy risk',
+      'Education investment: Degree costs £50K-200K, higher earnings but no guaranteed job',
+      'Moving for opportunity: Better job market but costs and relationship disruption',
+      'Investing vs saving: Market investments grow faster than savings but can lose value',
+      'Time vs money: Spending time learning skills (risk) can save money long-term (return)'
+    ],
     references: ['money', 'oxygen', 'optionality', 'asymmetric-risk-reward', 'diversification-hedging', 'cash-flow-management']
   },
   {
@@ -379,6 +430,16 @@ const artifacts: Artifact[] = [
       'Too much too fast = injury',
       'Systematic progression required'
     ],
+    examples: [
+      'Weightlifting: Add 5lbs per week to bench press, not 50lbs - body adapts gradually',
+      'Running: Increase distance 10% weekly (3 miles → 3.3 → 3.6), not doubling immediately',
+      'Learning coding: Start with tutorials, then small projects, then complex apps - build complexity',
+      'Public speaking: Start with small groups, then larger audiences, then conferences',
+      'Writing: Begin with 500 words/day, increase to 1000, then longer-form content',
+      'Meditation: Start 5 minutes daily, add 1 minute weekly until reaching 20 minutes',
+      'Cold exposure: Begin with 30 seconds, increase by 15 seconds weekly',
+      'Work responsibilities: Take on slightly more challenging projects, not overwhelming ones'
+    ],
     references: ['capacity', 'water', 'energy', 'armor', 'sustainable-balance', 'energy-conservation-principle']
   },
   {
@@ -394,6 +455,16 @@ const artifacts: Artifact[] = [
       'Context-dependent balance',
       'Pendulum swings inevitable',
       'Long-term orientation'
+    ],
+    examples: [
+      'Work schedule: 50-hour weeks with 2-week vacation quarterly, not 80-hour weeks or 20-hour weeks',
+      'Investment strategy: 70% stocks/30% bonds balances growth with safety, rebalance annually',
+      'Fitness: Train 4 days/week with 3 rest days, not 7 days or 0 days',
+      'Social life: 2-3 social events/week maintains relationships without exhaustion',
+      'Learning: Study 2 hours daily with weekends off, not 8-hour marathons or no study',
+      'Spending: Save 20% income while enjoying 80%, not hoarding or spending everything',
+      'Diet: 80% healthy foods, 20% treats maintains nutrition without deprivation',
+      'Career growth: Take calculated risks while maintaining safety net, not all-in or all-safe'
     ],
     references: ['capacity', 'energy', 'meaning', 'optionality', 'tier-system', 'progressive-overload', 'risk-return-tradeoff']
   },
@@ -412,6 +483,16 @@ const artifacts: Artifact[] = [
       'Foundation of finance',
       'Inflation erodes purchasing power'
     ],
+    examples: [
+      'Pay off debt vs invest: £10K credit card debt at 20% costs more than investing that £10K at 7% - pay debt first',
+      'Early retirement savings: £5K invested at 25 grows to £75K by 65, but £5K at 35 only grows to £38K',
+      'Delayed gratification: Buying £50K car now costs opportunity to earn £400K+ by retirement',
+      'Salary negotiation: £5K raise now worth £200K+ over career through compounding raises',
+      'Education ROI: £100K MBA pays off if increases earnings £10K/year for 10+ years',
+      'Renting vs buying: Rent and invest down payment if investment returns exceed home appreciation',
+      'Discount rates: £1000 today is worth more than £1000 in 5 years due to earning potential',
+      'Prepayment decisions: Pay extra on mortgage only if rate > investment return potential'
+    ],
     references: ['money', 'engines', 'oxygen', 'compound-interest', 'compound-growth-principle', 'cash-flow-management']
   },
   {
@@ -427,6 +508,16 @@ const artifacts: Artifact[] = [
       'Venture capital model',
       'Antifragility',
       'Convexity in returns'
+    ],
+    examples: [
+      'Investing in startups: Risk £10K with potential for £1M+ return (100x upside, limited downside)',
+      'Writing a book: Invest time for potential royalties and career advancement, minimal downside',
+      'Learning valuable skills: Time investment with unlimited career upside, low financial risk',
+      'Real estate options: Small option fee controls large property, limited to option cost if unfavorable',
+      'Stock options/LEAPS: Small premium controls 100 shares, downside limited to premium paid',
+      'Side business while employed: Build income stream with job security as downside protection',
+      'Networking at conferences: Time cost vs. potential career-changing connections',
+      'Creating content online: Low-cost publishing with potential for viral reach and income'
     ],
     references: ['optionality', 'money', 'engines', 'keys', 'risk-return-tradeoff', 'compound-growth-principle']
   },
@@ -444,6 +535,16 @@ const artifacts: Artifact[] = [
       'Hedging protects downside',
       'Over-diversification dilutes returns'
     ],
+    examples: [
+      'Stock portfolio: Invest in 20+ companies across sectors (tech, healthcare, finance), not just one industry',
+      'Asset allocation: 60% stocks, 30% bonds, 10% real estate - different assets perform in different cycles',
+      'Income streams: Salary + freelance + rental income + investments - if one fails, others continue',
+      'Career skills: Technical skills + communication + business knowledge - makes you less replaceable',
+      'Emergency fund: Keep 6 months expenses in high-yield savings as hedge against job loss',
+      'Geographic diversification: Invest in US, international, emerging markets - reduces country risk',
+      'Industry exposure: Work in tech but invest across healthcare, finance, consumer goods',
+      'Option hedging: Own 100 shares of stock, buy put option to limit downside to 10% loss'
+    ],
     references: ['money', 'optionality', 'oxygen', 'risk-return-tradeoff', 'cash-flow-management']
   },
   {
@@ -460,6 +561,16 @@ const artifacts: Artifact[] = [
       'Operating cash flow critical',
       'Burn rate awareness'
     ],
+    examples: [
+      'Monthly budget: Track income timing (bi-weekly pay) vs expenses (monthly bills) to avoid shortfalls',
+      'Emergency fund: Keep 3-6 months expenses in savings to handle cash flow gaps',
+      'Business operations: Ensure receivables (30-60 days) don\'t exceed payables timing',
+      'Credit card strategy: Pay in full monthly, use 30-day float to optimize cash timing',
+      'Side hustle timing: Start part-time while employed to maintain cash flow during transition',
+      'Expense timing: Schedule large purchases after payday, not before, to maintain liquidity',
+      'Investment liquidity: Keep some assets easily accessible (not all in retirement accounts)',
+      'Subscription audit: Cancel unused subscriptions to improve monthly cash flow by £50-200'
+    ],
     references: ['oxygen', 'money', 'engines', 'optionality', 'time-value-of-money', 'diversification-hedging']
   },
   {
@@ -475,6 +586,16 @@ const artifacts: Artifact[] = [
       'Start early, benefit greatly',
       'Reinvestment drives compounding',
       'Works for and against you'
+    ],
+    examples: [
+      'Pension contributions: £500/month from age 25-65 at 7% = £1.2M (your £240K becomes £1.2M)',
+      'Dividend reinvestment: £10K in dividend stocks reinvesting dividends doubles in 10 years vs 14 years without',
+      'High-yield savings: £20K at 5% compounds to £32K in 10 years with no additional deposits',
+      'Debt compounding: £5K credit card at 20% becomes £31K in 10 years if only minimum payments',
+      'Investment returns: £100K at 10% annual return becomes £260K in 10 years, £673K in 20 years',
+      'Early investing advantage: Starting at 20 vs 30 means 2-3x more wealth at retirement',
+      'Reinvestment strategy: Taking profits and reinvesting accelerates growth vs spending gains',
+      'Compound effect: Small regular investments (£200/month) outperform large sporadic ones (£10K every 5 years)'
     ],
     references: ['money', 'engines', 'optionality', 'compound-growth-principle', 'time-value-of-money']
   },
@@ -493,6 +614,16 @@ const artifacts: Artifact[] = [
       'Burnout = chronic deficit',
       'Recovery is productive'
     ],
+    examples: [
+      'Sleep 7-9 hours nightly: Non-negotiable recovery that enables next-day performance',
+      'Take weekends off: 2 days recovery per week prevents chronic depletion',
+      'Active recovery days: Light walking/yoga instead of complete rest maintains momentum',
+      'Vacation planning: Take 1-2 week breaks quarterly to fully recharge',
+      'Daily breaks: 15-min breaks every 90 minutes maintain focus and energy',
+      'Evening wind-down: 1-hour screen-free routine before bed improves sleep quality',
+      'Meditation/breathing: 10-min daily practice reduces stress and aids recovery',
+      'Seasonal rhythms: Lighter workload in winter, peak performance in spring/summer'
+    ],
     references: ['energy', 'capacity', 'water', 'burnout-prevention', 'sustainable-rhythm', 'sustainable-balance']
   },
   {
@@ -508,6 +639,16 @@ const artifacts: Artifact[] = [
       'Say no to protect energy',
       'Low-leverage tasks drain you',
       'Energy ROI thinking'
+    ],
+    examples: [
+      'Time blocking: Schedule high-energy tasks (deep work) during peak hours (morning)',
+      'Eliminate low-value activities: Stop checking email constantly, batch process 2x/day',
+      'Delegate or eliminate: Outsource tasks below your hourly rate (house cleaning, errands)',
+      'Say no strategically: Decline meetings/projects that don\'t align with goals',
+      'Automate decisions: Meal prep on Sunday, wear similar outfits, reduce daily choices',
+      'Focus on 20/80: Spend 80% of energy on top 20% highest-impact activities',
+      'Reduce context switching: Group similar tasks (all calls together, all writing together)',
+      'Protect peak hours: Block calendar for focused work, reject low-priority requests'
     ],
     references: ['energy', 'capacity', 'energy-conservation-principle', 'sustainable-rhythm', 'tier-system']
   },
@@ -525,6 +666,16 @@ const artifacts: Artifact[] = [
       'Predictable patterns reduce stress',
       'Sustainable pace'
     ],
+    examples: [
+      'Daily routine: Wake 6am, exercise 6:30-7:30, deep work 8-12, meetings 2-5pm',
+      'Weekly rhythm: Monday planning, Tue-Thu focused work, Friday review/cleanup',
+      'Sleep schedule: Same bedtime/wake time daily, even weekends (circadian alignment)',
+      'Workout schedule: Monday/Wednesday/Friday strength, Tuesday/Thursday cardio',
+      'Monthly cycles: Weeks 1-3 push hard, Week 4 lighter recovery and planning',
+      'Seasonal adjustments: More intense summer/fall, lighter winter/spring',
+      'Meal timing: Breakfast 7am, lunch 12pm, dinner 6pm (consistent fuel schedule)',
+      'Review rhythms: Daily 5-min review, weekly 30-min planning, monthly 2-hour strategic review'
+    ],
     references: ['energy', 'capacity', 'water', 'recovery-over-depletion', 'capacity-building', 'sustainable-balance']
   },
   {
@@ -541,6 +692,16 @@ const artifacts: Artifact[] = [
       'Progressive overload applies',
       'Long-term investment'
     ],
+    examples: [
+      'Fitness progression: Start 30-min workouts, increase to 60-min over 3 months',
+      'Work capacity: Gradually increase work hours from 40 to 50 over 6 months, then maintain',
+      'Mental endurance: Start with 2-hour focus sessions, build to 4-hour deep work blocks',
+      'Stress tolerance: Take on slightly bigger challenges monthly, build resilience',
+      'Physical capacity: Run 1 mile, add 0.25 miles weekly until reaching 5K goal',
+      'Learning capacity: Study 1 hour/day, increase to 2 hours, then 3 hours gradually',
+      'Social capacity: Start networking 1x/month, increase to weekly as comfort grows',
+      'Recovery capacity: Improve sleep quality, reduce recovery time needed between intense periods'
+    ],
     references: ['capacity', 'energy', 'water', 'progressive-overload', 'sustainable-rhythm', 'recovery-over-depletion']
   },
   {
@@ -556,6 +717,16 @@ const artifacts: Artifact[] = [
       'Chronic depletion = burnout',
       'Mental & physical exhaustion',
       'Strategic rest cycles'
+    ],
+    examples: [
+      'Monitor energy levels: Track daily energy 1-10, take rest when consistently below 5',
+      'Set boundaries: No work emails after 6pm, protect personal time strictly',
+      'Regular check-ins: Weekly self-assessment of stress, sleep, mood, and energy',
+      'Preventive breaks: Take vacation before feeling exhausted, not after',
+      'Reduce commitments: Say no to new projects when energy reserves are low',
+      'Stress management: Daily meditation, exercise, or hobbies to release tension',
+      'Sleep hygiene: Maintain 7-9 hours sleep even during busy periods',
+      'Support systems: Build relationships and ask for help before crisis point'
     ],
     references: ['capacity', 'energy', 'meaning', 'recovery-over-depletion', 'sustainable-rhythm', 'sustainable-balance']
   },
@@ -617,6 +788,7 @@ interface ArtifactsViewProps {
 type ViewMode = 'grid' | 'museum'
 
 export default function ArtifactsView({ searchQuery: externalSearchQuery }: ArtifactsViewProps = {}) {
+  const [searchParams] = useSearchParams()
   const [internalSearchQuery, setInternalSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<ArtifactCategory | 'hierarchy-tree' | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
@@ -628,6 +800,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
   const { dashboard, isDemo } = useGameStore()
   const [userResources, setUserResources] = useState<any>(null)
   const [userEngines, setUserEngines] = useState<any[]>([])
+  const [treeRefreshTrigger, setTreeRefreshTrigger] = useState(0)
   
   // Use external search query if provided, otherwise use internal state
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery
@@ -683,11 +856,13 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
     fetchLoadoutItems()
   }, [])
 
-  // Fetch Reality Nodes (Laws and Principles) on mount
+  // Fetch Reality Nodes (Laws and Principles) on mount and periodically
   useEffect(() => {
     const fetchRealityNodes = async () => {
       try {
         setIsLoadingRealityNodes(true)
+        // Clear cache to ensure fresh data
+        realityNodeApi.clearCache()
         // Fetch all LAW and PRINCIPLE type nodes
         const [lawsResponse, principlesResponse] = await Promise.all([
           realityNodeApi.getNodes({ nodeType: 'LAW' }),
@@ -708,6 +883,15 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
     }
 
     fetchRealityNodes()
+    
+    // Set up periodic refresh every 30 seconds to keep artifacts live
+    const refreshInterval = setInterval(() => {
+      fetchRealityNodes()
+      // Trigger tree refresh when artifacts refresh
+      setTreeRefreshTrigger(prev => prev + 1)
+    }, 30000)
+
+    return () => clearInterval(refreshInterval)
   }, [])
 
   /**
@@ -983,9 +1167,9 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
   }, [searchQuery, selectedCategory, allArtifacts])
 
   // Helper function to get artifact by ID
-  const getArtifactById = (id: string): Artifact | undefined => {
+  const getArtifactById = useCallback((id: string): Artifact | undefined => {
     return allArtifacts.find(a => a.id === id)
-  }
+  }, [allArtifacts])
 
   // Helper function to get referenced artifacts
   const getReferencedArtifacts = (artifact: Artifact): Artifact[] => {
@@ -996,6 +1180,20 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
       .map(refId => getArtifactById(refId))
       .filter((ref): ref is Artifact => ref !== undefined)
   }
+
+  // Handle artifact ID from URL query parameter
+  useEffect(() => {
+    const artifactId = searchParams.get('id')
+    if (artifactId && allArtifacts.length > 0) {
+      const artifact = getArtifactById(artifactId)
+      if (artifact) {
+        setSelectedArtifact(artifact)
+        // Clear the ID from URL after selecting (optional, keeps URL clean)
+        // searchParams.delete('id')
+        // navigate(`/knowledge/artifacts${searchParams.toString() ? `?${searchParams.toString()}` : ''}`, { replace: true })
+      }
+    }
+  }, [searchParams, allArtifacts, getArtifactById])
 
   const handleArtifactClick = (artifact: Artifact) => {
     setSelectedArtifact(artifact)
@@ -1287,7 +1485,17 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
       {/* Content Area - Show Hierarchy Tree or Artifacts */}
       {selectedCategory === 'hierarchy-tree' ? (
         <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <HierarchyTreeView rootNodeId="reality" />
+          <HierarchyTreeView 
+            rootNodeId="reality" 
+            refreshTrigger={treeRefreshTrigger}
+            onArtifactClick={(artifactId) => {
+              // Find and open the artifact modal directly
+              const artifact = getArtifactById(artifactId)
+              if (artifact) {
+                setSelectedArtifact(artifact)
+              }
+            }}
+          />
         </div>
       ) : filteredArtifacts.length === 0 ? (
         <div className="text-center py-12">
@@ -1828,6 +2036,29 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery }: Arti
                             ))}
                           </ul>
               </div>
+                      </div>
+                    )}
+
+                    {/* Real-World Examples Section */}
+                    {selectedArtifact.examples && selectedArtifact.examples.length > 0 && (
+                      <div>
+                        <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                          <Lightbulb className="w-5 h-5 text-yellow-400" />
+                          Real-World Examples
+                        </h3>
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                          <p className="text-yellow-200/90 text-sm mb-4">
+                            Practical examples to help you take action:
+                          </p>
+                          <ul className="space-y-3">
+                            {selectedArtifact.examples.map((example, idx) => (
+                              <li key={idx} className="text-gray-200 flex items-start gap-3">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0" />
+                                <span className="flex-1 leading-relaxed">{example}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     )}
 

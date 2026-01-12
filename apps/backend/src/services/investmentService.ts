@@ -126,3 +126,6 @@ export function getRecommendedAllocation(): Record<InvestmentType, number> {
 }
 
 
+
+
+

@@ -17,7 +17,8 @@ import {
   RefreshCw,
   Brain,
   Users,
-  Package
+  Package,
+  Key
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import HealthStatusCard from '../components/HealthStatusCard'
@@ -533,22 +534,63 @@ export default function MasterHealth() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                   <h3 className="font-semibold mb-2 text-green-400">Exercise</h3>
-                  <p className="text-sm text-gray-400 mb-2">Grants XP and improves Capacity</p>
+                  <div className="space-y-1.5 mb-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Key className="w-4 h-4 text-yellow-400" />
+                      <span className="text-gray-300">XP: <span className="font-semibold text-white">200</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 ml-6">
+                      <span>Capacity: <span className="text-green-400 font-semibold">+250</span></span>
+                      <span className="text-gray-500">•</span>
+                      <span>Optionality: <span className="text-purple-400 font-semibold">+50</span></span>
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500">Energy Cost: 25</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                   <h3 className="font-semibold mb-2 text-blue-400">Learning</h3>
-                  <p className="text-sm text-gray-400 mb-2">Grants XP and improves Capacity</p>
+                  <div className="space-y-1.5 mb-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Key className="w-4 h-4 text-yellow-400" />
+                      <span className="text-gray-300">XP: <span className="font-semibold text-white">400</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 ml-6 flex-wrap">
+                      <span>Capacity: <span className="text-green-400 font-semibold">+150</span></span>
+                      <span className="text-gray-500">•</span>
+                      <span>Engines: <span className="text-blue-400 font-semibold">+100</span></span>
+                      <span className="text-gray-500">•</span>
+                      <span>Optionality: <span className="text-purple-400 font-semibold">+200</span></span>
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500">Energy Cost: 20</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                   <h3 className="font-semibold mb-2 text-purple-400">Save Expenses</h3>
-                  <p className="text-sm text-gray-400 mb-2">Grants XP and improves Capacity</p>
+                  <div className="space-y-1.5 mb-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Key className="w-4 h-4 text-yellow-400" />
+                      <span className="text-gray-300">XP: <span className="font-semibold text-white">1000</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 ml-6 flex-wrap">
+                      <span>Engines: <span className="text-blue-400 font-semibold">+200</span></span>
+                      <span className="text-gray-500">•</span>
+                      <span>Oxygen: <span className="text-cyan-400 font-semibold">+500</span></span>
+                      <span className="text-gray-500">•</span>
+                      <span>Optionality: <span className="text-purple-400 font-semibold">+300</span></span>
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500">Energy Cost: 15</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                   <h3 className="font-semibold mb-2 text-pink-400">Rest</h3>
-                  <p className="text-sm text-gray-400 mb-2">No XP, improves Capacity only</p>
+                  <div className="space-y-1.5 mb-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <span>No XP</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 ml-6">
+                      <span>Capacity: <span className="text-green-400 font-semibold">+2</span> (recovery only)</span>
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500">Energy Cost: 18</p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Package, Users, BookOpen, Info, Shield, Calculator, BarChart3, TrendingUp, ChevronRight, ChevronDown, ChevronUp, Lock, ExternalLink, AlertTriangle } from 'lucide-react'
+import { X, Package, Users, BookOpen, Info, Shield, Calculator, BarChart3, TrendingUp, ChevronRight, ChevronDown, ChevronUp, Lock, ExternalLink, AlertTriangle, Smartphone } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Team, Product, Guide, Agent } from '../services/financeApi'
 import { teamsApi, productsApi, guidesApi, agentsApi } from '../services/financeApi'
@@ -447,17 +447,34 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                                             </div>
                                           )}
 
-                                          {/* Open Product Button */}
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              navigate(getMasterProductRoute(MasterDomain.MONEY, product.id))
-                                            }}
-                                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
-                                          >
-                                            <span>Open Product</span>
-                                            <ChevronRight className="w-4 h-4" />
-                                          </button>
+                                          {/* Product Actions */}
+                                          <div className="space-y-2">
+                                            {/* Open in App Button (if accessUrl available) */}
+                                            {product.accessUrl && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  navigate(product.accessUrl!)
+                                                }}
+                                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+                                              >
+                                                <Smartphone className="w-4 h-4" />
+                                                <span>Open in App</span>
+                                                <ChevronRight className="w-4 h-4" />
+                                              </button>
+                                            )}
+                                            {/* Open Product Detail Button */}
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                navigate(getMasterProductRoute(MasterDomain.MONEY, product.id))
+                                              }}
+                                              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                              <span>{product.accessUrl ? 'View Details' : 'Open Product'}</span>
+                                              <ChevronRight className="w-4 h-4" />
+                                            </button>
+                                          </div>
                                         </div>
                                       </motion.div>
                                     )}

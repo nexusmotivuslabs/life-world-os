@@ -64,21 +64,30 @@ export async function request<T>(
 
 // Auth
 export const authApi = {
-  register: (email: string, username: string, password: string) =>
-    request<{ token: string; user: { id: string; email: string; username: string } }>(
+  register: (email: string, username: string, password: string, firstName?: string) =>
+    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
       '/api/auth/register',
       {
         method: 'POST',
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, firstName }),
       }
     ),
 
   login: (email: string, password: string) =>
-    request<{ token: string; user: { id: string; email: string; username: string } }>(
+    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
       '/api/auth/login',
       {
         method: 'POST',
         body: JSON.stringify({ email, password }),
+      }
+    ),
+
+  googleLogin: (idToken: string) =>
+    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
+      '/api/auth/google',
+      {
+        method: 'POST',
+        body: JSON.stringify({ idToken }),
       }
     ),
 }

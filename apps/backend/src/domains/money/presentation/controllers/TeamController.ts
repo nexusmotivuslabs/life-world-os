@@ -18,10 +18,12 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
 
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
+
 const router = Router()
 
-// Note: In production, add authentication middleware here
-// router.use(authenticateToken)
+// All team routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters and use cases
 const teamRepository = new PrismaTeamRepositoryAdapter(prisma)
@@ -57,7 +59,7 @@ const consultTeamUseCase = new ConsultTeamUseCase(
  * RESILIENCE: Returns 200 with empty array instead of 500 error to prevent cascading failures.
  * This allows the frontend to handle gracefully and show appropriate empty states.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const teams = await teamRepository.findAll()
     res.json({
@@ -85,7 +87,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/teams/:teamId
  * Get team details with agents
  */
-router.get('/:teamId', async (req: Request, res: Response) => {
+router.get('/:teamId', async (req: AuthRequest, res: Response) => {
   try {
     const team = await teamRepository.findById(req.params.teamId)
     if (!team) {
@@ -122,13 +124,9 @@ router.get('/:teamId', async (req: Request, res: Response) => {
  * POST /api/teams/:teamId/chat
  * Consult with a team
  */
-router.post('/:teamId/chat', async (req: Request, res: Response) => {
+router.post('/:teamId/chat', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Add proper authentication middleware
-    const userId = (req as any).userId || 'demo-user' // Temporary for development
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+    const userId = req.userId!
 
     const { query } = req.body
 

@@ -17,8 +17,12 @@ import {
 import { CalculateEmergencyFundWithRiskProfileUseCase } from '../../application/useCases/CalculateEmergencyFundWithRiskProfileUseCase.js'
 import { EmploymentType, JobSecurity, RiskTolerance, IncomeStructure } from '../../domain/valueObjects/EmergencyFundRiskProfile.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
 const router = Router()
+
+// All product routes require authentication
+router.use(authenticateToken)
 
 // Initialize adapters
 const productRepository = new PrismaProductRepositoryAdapter(prisma)
@@ -39,7 +43,7 @@ const calculateWithRiskProfileUseCase = new CalculateEmergencyFundWithRiskProfil
  * but team associations fail, the endpoint gracefully degrades by returning all
  * active products from the organization.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const teamId = req.query.teamId as string | undefined
     
@@ -111,7 +115,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/products/:productId
  * Get product details including security information
  */
-router.get('/:productId', async (req: Request, res: Response) => {
+router.get('/:productId', async (req: AuthRequest, res: Response) => {
   try {
     const product = await productRepository.findById(req.params.productId)
     if (!product) {
@@ -157,10 +161,9 @@ router.get('/:productId', async (req: Request, res: Response) => {
  * POST /api/products/emergency-fund/goal
  * Set emergency fund goal
  */
-router.post('/emergency-fund/goal', async (req: Request, res: Response) => {
+router.post('/emergency-fund/goal', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.body.userId || 'demo-user-id' // Temporary for development
+    const userId = req.userId!
 
     const { targetAmount, monthsCoverage, monthlyExpenses, currentAmount } = req.body
 
@@ -202,10 +205,9 @@ router.post('/emergency-fund/goal', async (req: Request, res: Response) => {
  * PUT /api/products/emergency-fund/progress
  * Update emergency fund progress
  */
-router.put('/emergency-fund/progress', async (req: Request, res: Response) => {
+router.put('/emergency-fund/progress', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.body.userId || 'demo-user-id' // Temporary for development
+    const userId = req.userId!
 
     const { amount, notes } = req.body
 
@@ -240,10 +242,9 @@ router.put('/emergency-fund/progress', async (req: Request, res: Response) => {
  * GET /api/products/emergency-fund/status
  * Get emergency fund status
  */
-router.get('/emergency-fund/status', async (req: Request, res: Response) => {
+router.get('/emergency-fund/status', async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Extract userId from authentication token
-    const userId = req.query.userId as string || 'demo-user-id' // Temporary for development
+    const userId = req.userId!
 
     const status = await getStatusUseCase.execute(userId)
 

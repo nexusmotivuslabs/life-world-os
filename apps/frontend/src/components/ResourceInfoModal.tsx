@@ -269,3 +269,6 @@ export default function ResourceInfoModal({ type, value, isOpen, onClose }: Reso
 }
 
 
+
+
+

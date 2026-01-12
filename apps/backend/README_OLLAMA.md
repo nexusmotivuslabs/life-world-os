@@ -90,3 +90,6 @@ Note: If switching to OpenAI, you'll need to update the database vector column t
 See [OLLAMA_SETUP.md](../../OLLAMA_SETUP.md) for detailed setup instructions.
 
 
+
+
+
