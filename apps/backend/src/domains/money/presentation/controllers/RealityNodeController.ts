@@ -7,6 +7,7 @@
 
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
+import { getOrSet, cacheKeys } from '../../../../lib/cache.js'
 import { RealityNodeType, RealityNodeCategory } from '@prisma/client'
 
 const router = Router()
@@ -133,41 +134,44 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params
 
-    const node = await prisma.realityNode.findUnique({
-      where: { id },
-      include: {
-        parent: {
-          include: {
-            parent: {
-              include: {
-                parent: true, // 3 levels up
+    const node = await getOrSet(cacheKeys.realityNode(id), async () => {
+      const n = await prisma.realityNode.findUnique({
+        where: { id },
+        include: {
+          parent: {
+            include: {
+              parent: {
+                include: {
+                  parent: true, // 3 levels up
+                },
               },
             },
           },
-        },
-        children: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            nodeType: true,
-            category: true,
-            immutable: true,
-            orderIndex: true,
+          children: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              nodeType: true,
+              category: true,
+              immutable: true,
+              orderIndex: true,
+            },
+            orderBy: { orderIndex: 'asc' },
           },
-          orderBy: { orderIndex: 'asc' },
         },
-      },
+      })
+      return n
     })
 
     if (!node) {
       return res.status(404).json({ error: 'Node not found' })
     }
 
-    // Add cache headers for efficient client-side caching
-    const lastModified = node.updatedAt || node.createdAt
+    // Add cache headers (cached node may have date as string)
+    const lm = node.updatedAt || node.createdAt
+    const lastModified = lm instanceof Date ? lm : new Date(lm as string)
     const etag = `"${node.id}-${lastModified.getTime()}"`
-    
     res.setHeader('Last-Modified', lastModified.toUTCString())
     res.setHeader('ETag', etag)
     res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
@@ -268,42 +272,46 @@ router.get('/:id/children', async (req: Request, res: Response) => {
   try {
     const { id } = req.params
 
-    const children = await prisma.realityNode.findMany({
-      where: { parentId: id },
-      orderBy: [
-        { orderIndex: 'asc' },
-        { title: 'asc' },
-      ],
-      include: {
-        children: {
-          select: {
-            id: true,
-            title: true,
-            nodeType: true,
-            category: true,
-            orderIndex: true,
+    const { children, count } = await getOrSet(
+      cacheKeys.realityNodeChildren(id),
+      async () => {
+        const list = await prisma.realityNode.findMany({
+          where: { parentId: id },
+          orderBy: [
+            { orderIndex: 'asc' },
+            { title: 'asc' },
+          ],
+          include: {
+            children: {
+              select: {
+                id: true,
+                title: true,
+                nodeType: true,
+                category: true,
+                orderIndex: true,
+              },
+              orderBy: { orderIndex: 'asc' },
+            },
           },
-          orderBy: { orderIndex: 'asc' },
-        },
-      },
-    })
-
-    // Calculate cache headers based on most recent child update
-    let maxUpdatedAt: Date | null = null
-    children.forEach(child => {
-      const updated = (child as any).updatedAt || (child as any).createdAt
-      if (updated && (!maxUpdatedAt || updated > maxUpdatedAt)) {
-        maxUpdatedAt = updated
+        })
+        return { children: list, count: list.length }
       }
-    })
+    )
 
-    if (maxUpdatedAt) {
-      const etag = `"children-${id}-${maxUpdatedAt.getTime()}"`
-      res.setHeader('Last-Modified', maxUpdatedAt.toUTCString())
+    const maxUpdatedAtForHeaders = children?.length
+      ? children.reduce((max: Date | null, child: any) => {
+          const updated = child?.updatedAt || child?.createdAt
+          if (updated && (!max || (updated instanceof Date ? updated : new Date(updated)) > max))
+            return updated instanceof Date ? updated : new Date(updated)
+          return max
+        }, null as Date | null)
+      : null
+    if (maxUpdatedAtForHeaders) {
+      const etag = `"children-${id}-${maxUpdatedAtForHeaders.getTime()}"`
+      res.setHeader('Last-Modified', maxUpdatedAtForHeaders.toUTCString())
       res.setHeader('ETag', etag)
       res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
 
-      // Check if client has cached version
       const ifNoneMatch = req.headers['if-none-match']
       if (ifNoneMatch === etag) {
         return res.status(304).end() // Not Modified
@@ -312,7 +320,7 @@ router.get('/:id/children', async (req: Request, res: Response) => {
 
     res.json({
       children,
-      count: children.length,
+      count,
     })
   } catch (error: any) {
     console.error('Error fetching children:', error)

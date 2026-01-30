@@ -31,88 +31,82 @@ interface HierarchyTreeViewProps {
   refreshTrigger?: number // Optional: increment this to trigger a refresh
 }
 
+// Resolve API root id (reality -> reality-root) for initial state and effects
+const getActualRootId = (rootNodeId: string) =>
+  rootNodeId === 'reality' ? 'reality-root' : rootNodeId
+
 export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId, onArtifactClick, refreshTrigger }: HierarchyTreeViewProps = {}) {
   const navigate = useNavigate()
+  const actualRootId = getActualRootId(rootNodeId)
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [hasDataIssues, setHasDataIssues] = useState(false) // Track if we're experiencing issues
-  // Start with root expanded, all others collapsed
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set([rootNodeId]))
+  const [hasDataIssues, setHasDataIssues] = useState(false)
+  // Initial expanded: use actual root id so root node (e.g. reality-root) is expanded
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => new Set([actualRootId]))
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(true)
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const expandedNodesRef = useRef<Set<string>>(expandedNodes)
+  const refreshTreeDataRef = useRef<() => Promise<void>>(null!)
+  const isRefreshingRef = useRef(false)
 
-  // Refresh tree data (used for periodic updates and manual refresh)
-  // Using useCallback to ensure stable reference and avoid stale closures
+  // Keep ref in sync so refresh callback can read current expanded state without being in deps
+  useEffect(() => {
+    expandedNodesRef.current = expandedNodes
+  }, [expandedNodes])
+
+  // Refresh tree data: stable deps (no expandedNodes) so main effect doesn't re-run on every expand/collapse
   const refreshTreeData = useCallback(async () => {
-    if (isRefreshing) return // Prevent concurrent refreshes
-    
+    if (isRefreshingRef.current) return
     try {
+      isRefreshingRef.current = true
       setIsRefreshing(true)
-      
-      // Determine the actual root node ID to use
-      const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
-      
-      // Preserve expanded nodes state before refresh
-      const preservedExpandedNodes = new Set(expandedNodes)
-      
-      // Clear caches to ensure fresh data
+      const preservedExpandedNodes = new Set(expandedNodesRef.current)
       realityNodeApi.clearCache()
-      
-      // Load fresh data from database
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
-      
-      // Update cache
       await hierarchyCache.set(actualRootId, rootTree)
-      
-      // Update tree data
       setTreeData([rootTree])
       setLastRefreshTime(new Date())
-      
-      // Restore expanded nodes
       setExpandedNodes(preservedExpandedNodes)
     } catch (err) {
       console.error('Failed to refresh tree data:', err)
-      // Don't show error on background refresh, just log it
     } finally {
+      isRefreshingRef.current = false
       setIsRefreshing(false)
     }
-  }, [rootNodeId, overrideParentId, expandedNodes, isRefreshing])
+  }, [actualRootId, overrideParentId])
 
-  // Load tree data on mount and when dependencies change
+  refreshTreeDataRef.current = refreshTreeData
+
+  // Load tree once on mount and when root/parent change only (no dependency on refreshTreeData or expandedNodes)
   useEffect(() => {
     loadTreeData()
-    
-    // Set up periodic refresh every 30 seconds to keep tree live
-    refreshIntervalRef.current = setInterval(() => {
-      refreshTreeData()
-    }, 30000) // Refresh every 30 seconds
-
-    // Cleanup interval on unmount
+    const interval = setInterval(() => {
+      refreshTreeDataRef.current?.()
+    }, 300000) // 5 minutes – hierarchy changes rarely
+    refreshIntervalRef.current = interval
     return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current)
-      }
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current)
     }
-  }, [rootNodeId, overrideParentId, refreshTreeData])
+  }, [rootNodeId, overrideParentId])
 
-  // Refresh when refreshTrigger changes (allows parent to trigger refresh)
+  // Refresh when parent explicitly triggers via refreshTrigger
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      refreshTreeData()
+      refreshTreeDataRef.current?.()
     }
-  }, [refreshTrigger, refreshTreeData])
+  }, [refreshTrigger])
 
-  // Ensure root (REALITY) is expanded when tree data loads
+  // Ensure root node is expanded when tree first loads (use actual id e.g. reality-root)
   useEffect(() => {
-    if (treeData.length > 0 && treeData[0].id === 'reality') {
+    if (treeData.length > 0 && treeData[0].id) {
       setExpandedNodes((prev) => {
-        const newSet = new Set(prev)
-        newSet.add('reality')
-        return newSet
+        const next = new Set(prev)
+        next.add(treeData[0].id)
+        return next
       })
     }
   }, [treeData])
@@ -577,8 +571,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   }
 
   const collapseAll = () => {
-    // Collapse all except root (REALITY)
-    setExpandedNodes(new Set(['reality']))
+    setExpandedNodes(new Set([actualRootId]))
   }
 
   return (
@@ -643,7 +636,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               onClick={handleManualRefresh}
               disabled={isRefreshing}
               className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded border border-green-500/30 text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Refresh tree data (auto-refreshes every 30 seconds)"
+              title="Refresh tree data (auto-refreshes every 5 minutes)"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh'}

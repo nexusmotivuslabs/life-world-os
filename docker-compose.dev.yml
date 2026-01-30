@@ -32,6 +32,24 @@ services:
     # Cloud-ready: Replace with RDS, Cloud SQL, Azure Database, etc.
     # Just update DATABASE_URL env var
 
+  # Redis - cache for hierarchy, nodes, etc. (cache-aside)
+  redis-dev:
+    profiles: ["db", "full", "backend"]
+    image: redis:7-alpine
+    container_name: ${DEV_REDIS_CONTAINER_NAME:-life-redis-dev}
+    ports:
+      - "${DEV_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
   # Backend Service (Optional - for full Docker mode)
   backend-dev:
     profiles: ["backend", "full"]
@@ -50,6 +68,7 @@ services:
       - PORT=${DEV_BACKEND_PORT:-3001}
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production-min-32-chars}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - REDIS_URL=${REDIS_URL:-redis://redis-dev:6379}
       # AI Services - connect to local or cloud
       - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
@@ -64,6 +83,8 @@ services:
       - ./apps/backend/prisma:/app/prisma
     depends_on:
       postgres-dev:
+        condition: service_healthy
+      redis-dev:
         condition: service_healthy
     networks:
       - life-world-os-dev-network
@@ -130,3 +151,4 @@ networks:
 volumes:
   postgres_dev_data:
     # Cloud-ready: Replace with EBS, Persistent Disk, etc.
+  redis_dev_data:
