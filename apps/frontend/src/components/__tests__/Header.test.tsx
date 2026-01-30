@@ -50,6 +50,7 @@ describe('Header', () => {
           username: 'testuser',
           email: 'test@example.com',
           firstName: 'John',
+          lastName: null,
         },
       },
       fetchDashboard: vi.fn(),
@@ -64,6 +65,31 @@ describe('Header', () => {
     expect(screen.getByText(/Hello John/i)).toBeInTheDocument()
   })
 
+  it('should display firstName and lastName when both available', () => {
+    localStorageMock.getItem.mockReturnValue('token')
+    vi.mocked(useGameStore).mockReturnValue({
+      isDemo: false,
+      dashboard: {
+        user: {
+          id: '1',
+          username: 'testuser',
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
+      fetchDashboard: vi.fn(),
+    } as any)
+
+    render(
+      <BrowserRouter>
+        <Header />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText(/Hello John Smith/i)).toBeInTheDocument()
+  })
+
   it('should fallback to username when firstName not available', () => {
     localStorageMock.getItem.mockReturnValue('token')
     vi.mocked(useGameStore).mockReturnValue({
@@ -74,6 +100,7 @@ describe('Header', () => {
           username: 'testuser',
           email: 'test@example.com',
           firstName: null,
+          lastName: null,
         },
       },
       fetchDashboard: vi.fn(),
@@ -98,6 +125,7 @@ describe('Header', () => {
           username: '',
           email: 'test@example.com',
           firstName: null,
+          lastName: null,
         },
       },
       fetchDashboard: vi.fn(),
@@ -140,6 +168,7 @@ describe('Header', () => {
           username: 'testuser',
           email: 'test@example.com',
           firstName: 'John',
+          lastName: null,
         },
       },
       fetchDashboard: vi.fn(),
@@ -166,6 +195,7 @@ describe('Header', () => {
           username: 'testuser',
           email: 'test@example.com',
           firstName: 'John',
+          lastName: null,
         },
       },
       fetchDashboard: vi.fn(),

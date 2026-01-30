@@ -61,19 +61,16 @@ export default function Register() {
     setLoading(true)
 
     try {
-      const { token } = await authApi.googleLogin(credential)
+      const { token, user, requiresFirstName } = await authApi.googleLogin(credential)
       localStorage.setItem('token', token)
-      // Redirect to choose-plane after successful Google login
+      if (user) localStorage.setItem('user', JSON.stringify(user))
+      if (requiresFirstName) {
+        navigate('/set-first-name', { replace: true })
+        return
+      }
       navigate('/choose-plane', { replace: true })
     } catch (err) {
-      let errorMessage = 'Google sign-in failed'
-      if (err instanceof Error) {
-        errorMessage = err.message
-        // Check if it's a "requires sign-up" error
-        if (err.message.includes('Account not found') || err.message.includes('sign up')) {
-          errorMessage = 'Account not found. Please create an account first using the form above, then you can use Google Sign-In.'
-        }
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Google sign-in failed'
       setError(errorMessage)
       setLoading(false)
     }

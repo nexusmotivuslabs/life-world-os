@@ -63,6 +63,40 @@ Content-Type: application/json
 }
 ```
 
+#### Google Sign-In
+```http
+POST /api/auth/google
+Content-Type: application/json
+
+{
+  "idToken": "<google-id-token>"
+}
+```
+
+Sign-in or sign-up with Google. The frontend obtains an ID token from Google Identity Services and sends it here. No prior registration is required: if no user exists for this Google account, one is created from the Google profile (email, `given_name` → firstName, `family_name` → lastName). Username is derived from the email local part (e.g. `john` from `john@gmail.com`), with a numeric suffix if needed for uniqueness.
+
+**Response (200):**
+```json
+{
+  "token": "jwt-token",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "username",
+    "firstName": "John",
+    "lastName": "Smith"
+  },
+  "requiresFirstName": false
+}
+```
+
+- **requiresFirstName**: `true` when the user has no first name (e.g. Google didn’t provide one). The client can redirect to a “set first name” flow.
+
+**Errors:**
+- `400` – Missing `idToken`, or email not provided by Google
+- `401` – Invalid or expired ID token
+- `500` – Google OAuth not configured, or account creation/initialization failed
+
 ### User
 
 #### Get Profile

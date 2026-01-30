@@ -134,6 +134,7 @@ export interface DashboardData {
     username: string
     email: string
     firstName?: string | null // First name from Google or registration
+    lastName?: string | null   // Last name from Google (family_name)
     overallXP: number
     overallRank: OverallRank
     overallLevel: number

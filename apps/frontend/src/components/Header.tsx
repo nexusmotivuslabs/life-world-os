@@ -22,8 +22,11 @@ export default function Header() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   const isAuthenticated = !isDemo && token && dashboard
   
-  // Get display name - priority: firstName > username > email
-  const displayName = dashboard?.user.firstName || dashboard?.user.username || dashboard?.user.email || ''
+  // Get display name - priority: "firstName lastName" or firstName > username > email
+  const displayName =
+    dashboard?.user.firstName || dashboard?.user.lastName
+      ? [dashboard?.user.firstName, dashboard?.user.lastName].filter(Boolean).join(' ')
+      : dashboard?.user.username || dashboard?.user.email || ''
   
   // Fetch dashboard on mount if token exists
   useEffect(() => {

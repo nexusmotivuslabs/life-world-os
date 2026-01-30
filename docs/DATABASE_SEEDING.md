@@ -84,6 +84,7 @@ The seed script (`apps/backend/prisma/seed.ts`) runs multiple seed scripts in or
 4. **Weapons and Capabilities** - Loadout items
 5. **Money System** - Agents and Teams
 6. **Training and Knowledge** - Training modules, health knowledge, awareness layers
+7. **Development test users** (dev only) - Test and demo users for Life World OS login and health/capacity demos. See **[TEST_USERS.md](./TEST_USERS.md)** for emails, passwords, and usage.
 
 ## Seed Script Features
 

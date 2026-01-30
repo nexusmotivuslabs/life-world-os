@@ -45,7 +45,7 @@ Open in browser: **http://localhost:3000**
 - **Username**: `admin`
 - **Password**: `admin`
 
-**Note**: You'll be prompted to change the password on first login.
+**Local dev**: The observability stack resets the admin password to `admin` on every container start, so login always works. You can skip changing the password for local use.
 
 ---
 
@@ -55,7 +55,7 @@ Open in browser: **http://localhost:3000**
 
 1. Open http://localhost:3000
 2. Login with `admin` / `admin`
-3. Change password when prompted
+3. (Optional) Change password when prompted — for local dev you can skip this; the password is reset on each container start
 
 ### 2. Verify Data Source
 

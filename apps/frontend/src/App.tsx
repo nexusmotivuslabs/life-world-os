@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import SetFirstName from './pages/SetFirstName'
 import LandingPage from './pages/LandingPage'
 import Admin from './pages/Admin'
 import ProductDetailView from './components/ProductDetailView'
@@ -48,6 +49,13 @@ function App() {
             <PublicRoute>
               <Register />
             </PublicRoute>
+          } />
+
+          {/* Set first name - after Google Sign-In when name not provided */}
+          <Route path="/set-first-name" element={
+            <ProtectedRoute>
+              <SetFirstName />
+            </ProtectedRoute>
           } />
           
           {/* Choose plane - after authentication */}

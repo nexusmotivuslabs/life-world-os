@@ -51,7 +51,7 @@ export async function request<T>(
     })
 
     throw createApiError(
-      `Network error: ${error instanceof Error ? error.message : 'Failed to connect to server'}`,
+      'Unable to reach the API. Make sure the backend is running and VITE_API_URL is correct.',
       endpoint,
       method,
       undefined,
@@ -64,17 +64,17 @@ export async function request<T>(
 
 // Auth
 export const authApi = {
-  register: (email: string, username: string, password: string, firstName?: string) =>
-    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
+  register: (email: string, username: string, password: string, firstName?: string, lastName?: string) =>
+    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null; lastName?: string | null } }>(
       '/api/auth/register',
       {
         method: 'POST',
-        body: JSON.stringify({ email, username, password, firstName }),
+        body: JSON.stringify({ email, username, password, firstName, lastName }),
       }
     ),
 
   login: (email: string, password: string) =>
-    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
+    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null; lastName?: string | null } }>(
       '/api/auth/login',
       {
         method: 'POST',
@@ -83,13 +83,42 @@ export const authApi = {
     ),
 
   googleLogin: (idToken: string) =>
-    request<{ token: string; user: { id: string; email: string; username: string; firstName?: string | null } }>(
+    request<{
+      token: string
+      user: { id: string; email: string; username: string; firstName?: string | null; lastName?: string | null }
+      requiresFirstName?: boolean
+    }>(
       '/api/auth/google',
       {
         method: 'POST',
         body: JSON.stringify({ idToken }),
       }
     ),
+}
+
+// User profile
+export const userApi = {
+  getProfile: () =>
+    request<{
+      id: string
+      email: string
+      username: string
+      firstName?: string | null
+      lastName?: string | null
+      [key: string]: unknown
+    }>('/api/user/profile'),
+  updateProfile: (data: { firstName?: string; lastName?: string }) =>
+    request<{
+      id: string
+      email: string
+      username: string
+      firstName?: string | null
+      lastName?: string | null
+      [key: string]: unknown
+    }>('/api/user/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 }
 
 // Dashboard

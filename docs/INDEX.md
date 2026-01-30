@@ -44,6 +44,8 @@
 
 ### API & Technical
 - [API Documentation](./API_DOCUMENTATION.md) - Complete API reference
+- [Test Users (Development)](./TEST_USERS.md) - Dev seed test users for Life World OS login
+- [Loki Logs](./LOKI_LOGS.md) - View backend/frontend logs in Grafana (CloudWatch-like)
 - [Naming Reference](./NAMING_REFERENCE.md) - All names and conventions used
 - [Quick Reference](./QUICK_REFERENCE.md) - Quick reference guide
 

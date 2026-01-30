@@ -49,6 +49,27 @@ npm run dev:db && npm run dev
 
 See [QUICK_START_DOCKER.md](./QUICK_START_DOCKER.md) for detailed guide.
 
+### Local full stack (with or without observability)
+
+```bash
+# Minimal: UI, backend, DB only
+npm run local-lite
+
+# Full: same + Prometheus & Grafana (logs and metrics)
+npm run local
+```
+
+**When using `npm run local` (full stack):**
+
+| Service    | URL                      | Login / notes        |
+|-----------|---------------------------|----------------------|
+| **Grafana**  | http://localhost:3000     | **admin** / **admin** (reset on every container start so login always works) |
+| **Prometheus** | http://localhost:9090  | No login (read-only UI) |
+| **Loki**     | http://localhost:3100   | Logs; view in Grafana → **Explore** → select **Loki** (backend/frontend logs when using `npm run local`) |
+
+**Life World OS test users (after running `npm run seed` once in dev):**  
+`test@example.com` or `demo@example.com` — password: **password123**. See **[docs/TEST_USERS.md](docs/TEST_USERS.md)** for the full list and usage.
+
 ### MVP: In-Home WiFi Access (Local Deployment)
 
 **Cost**: $0/month | **Time**: 5 minutes

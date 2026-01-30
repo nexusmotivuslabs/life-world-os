@@ -193,6 +193,11 @@ export const routes: Record<string, RouteConfig> = {
     label: 'Register',
     requiresAuth: false,
   },
+  setFirstName: {
+    path: '/set-first-name',
+    label: 'Set First Name',
+    requiresAuth: true,
+  },
   admin: {
     path: '/admin',
     label: 'Admin',

@@ -23,6 +23,8 @@ interface DevUserData {
   capacityStrength: number // 0-100
   capacityBand: 'critical' | 'low' | 'medium' | 'high' | 'optimal'
   description: string
+  firstName?: string
+  lastName?: string
   hasRecoveryActions?: boolean // Whether to add sample recovery actions
   isInBurnout?: boolean
   consecutiveHighEffortDays?: number
@@ -30,7 +32,34 @@ interface DevUserData {
   recoveryActionsThisWeek?: number
 }
 
+// Persistent test users for Life World OS access (always created in dev seed)
 const devUsers: DevUserData[] = [
+  {
+    email: 'test@example.com',
+    username: 'testuser',
+    capacityStrength: 70,
+    capacityBand: 'high',
+    description: 'Simple test user for Life World OS access',
+    firstName: 'Test',
+    lastName: 'User',
+    hasRecoveryActions: true,
+    consecutiveHighEffortDays: 0,
+    consecutiveLowCapacityDays: 0,
+    recoveryActionsThisWeek: 2,
+  },
+  {
+    email: 'demo@example.com',
+    username: 'demouser',
+    capacityStrength: 70,
+    capacityBand: 'high',
+    description: 'Demo user for Life World OS access',
+    firstName: 'Demo',
+    lastName: 'User',
+    hasRecoveryActions: true,
+    consecutiveHighEffortDays: 0,
+    consecutiveLowCapacityDays: 0,
+    recoveryActionsThisWeek: 2,
+  },
   {
     email: 'optimal-health@dev.test',
     username: 'optimal_health_user',
@@ -142,6 +171,8 @@ async function createDevUser(userData: DevUserData) {
       email: userData.email,
       username: userData.username,
       passwordHash,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
       currentSeason: Season.SPRING,
       isInBurnout: userData.isInBurnout || false,
       consecutiveHighEffortDays: userData.consecutiveHighEffortDays || 0,
@@ -331,7 +362,8 @@ async function main() {
     })
 
     console.log('💡 Usage:')
-    console.log('   • Login with any of the test user emails and password "password123"')
+    console.log('   • Life World OS access: test@example.com or demo@example.com / password "password123"')
+    console.log('   • Login with any test user email and password "password123"')
     console.log('   • Use /api/health/status endpoint to see different capacity states')
     console.log('   • Check activity logs to see recovery actions')
     console.log('═'.repeat(60))

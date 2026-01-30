@@ -209,8 +209,9 @@ fi
 # Step 3: Start observability services
 log_service "Step 3: Observability Services"
 
-log_info "Starting Prometheus and Grafana..."
-if docker-compose -f docker-compose.observability.local.yml up -d prometheus grafana 2>/dev/null; then
+LOKI_READY=false
+log_info "Starting Prometheus, Grafana, Loki and Promtail..."
+if docker-compose -f docker-compose.observability.local.yml up -d prometheus grafana loki promtail; then
     log_success "Observability services started"
     
     # Wait for Prometheus
@@ -220,6 +221,18 @@ if docker-compose -f docker-compose.observability.local.yml up -d prometheus gra
         if curl -s http://localhost:9090/-/healthy > /dev/null 2>&1; then
             log_success "Prometheus is UP (http://localhost:9090)"
             PROM_READY=true
+            break
+        fi
+        sleep 1
+    done
+    
+    # Wait for Loki
+    log_info "Waiting for Loki..."
+    LOKI_READY=false
+    for i in {1..20}; do
+        if curl -s http://localhost:3100/ready > /dev/null 2>&1; then
+            log_success "Loki is UP (http://localhost:3100) - View logs in Grafana Explore"
+            LOKI_READY=true
             break
         fi
         sleep 1
@@ -412,6 +425,12 @@ else
     echo -e "  Prometheus: ${YELLOW}Starting or not available${NC}"
 fi
 
+if [ "$LOKI_READY" = true ]; then
+    echo -e "  Loki:       ${GREEN}http://localhost:3100${NC} (logs; query in Grafana Explore)"
+else
+    echo -e "  Loki:       ${YELLOW}Starting or not available${NC}"
+fi
+
 if [ "$GRAF_READY" = true ]; then
     echo -e "  Grafana:    ${GREEN}http://localhost:3000${NC} (admin/admin)"
 else
@@ -432,7 +451,10 @@ echo -e "${BLUE}Observability Logs:${NC}"
 echo -e "  Prometheus: ${YELLOW}docker logs -f life-world-os-prometheus${NC}"
 echo -e "  Grafana:    ${YELLOW}docker logs -f life-world-os-grafana${NC}"
 
-echo -e "\n${YELLOW}Press Ctrl+C to stop all services${NC}\n"
+echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${MAGENTA}📟 Backend & frontend logs (live below)${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}\n"
 
 # Cleanup on exit
 cleanup() {
@@ -444,9 +466,5 @@ cleanup() {
 
 trap cleanup INT TERM
 
-# Keep script running and show periodic status
-while true; do
-    sleep 30
-    # Optional: Show status every 30 seconds
-    # log_info "All services running... (Press Ctrl+C to stop)"
-done
+# Stream backend and frontend logs so you see them running
+tail -f /tmp/life-world-backend.log /tmp/life-world-frontend.log 2>/dev/null || while true; do sleep 30; done

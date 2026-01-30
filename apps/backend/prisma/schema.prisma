@@ -244,6 +244,7 @@ model User {
   email                      String      @unique @db.VarChar(255)
   username                   String      @unique @db.VarChar(100)
   firstName                  String?     @db.VarChar(100) // First name from Google or registration
+  lastName                    String?     @db.VarChar(100) // Last name from Google (family_name)
   passwordHash               String?     @db.VarChar(255)
   googleId                   String?     @unique @db.VarChar(255)
   currentSeason              Season      @default(SPRING)

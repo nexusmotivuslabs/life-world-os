@@ -1,8 +1,30 @@
 # Phase 1: Local Observability Stack
-# Prometheus + Grafana for local development monitoring
-# Access: Prometheus (http://localhost:9090), Grafana (http://localhost:3000)
+# Prometheus + Grafana + Loki for local development monitoring
+#
+# Prometheus: http://localhost:9090 (no login)
+# Grafana:    http://localhost:3000  login: admin / admin
+# Loki:       http://localhost:3100 (logs; query via Grafana Explore)
 
 services:
+  # Loki - Log aggregation (CloudWatch-like; view in Grafana Explore)
+  loki:
+    image: grafana/loki:latest
+    container_name: life-world-os-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki/data
+    command: -config.file=/etc/loki/config.yaml
+    networks:
+      - observability-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
   # Prometheus - Metrics Collection
   prometheus:
     image: prom/prometheus:latest
@@ -29,6 +51,7 @@ services:
       retries: 3
 
   # Grafana - Dashboards and Visualization
+  # Local dev: admin password reset to "admin" on every start so login always works (volume preserved).
   grafana:
     image: grafana/grafana:latest
     container_name: life-world-os-grafana
@@ -40,12 +63,14 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_INSTALL_PLUGINS=
+    entrypoint: ["/bin/sh", "-c", "grafana-cli admin reset-admin-password admin 2>/dev/null || true; exec grafana-server --config=/etc/grafana/grafana.ini"]
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
     depends_on:
       - prometheus
+      - loki
     networks:
       - observability-network
     restart: unless-stopped
@@ -54,6 +79,20 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # Promtail - Ship logs to Loki (backend/frontend logs from host /tmp when using npm run local)
+  promtail:
+    image: grafana/promtail:latest
+    container_name: life-world-os-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /tmp:/var/log/host:ro
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      - observability-network
+    restart: unless-stopped
 
   # Node Exporter (Optional) - System Metrics
   node-exporter:
@@ -79,15 +118,13 @@ networks:
   life-world-os-dev-network:
     name: life-world-os-dev-network
     driver: bridge
-    # Network shared with dev services
-  life-world-os-staging-network:
-    external: true
-    name: life-world-os-staging-network
-    # Optional - only needed if staging services are running
+    # Network shared with dev services (created if missing)
 
 volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  loki_data:
     driver: local
 

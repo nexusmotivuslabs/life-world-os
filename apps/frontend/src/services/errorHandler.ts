@@ -1,8 +1,11 @@
 /**
  * Error Handler Utility
- * 
+ *
  * Provides detailed error handling and logging for API requests.
+ * Logs all known user issues (validation, auth, missing details) in a consistent format.
  */
+
+import { logger } from '../lib/logger'
 
 export interface ApiError extends Error {
   status?: number
@@ -11,6 +14,80 @@ export interface ApiError extends Error {
   method?: string
   responseBody?: any
   originalError?: Error
+}
+
+/** Known user-issue codes from API (RFC 7807 or legacy) */
+const USER_ISSUE_CODES = new Set([
+  'VALIDATION_ERROR',
+  'USER_ALREADY_EXISTS',
+  'USER_NOT_FOUND',
+  'INVALID_CREDENTIALS',
+  'OAUTH_ONLY_ACCOUNT',
+  'MISSING_ID_TOKEN',
+  'EMAIL_NOT_PROVIDED',
+  'INVALID_TOKEN',
+  'TOKEN_EXPIRED',
+  'REQUIRES_SIGN_UP',
+  'REQUIRES_FIRST_NAME',
+  'CONFIG_ERROR',
+  'SCHEMA_MISMATCH',
+  'AUTH_FAILED',
+  'USER_CREATE_FAILED',
+  'USER_INIT_FAILED',
+  'REGISTRATION_FAILED',
+  'LOGIN_FAILED',
+  'PROFILE_FETCH_FAILED',
+  'PROFILE_UPDATE_FAILED',
+])
+
+export type UserIssueType = 'validation' | 'auth' | 'not_found' | 'missing_details' | 'client_error'
+
+/**
+ * Log a known user issue (validation, missing details, auth failures) for debugging and observability.
+ * Call this whenever the API returns a 4xx that represents a user-fixable or expected condition.
+ */
+export function logUserIssue(
+  context: {
+    type: UserIssueType
+    code?: string
+    status: number
+    detail?: string
+    title?: string
+    endpoint: string
+    method: string
+    [key: string]: unknown
+  }
+): void {
+  const payload = {
+    userIssue: true,
+    type: context.type,
+    code: context.code,
+    status: context.status,
+    detail: context.detail,
+    title: context.title,
+    endpoint: context.endpoint,
+    method: context.method,
+    timestamp: new Date().toISOString(),
+    ...(context.responseBody && { responseBody: context.responseBody }),
+  }
+  logger.warn('[User Issue] ' + (context.detail || context.title || context.code || String(context.status)), payload)
+}
+
+function inferUserIssueType(status: number, code?: string): UserIssueType {
+  if (code === 'USER_NOT_FOUND' || code === 'REQUIRES_SIGN_UP') return 'not_found'
+  if (code === 'VALIDATION_ERROR' || code === 'USER_ALREADY_EXISTS') return 'validation'
+  if (
+    code === 'INVALID_CREDENTIALS' ||
+    code === 'OAUTH_ONLY_ACCOUNT' ||
+    code === 'INVALID_TOKEN' ||
+    code === 'TOKEN_EXPIRED' ||
+    code === 'AUTH_FAILED' ||
+    code === 'LOGIN_FAILED'
+  )
+    return 'auth'
+  if (code === 'REQUIRES_FIRST_NAME' || code === 'MISSING_ID_TOKEN' || code === 'EMAIL_NOT_PROVIDED') return 'missing_details'
+  if (status >= 400 && status < 500) return 'client_error'
+  return 'client_error'
 }
 
 /**
@@ -37,20 +114,21 @@ export function createApiError(
 }
 
 /**
- * Extract error message from response
+ * Parse response body once (body can only be read once)
  */
-async function extractErrorMessage(response: Response): Promise<string> {
+async function parseResponseBody(response: Response): Promise<{ message: string; body: any }> {
+  const contentType = response.headers.get('content-type')
   try {
-    const contentType = response.headers.get('content-type')
-    if (contentType?.includes('application/json')) {
+    if (contentType?.includes('application/json') || contentType?.includes('application/problem+json')) {
       const data = await response.json()
-      return data.error || data.message || `HTTP ${response.status}: ${response.statusText}`
-    } else {
-      const text = await response.text()
-      return text || `HTTP ${response.status}: ${response.statusText}`
+      const message =
+        data.detail ?? data.error ?? data.message ?? `HTTP ${response.status}: ${response.statusText}`
+      return { message, body: data }
     }
-  } catch (e) {
-    return `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`
+    const text = await response.text()
+    return { message: text || `HTTP ${response.status}: ${response.statusText}`, body: null }
+  } catch {
+    return { message: `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`, body: null }
   }
 }
 
@@ -65,9 +143,9 @@ export async function handleFetchError(
 ): Promise<never> {
   // Network error (no response)
   if (!response) {
-    const errorMessage = originalError?.message || 'Network request failed'
+    const errorMessage = 'Unable to reach the API. Make sure the backend is running and VITE_API_URL is correct.'
     const error = createApiError(
-      `Network error: ${errorMessage}`,
+      errorMessage,
       endpoint,
       method,
       undefined,
@@ -79,7 +157,7 @@ export async function handleFetchError(
     console.error('❌ API Request Failed:', {
       endpoint,
       method,
-      error: errorMessage,
+      error: originalError?.message || 'Network request failed',
       type: 'network',
       timestamp: new Date().toISOString(),
     })
@@ -87,10 +165,9 @@ export async function handleFetchError(
     throw error
   }
 
-  // HTTP error (response exists but not ok)
+  // HTTP error (response exists but not ok) - read body once
   try {
-    const errorMessage = await extractErrorMessage(response)
-    const responseBody = await response.json().catch(() => null)
+    const { message: errorMessage, body: responseBody } = await parseResponseBody(response)
 
     const error = createApiError(
       errorMessage,
@@ -101,6 +178,21 @@ export async function handleFetchError(
       responseBody,
       originalError
     )
+
+    // Log all 4xx as known user issues (validation, auth, missing details, etc.)
+    if (response.status >= 400 && response.status < 500 && responseBody) {
+      const code = responseBody.code ?? responseBody.error
+      logUserIssue({
+        type: inferUserIssueType(response.status, code),
+        code: code ?? undefined,
+        status: response.status,
+        detail: responseBody.detail ?? responseBody.error ?? responseBody.message,
+        title: responseBody.title,
+        endpoint,
+        method,
+        responseBody,
+      })
+    }
 
     console.error('❌ API Request Failed:', {
       endpoint,
