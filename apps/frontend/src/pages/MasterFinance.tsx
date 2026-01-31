@@ -14,6 +14,7 @@ import {
 import { motion } from 'framer-motion'
 import TeamDetailView from '../components/TeamDetailView'
 import AgentDetailCard from '../components/AgentDetailCard'
+import DomainTag from '../components/DomainTag'
 import { useDataFetch } from '../hooks/useDataFetch'
 import { 
   AgentsResponseSchema, 
@@ -287,8 +288,8 @@ export default function MasterFinance() {
                 <h2 className="text-xl font-semibold">{team.name}</h2>
               </div>
               <p className="text-gray-400 text-sm mb-4 line-clamp-2">{team.description}</p>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Domain: {team.domain}</span>
+              <div className="flex items-center justify-between text-sm gap-2">
+                <DomainTag domain={team.domain} size="sm" />
                 {team.agentCount !== undefined && (
                   <span className="text-blue-400">{team.agentCount} agents</span>
                 )}

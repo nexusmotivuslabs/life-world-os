@@ -4,7 +4,7 @@
  * Main page for managing loadouts - similar to COD/Halo loadout system
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Target, Plus, Trash2, Check } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { loadoutApi } from '../services/loadoutApi'
@@ -40,6 +40,7 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
   const [viewingItem, setViewingItem] = useState<LoadoutItem | null>(null)
   const [newLoadoutName, setNewLoadoutName] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const lastPowerLevelLoadoutIdRef = useRef<string | null>(null)
 
   // Initialize from initialData on mount
   useEffect(() => {
@@ -56,11 +57,13 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run once on mount
 
+  // Load power level only when selected loadout id changes (avoid duplicate requests)
   useEffect(() => {
-    if (selectedLoadout) {
-      loadPowerLevel(selectedLoadout.id)
-    }
-  }, [selectedLoadout])
+    if (!selectedLoadout) return
+    if (lastPowerLevelLoadoutIdRef.current === selectedLoadout.id) return
+    lastPowerLevelLoadoutIdRef.current = selectedLoadout.id
+    loadPowerLevel(selectedLoadout.id)
+  }, [selectedLoadout?.id])
 
   const loadData = async () => {
     try {
@@ -181,6 +184,8 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
       setLoadouts(loadouts.map(l => (l.id === updated.id ? updated : l)))
       setSelectedLoadout(updated)
       setSelectingSlot(null)
+      lastPowerLevelLoadoutIdRef.current = updated.id
+      loadPowerLevel(updated.id)
     } catch (error: any) {
       logger.error('Failed to update loadout', error instanceof Error ? error : new Error(String(error)))
       if (error.message?.includes('Preset loadouts cannot be modified')) {

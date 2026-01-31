@@ -143,9 +143,21 @@ const sizeClasses = {
   lg: 'text-base px-4 py-2',
 }
 
+/**
+ * Resolve display key for compound domains (e.g. INVESTMENT/TAX_OPTIMIZATION -> INVESTMENT).
+ * Shows the primary/category segment as the label.
+ */
+function domainToDisplayKey(domain: string): string {
+  if (domain.includes('/')) {
+    return domain.split('/')[0].trim()
+  }
+  return domain
+}
+
 export default function DomainTag({ domain, count, size = 'md', onClick, className = '' }: DomainTagProps) {
-  const config = domainConfig[domain] || {
-    label: domain,
+  const key = domainToDisplayKey(domain)
+  const config = domainConfig[key] || {
+    label: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     color: 'text-gray-400',
     bgColor: 'bg-gray-500/10',
     borderColor: 'border-gray-500/30',

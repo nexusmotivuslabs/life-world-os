@@ -26,13 +26,10 @@ export interface UpdateLoadoutInput {
 
 /**
  * Get all loadouts for a user
- * Automatically creates preset loadouts if user has none
+ * Creates preset loadouts only when user has none (avoids extra count() on every request)
  */
 export async function getUserLoadouts(userId: string) {
-  // Ensure user has preset loadouts if they have none
-  await ensurePresetLoadouts(userId)
-
-  return prisma.loadout.findMany({
+  const loadouts = await prisma.loadout.findMany({
     where: { userId },
     include: {
       slots: {
@@ -46,6 +43,26 @@ export async function getUserLoadouts(userId: string) {
       { createdAt: 'asc' },
     ],
   })
+
+  if (loadouts.length === 0) {
+    await ensurePresetLoadouts(userId)
+    return prisma.loadout.findMany({
+      where: { userId },
+      include: {
+        slots: {
+          include: {
+            item: true,
+          },
+        },
+      },
+      orderBy: [
+        { isPreset: 'asc' },
+        { createdAt: 'asc' },
+      ],
+    })
+  }
+
+  return loadouts
 }
 
 /**
@@ -69,10 +86,26 @@ export async function getLoadoutById(loadoutId: string, userId: string) {
 
 /**
  * Get active loadout for a user
- * Automatically creates preset loadouts if user has none
+ * Creates preset loadouts only when user has no loadouts (checked inside ensurePresetLoadouts)
  */
 export async function getActiveLoadout(userId: string) {
-  // Ensure user has preset loadouts if they have none
+  const loadout = await prisma.loadout.findFirst({
+    where: {
+      userId,
+      isActive: true,
+    },
+    include: {
+      slots: {
+        include: {
+          item: true,
+        },
+      },
+    },
+  })
+
+  if (loadout) return loadout
+
+  // No active loadout: ensure presets exist (creates if user has zero loadouts)
   await ensurePresetLoadouts(userId)
 
   return prisma.loadout.findFirst({

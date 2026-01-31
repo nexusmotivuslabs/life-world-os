@@ -44,6 +44,7 @@
     "restore-db:staging": "cd apps/backend && NODE_ENV=staging tsx ../../seeds/scripts/restoreDump.ts staging",
     "smoke-test": "./scripts/utils/smoke-test.sh",
     "test:e2e": "playwright test",
+    "test:e2e:no-server": "SKIP_WEBSERVER=1 playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:local": "./scripts/utils/run-e2e-local.sh",
     "test:e2e:report": "playwright show-report",

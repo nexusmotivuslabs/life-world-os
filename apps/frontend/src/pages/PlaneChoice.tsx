@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Zap, BarChart3, ChevronRight, DollarSign, TrendingUp, HeartPulse, Target, Eye, Layers, Sword, Sparkles, Clock } from 'lucide-react'
+import { BookOpen, Zap, BarChart3, ChevronRight, DollarSign, TrendingUp, HeartPulse, Target, Eye, Layers, Sword, Sparkles, Clock, FileText } from 'lucide-react'
 import { loadoutApi } from '../services/loadoutApi'
 import { Loadout } from '../types/loadout'
 import { motion } from 'framer-motion'
@@ -161,6 +161,74 @@ export default function PlaneChoice() {
                   </motion.div>
                 )
               })()}
+
+              {/* 3. Loadouts - Weapons & Armour */}
+              {(() => {
+                const loadoutsStatus = getReleaseStatus('loadouts')
+                const isSelectable = loadoutsStatus ? isFeatureSelectable(loadoutsStatus) : false
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    onClick={isSelectable ? () => navigate('/loadouts') : undefined}
+                    className={`bg-gray-800 rounded-lg p-8 border-2 ${
+                      isSelectable
+                        ? 'border-red-500/30 hover:border-red-500/60 cursor-pointer transition-all hover:scale-105'
+                        : 'border-gray-700/50 opacity-75 cursor-not-allowed'
+                    } group flex flex-col h-full relative overflow-hidden`}
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-4 bg-red-500/20 rounded-lg">
+                        <Sword className="w-8 h-8 text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-white group-hover:text-red-400 transition-colors">
+                          Loadouts
+                        </h3>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+                          Equip
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-6 flex-grow">
+                      Weapons and armour. Equip tools, strategies, and capabilities and manage your loadout.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-400">Weapons • Armour • Grenades • Tactical</div>
+                    </div>
+                  </motion.div>
+                )
+              })()}
+
+              {/* 4. Blog - Articles & Insights */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+                onClick={() => navigate('/blogs')}
+                className="bg-gray-800 rounded-lg p-8 border-2 border-cyan-500/30 hover:border-cyan-500/60 cursor-pointer transition-all hover:scale-105 group flex flex-col h-full relative overflow-hidden"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 bg-cyan-500/20 rounded-lg">
+                    <FileText className="w-8 h-8 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      Blog
+                    </h3>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                      Read
+                    </span>
+                  </div>
+                </div>
+                <p className="text-gray-300 mb-6 flex-grow">
+                  Technical articles and insights. Laws, principles, career strategy, and tooling.
+                </p>
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-400">Systems • Career • Tech Stack • Version Control</div>
+                </div>
+              </motion.div>
             </div>
           </div>
 
@@ -274,61 +342,6 @@ export default function PlaneChoice() {
 
                     <div className="space-y-2">
                       <div className="text-sm text-gray-400">Analytics • Trends • Reports</div>
-                    </div>
-                  </motion.div>
-                )
-              })()}
-
-              {/* Weapons - Coming Soon */}
-              {(() => {
-                const weaponsRelease = getReleaseInfo('weapons')
-                const weaponsStatus = getReleaseStatus('weapons')
-                const isSelectable = weaponsStatus ? isFeatureSelectable(weaponsStatus) : false
-                const statusColor = weaponsStatus ? getReleaseStatusColor(weaponsStatus) : null
-                
-                return (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    onClick={isSelectable ? () => navigate('/weapons') : undefined}
-                    className={`bg-gray-800/50 rounded-lg p-8 border-2 ${
-                      isSelectable
-                        ? 'border-gray-700/50 hover:border-gray-600 cursor-pointer transition-all hover:scale-105'
-                        : 'border-gray-700/50 opacity-75 cursor-not-allowed'
-                    } group flex flex-col h-full relative overflow-hidden`}
-                  >
-                    {/* Release Status Badge */}
-                    {weaponsStatus && (
-                      <div className={`absolute top-4 right-4 flex items-center gap-2 px-3 py-1 rounded-full border ${statusColor?.bg} ${statusColor?.border}`}>
-                        <Clock className={`w-4 h-4 ${statusColor?.text}`} />
-                        <span className={`text-xs font-medium ${statusColor?.text}`}>
-                          {getReleaseStatusLabel(weaponsStatus)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="p-4 bg-red-600/20 rounded-lg">
-                        <Sword className="w-8 h-8 text-red-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-white group-hover:text-red-400 transition-colors">
-                          Weapons
-                        </h3>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                          Equip
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-300 mb-6 flex-grow">
-                      Equip powerful tools, strategies, and capabilities to enhance your effectiveness.
-                      Build your arsenal for navigating challenges and achieving goals.
-                    </p>
-
-                    <div className="space-y-2">
-                      <div className="text-sm text-gray-400">Loadout Items • Abilities • Strategies</div>
                     </div>
                   </motion.div>
                 )

@@ -94,6 +94,15 @@ const BLOG_POSTS = [
     tags: ['skills', 'specialization', 'career', 'tech', 'software-engineering', 'early-career', 'learning', 'optionality'],
     date: '2025-01-27',
     path: 'career/skills/why-general-skills-beat-narrow-specialisation-early.md'
+  },
+  {
+    slug: 'tooling-reference-what-is',
+    title: 'Tooling Reference – Life World OS',
+    category: 'Life World OS',
+    subcategory: 'Tech Stack',
+    tags: ['documentation', 'tooling', 'reference', 'what-is', 'tech-stack'],
+    date: '2026-01-30',
+    path: 'life-world-os/tech-stack/tooling-reference-what-is.md'
   }
 ]
 

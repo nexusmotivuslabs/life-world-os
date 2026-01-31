@@ -5,18 +5,15 @@
  * Shows "Life World OS" link, login/logout/signup buttons, and user greeting.
  */
 
-import { Link } from 'react-router-dom'
-import { Settings, LogOut, LogIn, UserPlus } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Settings, LogOut, LogIn, UserPlus, FileText } from 'lucide-react'
 import { useGameStore } from '../store/useGameStore'
 import { routes } from '../config/routes'
-import { useEffect, useState } from 'react'
-import BlogDropdown from './BlogDropdown'
-import BlogModal from './BlogModal'
+import { useEffect } from 'react'
 
 export default function Header() {
+  const navigate = useNavigate()
   const { isDemo, dashboard, fetchDashboard } = useGameStore()
-  const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null)
-  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false)
   
   // Check if user is authenticated
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
@@ -43,16 +40,6 @@ export default function Header() {
     window.location.href = '/login'
   }
 
-  const handleBlogPostSelect = (slug: string) => {
-    setSelectedBlogSlug(slug)
-    setIsBlogModalOpen(true)
-  }
-
-  const handleCloseBlogModal = () => {
-    setIsBlogModalOpen(false)
-    setSelectedBlogSlug(null)
-  }
-
   return (
     <header className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-8 py-4">
@@ -73,7 +60,15 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {isAuthenticated && token && !isDemo && dashboard ? (
               <>
-                <BlogDropdown onPostSelect={handleBlogPostSelect} />
+                <button
+                  type="button"
+                  onClick={() => navigate(routes.blogs.path)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-200 hover:text-white hover:bg-white/10 rounded transition-colors"
+                  aria-label="Go to Blog"
+                >
+                  <FileText className="w-4 h-4" />
+                  Blog
+                </button>
                 <Link
                   to={routes.configuration.path}
                   className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white text-sm font-medium flex items-center gap-2 transition-colors"
@@ -118,15 +113,6 @@ export default function Header() {
               </>
             )}
           </div>
-          
-          {/* Blog Modal - only show when authenticated */}
-          {isAuthenticated && token && !isDemo && dashboard && (
-            <BlogModal
-              slug={selectedBlogSlug}
-              isOpen={isBlogModalOpen}
-              onClose={handleCloseBlogModal}
-            />
-          )}
         </div>
       </div>
     </header>

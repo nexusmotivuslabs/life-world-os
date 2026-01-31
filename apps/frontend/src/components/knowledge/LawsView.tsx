@@ -8,6 +8,50 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, Search, ChevronRight, Filter, Target } from 'lucide-react'
 import { powerLawsApi, bibleLawsApi, PowerLaw, BibleLaw, PowerLawDomain, BibleLawDomain } from '../../services/financeApi'
+import { enumToDisplayName } from '../../utils/enumDisplayNames'
+
+/** Renders "This is the part that matters" insights from law data (rules + supporting lines). */
+function LawInsightsBlock({
+  title,
+  domainApplication,
+  rules,
+  lines,
+  accentColor = 'blue',
+}: {
+  title: string
+  domainApplication?: string
+  rules: string[]
+  lines?: string[]
+  accentColor?: 'blue' | 'purple'
+}) {
+  const border = accentColor === 'purple' ? 'border-purple-500/30 bg-purple-500/5' : 'border-blue-500/30 bg-blue-500/5'
+  const ruleColor = accentColor === 'purple' ? 'text-purple-300' : 'text-blue-300'
+  return (
+    <div className={`rounded-lg border p-4 ${border} mb-4`}>
+      <p className="text-sm font-semibold text-gray-200 mb-3">This is the part that matters.</p>
+      <p className="text-white font-medium mb-2">{title}</p>
+      {domainApplication && (
+        <p className="text-gray-300 text-sm mb-4">{domainApplication}</p>
+      )}
+      {rules.length > 0 && (
+        <div className="space-y-3">
+          {rules.map((rule, i) => (
+            <div key={i}>
+              <p className={`text-sm font-medium ${ruleColor}`}>Rule {i + 1}: {rule}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {lines && lines.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-600/50 space-y-1">
+          {lines.map((line, i) => (
+            <p key={i} className="text-sm text-gray-400 italic">{line}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function LawsView() {
   const [view, setView] = useState<'power' | 'bible'>('power')
@@ -212,7 +256,7 @@ export default function LawsView() {
             >
               {availableDomains.map((domain) => (
                 <option key={domain} value={domain}>
-                  {domain.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                  {enumToDisplayName(domain)}
                 </option>
               ))}
             </select>
@@ -238,7 +282,7 @@ export default function LawsView() {
               <option value="">All Categories</option>
               {availableCategories.map((cat) => (
                 <option key={cat.category} value={cat.category}>
-                  {cat.category} ({cat.count})
+                  {enumToDisplayName(cat.category)} ({cat.count})
                 </option>
               ))}
             </select>
@@ -283,15 +327,22 @@ export default function LawsView() {
                           Law {law.order}
                         </span>
                         <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded">
-                          {law.domain}
+                          {enumToDisplayName(law.domain)}
                         </span>
                         {law.category && (
                           <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded border border-orange-500/30">
-                            {law.category}
+                            {enumToDisplayName(law.category)}
                           </span>
                         )}
                       </div>
                       <h3 className="text-xl font-semibold text-white mb-2">{law.title}</h3>
+                      <LawInsightsBlock
+                        title={law.title}
+                        domainApplication={law.domainApplication}
+                        rules={law.strategies ?? []}
+                        lines={law.warnings}
+                        accentColor="blue"
+                      />
                       {law.originalDescription && (
                         <p className="text-gray-300 mb-3">{law.originalDescription}</p>
                       )}
@@ -337,15 +388,26 @@ export default function LawsView() {
                           Law {law.order}
                         </span>
                         <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded">
-                          {law.domain}
+                          {enumToDisplayName(law.domain)}
                         </span>
                         {law.category && (
                           <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
-                            {law.category}
+                            {enumToDisplayName(law.category)}
                           </span>
                         )}
                       </div>
                       <h3 className="text-xl font-semibold text-white mb-2">{law.title}</h3>
+                      <LawInsightsBlock
+                        title={law.title}
+                        domainApplication={law.domainApplication}
+                        rules={
+                          Array.isArray(law.principles)
+                            ? law.principles.map((p: { text?: string }) => (typeof p === 'string' ? p : p?.text ?? '')).filter(Boolean)
+                            : []
+                        }
+                        lines={law.practicalApplications}
+                        accentColor="purple"
+                      />
                       {law.originalText && (
                         <p className="text-gray-300 mb-3 italic">"{law.originalText}"</p>
                       )}

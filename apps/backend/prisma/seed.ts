@@ -4,8 +4,12 @@
  * Orchestrates all seed scripts in the correct order.
  * Idempotent - can be run multiple times safely.
  * Environment-aware - works for dev, staging, and prod.
+ *
+ * Requires DATABASE_URL. Copy apps/backend/.env.local.example to .env.local, then run:
+ *   cd apps/backend && npm run seed
  */
 
+import './loadEnv'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -49,7 +53,9 @@ async function seedLoadouts() {
   try {
     console.log('\n📦 Seeding Loadout Items...')
     const fullPath = path.join(__dirname, 'seed-loadouts.ts')
-    const { stdout, stderr } = await execAsync(`tsx "${fullPath}"`)
+    const { stdout, stderr } = await execAsync(`tsx "${fullPath}"`, {
+      env: { ...process.env, NODE_ENV: env },
+    })
     if (stdout) console.log(stdout)
     if (stderr) console.error(stderr)
     console.log('✅ Loadout Items seeded')
@@ -89,6 +95,16 @@ async function main() {
     console.log('\n⚔️  PHASE 4: Weapons and Capabilities')
     console.log('─'.repeat(60))
     await seedLoadouts()
+
+    // Backfill preset loadout slots (Primary/Secondary/Grenade from weapons, Armor Ability from armor, etc.)
+    console.log('\n📋 Populating preset loadout slots...')
+    const { fillEmptyPresetSlots } = await import('../src/services/presetLoadoutService')
+    const users = await prisma.user.findMany({ select: { id: true } })
+    let totalSlotsFilled = 0
+    for (const user of users) {
+      totalSlotsFilled += await fillEmptyPresetSlots(user.id)
+    }
+    console.log(`✅ Filled ${totalSlotsFilled} preset slot(s) for ${users.length} user(s)`)
 
     // Phase 5: Money System (Agents and Teams)
     console.log('\n💰 PHASE 5: Money System')

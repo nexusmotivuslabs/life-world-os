@@ -10,7 +10,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate",
     "studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts",
+    "seed": "sh -c '[ -f .env.local ] && set -a && . ./.env.local && set +a; tsx prisma/seed.ts'",
     "seed:local": "tsx src/scripts/seedWithEnv.ts local",
     "seed:dev": "tsx src/scripts/seedWithEnv.ts dev",
     "seed:local-sample": "tsx src/scripts/seedLocalSample.ts",

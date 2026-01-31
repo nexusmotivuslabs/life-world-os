@@ -1,8 +1,14 @@
 /**
  * Seed Loadout Items
- * 
- * Creates initial loadout items for the system
+ *
+ * Creates initial loadout items for the system.
+ * Weapons: Primary, Secondary, Grenade. Armor: Armor Ability. Plus Tactical Package, Support Upgrade.
  */
+
+import { config } from 'dotenv'
+import { resolve } from 'path'
+config({ path: resolve(process.cwd(), '.env.local') })
+config({ path: resolve(process.cwd(), '.env') })
 
 import { PrismaClient, LoadoutSlotType } from '@prisma/client'
 
@@ -464,10 +470,24 @@ const loadoutItems = [
   },
 ]
 
+// Schema fields only (LoadoutItem has no metadata column)
+function toLoadoutItemData(item: (typeof loadoutItems)[0]) {
+  return {
+    name: item.name,
+    slotType: item.slotType,
+    description: item.description,
+    powerLevel: item.powerLevel,
+    benefits: item.benefits,
+    icon: item.icon ?? null,
+    isDefault: item.isDefault,
+  }
+}
+
 async function main() {
   console.log('Seeding loadout items...')
 
   for (const item of loadoutItems) {
+    const data = toLoadoutItemData(item)
     await prisma.loadoutItem.upsert({
       where: {
         name_slotType: {
@@ -475,8 +495,8 @@ async function main() {
           slotType: item.slotType,
         },
       },
-      update: item,
-      create: item,
+      update: data,
+      create: data,
     })
   }
 

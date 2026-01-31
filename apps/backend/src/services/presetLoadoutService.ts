@@ -79,18 +79,7 @@ const PRESET_LOADOUTS = [
  * Called when user has no loadouts
  */
 export async function createPresetLoadouts(userId: string) {
-  // Get all default loadout items
-  const allItems = await prisma.loadoutItem.findMany({
-    where: { isDefault: true },
-  })
-
-  // Create a map for quick lookup
-  const itemsMap = new Map<string, string>()
-  for (const item of allItems) {
-    const key = `${item.name}_${item.slotType}`
-    itemsMap.set(key, item.id)
-  }
-
+  const itemsMap = await getDefaultItemsMap()
   const createdLoadouts = []
 
   for (let i = 0; i < PRESET_LOADOUTS.length; i++) {
@@ -142,7 +131,64 @@ export async function createPresetLoadouts(userId: string) {
 }
 
 /**
- * Check if user needs preset loadouts and create them if needed
+ * Build a map of itemName_slotType -> itemId for default loadout items
+ */
+async function getDefaultItemsMap(): Promise<Map<string, string>> {
+  const allItems = await prisma.loadoutItem.findMany({
+    where: { isDefault: true },
+  })
+  const map = new Map<string, string>()
+  for (const item of allItems) {
+    map.set(`${item.name}_${item.slotType}`, item.id)
+  }
+  return map
+}
+
+/**
+ * Fill empty slots on preset loadouts (e.g. created before loadout items were seeded).
+ * Idempotent: only creates missing slots.
+ */
+export async function fillEmptyPresetSlots(userId: string): Promise<number> {
+  const presetLoadouts = await prisma.loadout.findMany({
+    where: { userId, isPreset: true },
+    include: { slots: true },
+  })
+  if (presetLoadouts.length === 0) return 0
+
+  const itemsMap = await getDefaultItemsMap()
+  let filled = 0
+
+  for (const loadout of presetLoadouts) {
+    const presetDef = PRESET_LOADOUTS.find((p) => p.name === loadout.name)
+    if (!presetDef) continue
+
+    const existingSlotTypes = new Set(loadout.slots.map((s) => s.slotType))
+    const toCreate: { slotType: LoadoutSlotType; itemId: string }[] = []
+
+    for (const slot of presetDef.slots) {
+      if (existingSlotTypes.has(slot.slotType)) continue
+      const itemId = itemsMap.get(`${slot.itemName}_${slot.slotType}`)
+      if (!itemId) {
+        console.warn(`Preset backfill: item not found: ${slot.itemName} (${slot.slotType})`)
+        continue
+      }
+      toCreate.push({ slotType: slot.slotType, itemId })
+    }
+
+    for (const s of toCreate) {
+      await prisma.loadoutSlot.create({
+        data: { loadoutId: loadout.id, slotType: s.slotType, itemId: s.itemId },
+      })
+      filled++
+    }
+  }
+
+  return filled
+}
+
+/**
+ * Check if user needs preset loadouts and create them if needed.
+ * Also backfills empty slots on existing preset loadouts (e.g. after seed runs).
  */
 export async function ensurePresetLoadouts(userId: string) {
   const existingLoadouts = await prisma.loadout.count({
@@ -153,6 +199,7 @@ export async function ensurePresetLoadouts(userId: string) {
     return await createPresetLoadouts(userId)
   }
 
+  await fillEmptyPresetSlots(userId)
   return []
 }
 

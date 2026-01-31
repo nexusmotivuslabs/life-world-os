@@ -13,6 +13,7 @@ import { awarenessApi, AwarenessLayer } from '../../services/awarenessApi'
 import { artifactApi, UserArtifact } from '../../services/artifactApi'
 import { logger } from '../../lib/logger'
 import { getCategoryDisplayName } from '../../utils/realityNodeDisplay'
+import { enumToDisplayName } from '../../utils/enumDisplayNames'
 
 interface SearchResult {
   id: string
@@ -161,7 +162,7 @@ export default function KnowledgeSearch({ initialQuery = '' }: KnowledgeSearchPr
           title: law.title,
           description: law.originalDescription || law.domainApplication,
           content: law.domainApplication,
-          category: `48 Laws of Power - ${law.domain}`,
+          category: `48 Laws of Power - ${enumToDisplayName(law.domain)}`,
           route: '/knowledge/laws',
           icon: BookOpen,
           color: 'text-blue-400',
@@ -186,7 +187,7 @@ export default function KnowledgeSearch({ initialQuery = '' }: KnowledgeSearchPr
           title: law.title,
           description: law.domainApplication || law.scriptureReference,
           content: law.domainApplication || law.originalText,
-          category: `Bible Laws - ${law.domain}`,
+          category: `Bible Laws - ${enumToDisplayName(law.domain)}`,
           route: '/knowledge/laws',
           icon: BookOpen,
           color: 'text-purple-400',

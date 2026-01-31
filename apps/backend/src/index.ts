@@ -52,6 +52,7 @@ const PORT = process.env.PORT || 5001
 app.use(cors({
   origin: [
     'http://localhost:5002',  // Local frontend
+    'http://localhost:5003',  // Local frontend (alternate port)
     'http://localhost:5173',  // Dev frontend (Docker)
     'http://localhost:3000',  // Grafana
     'http://dev.lifeworld.com:5002',

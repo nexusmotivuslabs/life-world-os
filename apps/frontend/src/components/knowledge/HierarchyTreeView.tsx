@@ -633,15 +633,6 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded border border-green-500/30 text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Refresh tree data (auto-refreshes every 5 minutes)"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button
               onClick={expandAll}
               className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 text-sm flex items-center gap-2 transition-colors"
             >

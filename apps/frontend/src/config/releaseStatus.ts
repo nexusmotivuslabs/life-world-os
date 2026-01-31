@@ -170,6 +170,16 @@ export const releaseStatuses: Record<string, ReleaseInfo> = {
       lastUpdated: '2025-01-25',
     },
   },
+  // Loadouts (Weapons & Armour) - Live
+  loadouts: {
+    id: 'loadouts',
+    name: 'Loadouts',
+    attributes: {
+      status: ReleaseStatus.LIVE,
+      version: '2.0.0',
+      lastUpdated: '2025-01-25',
+    },
+  },
   // Coming Soon Features
   weapons: {
     id: 'weapons',

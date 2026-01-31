@@ -10,6 +10,7 @@ import { Search, BookOpen, Shield, Sparkles, ChevronRight, X } from 'lucide-reac
 import { Link, useNavigate } from 'react-router-dom'
 import { powerLawsApi, bibleLawsApi, PowerLaw, BibleLaw, PowerLawDomain, BibleLawDomain } from '../../services/financeApi'
 import { awarenessApi, AwarenessLayer } from '../../services/awarenessApi'
+import { enumToDisplayName } from '../../utils/enumDisplayNames'
 
 interface SearchResult {
   id: string
@@ -144,7 +145,7 @@ export default function KnowledgeSearchDropdown() {
           title: law.title,
           description: law.description,
           content: law.interpretation,
-          category: `48 Laws of Power - ${law.domain}`,
+          category: `48 Laws of Power - ${enumToDisplayName(law.domain)}`,
           route: '/knowledge/laws',
           icon: BookOpen,
           color: 'text-blue-400',
@@ -167,7 +168,7 @@ export default function KnowledgeSearchDropdown() {
           title: law.title,
           description: law.description,
           content: law.interpretation || law.scriptureReference,
-          category: `Bible Laws - ${law.domain}`,
+          category: `Bible Laws - ${enumToDisplayName(law.domain)}`,
           route: '/knowledge/laws',
           icon: BookOpen,
           color: 'text-purple-400',

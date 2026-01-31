@@ -71,13 +71,27 @@ router.get('/active', authenticateToken, async (req: AuthRequest, res) => {
 // GET /api/loadouts/items - Get available loadout items (Public endpoint)
 router.get('/items', async (req, res) => {
   try {
-    const slotType = req.query.slotType as LoadoutSlotType | undefined
+    const rawSlotType = req.query.slotType as string | undefined
+    let slotType: LoadoutSlotType | undefined
+    if (rawSlotType) {
+      const valid = Object.values(LoadoutSlotType).includes(rawSlotType as LoadoutSlotType)
+      if (!valid) {
+        return res.status(400).json({
+          error: 'Invalid slotType',
+          validValues: Object.values(LoadoutSlotType),
+        })
+      }
+      slotType = rawSlotType as LoadoutSlotType
+    }
     const items = await getLoadoutItems(slotType)
 
     res.json(items)
   } catch (error) {
     console.error('Get loadout items error:', error)
-    res.status(500).json({ error: 'Failed to get loadout items' })
+    res.status(500).json({
+      error: 'Failed to get loadout items',
+      message: error instanceof Error ? error.message : String(error),
+    })
   }
 })
 

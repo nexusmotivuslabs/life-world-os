@@ -20,6 +20,7 @@ import SystemsPlane from './pages/SystemsPlane'
 import InsightPlane from './pages/InsightPlane'
 import ConfigurationPlane from './pages/ConfigurationPlane'
 import LoadoutPageLoader from './components/LoadoutPageLoader'
+import BlogsPage from './pages/BlogsPage'
 import GuideBot from './components/GuideBot'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
@@ -269,8 +270,20 @@ function App() {
           <Route path="/loadouts" element={
             <ProtectedRoute>
               <Layout>
+                <LoadoutsLanding />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/loadouts/manage" element={
+            <ProtectedRoute>
+              <Layout>
                 <LoadoutPageLoader />
               </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/blogs" element={
+            <ProtectedRoute>
+              <BlogsPage />
             </ProtectedRoute>
           } />
           {/* Root redirects to home */}

@@ -28,7 +28,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5002',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -63,15 +63,18 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  /* Note: For local testing, start services manually with: npm run dev:local */
+  /* Note: For local testing, start services manually with: npm run dev:local or local-lite */
   /* Or use: npm run test:e2e:local which handles setup automatically */
-  webServer: {
-    command: 'npm run dev:local',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  /* Use SKIP_WEBSERVER=1 when server is already running (e.g. local-lite) */
+  ...(!process.env.SKIP_WEBSERVER && {
+    webServer: {
+      command: 'npm run dev:local',
+      url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5002',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  }),
 });
 

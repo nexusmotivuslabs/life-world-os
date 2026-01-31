@@ -18,7 +18,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 interface UsePageDataLoaderOptions<T> {
   onSuccess?: (data: T) => void
@@ -38,21 +38,27 @@ export function usePageDataLoader<T>(
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Refs so we run load only once on mount and retry uses latest loadFn
+  const loadFnRef = useRef(loadFn)
+  const optionsRef = useRef(options)
+  loadFnRef.current = loadFn
+  optionsRef.current = options
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const result = await loadFn()
+      const result = await loadFnRef.current()
       setData(result)
-      options.onSuccess?.(result)
+      optionsRef.current.onSuccess?.(result)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load data'
       setError(errorMessage)
-      options.onError?.(err instanceof Error ? err : new Error(errorMessage))
+      optionsRef.current.onError?.(err instanceof Error ? err : new Error(errorMessage))
     } finally {
       setLoading(false)
     }
-  }, [loadFn, options])
+  }, [])
 
   useEffect(() => {
     loadData()
