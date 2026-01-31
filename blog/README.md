@@ -11,11 +11,12 @@ Blog posts are organized by topic/genre with hierarchical structure:
 ```
 blog/
 ├── README.md (this file)
-├── systems/
-│   ├── version-control/
-│   │   └── gitops-vs-gitflow.md
-│   └── tooling/
+├── life-world-os/
+│   └── tech-stack/
 │       └── tooling-reference-what-is.md
+├── systems/
+│   └── version-control/
+│       └── gitops-vs-gitflow.md
 └── career/
     ├── decision-making/
     │   └── early-decisions-optionality.md
@@ -29,14 +30,19 @@ blog/
 
 ## Categories
 
+### Life World OS
+Documentation and guides specific to the Life World OS application.
+
+**Subcategories**:
+- **tech-stack**: Technologies and tools used in the app
+  - `tooling-reference-what-is.md` - "What is" reference for all tools
+
 ### Systems
 Technical systems, infrastructure, and architecture topics.
 
 **Subcategories**:
 - **version-control**: Git workflows, branching strategies, version management
   - `gitops-vs-gitflow.md` - GitOps vs Git Flow comparison
-- **tooling**: Tools and technologies used in the app
-  - `tooling-reference-what-is.md` - "What is" reference for all tools
 
 ### Career
 Career strategy, decision-making, and professional development topics.
@@ -87,13 +93,15 @@ Career strategy, decision-making, and professional development topics.
 
 ## Current Posts
 
+### Life World OS
+
+#### Tech Stack
+- [Tooling Reference – What Is](./life-world-os/tech-stack/tooling-reference-what-is.md) - Reference for all tools used in the app
+
 ### Systems
 
 #### Version Control
 - [GitOps vs Git Flow](./systems/version-control/gitops-vs-gitflow.md) - Comprehensive comparison with Life World OS application
-
-#### Tooling
-- [Tooling Reference – What Is](./systems/tooling/tooling-reference-what-is.md) - Reference for all tools used in the app
 
 ### Career
 

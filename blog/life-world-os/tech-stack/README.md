@@ -1,6 +1,6 @@
-# Tooling
+# Tech Stack
 
-Documentation for tools and technologies used in Life World OS.
+Documentation for the technologies and tools used in Life World OS.
 
 ---
 

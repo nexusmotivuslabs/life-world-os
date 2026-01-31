@@ -1,7 +1,7 @@
 # Tooling Reference – Life World OS
 
-**Category**: Systems → Tooling  
-**Tags**: `documentation`, `tooling`, `reference`, `what-is`  
+**Category**: Life World OS → Tech Stack  
+**Tags**: `documentation`, `tooling`, `reference`, `what-is`, `tech-stack`  
 **Date**: 2026-01-30  
 **Context**: Life World OS – "What is" reference for all tools used in the application
 
