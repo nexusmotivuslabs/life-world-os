@@ -12,8 +12,10 @@ Blog posts are organized by topic/genre with hierarchical structure:
 blog/
 ├── README.md (this file)
 ├── systems/
-│   └── version-control/
-│       └── gitops-vs-gitflow.md
+│   ├── version-control/
+│   │   └── gitops-vs-gitflow.md
+│   └── tooling/
+│       └── tooling-reference-what-is.md
 └── career/
     ├── decision-making/
     │   └── early-decisions-optionality.md
@@ -33,6 +35,8 @@ Technical systems, infrastructure, and architecture topics.
 **Subcategories**:
 - **version-control**: Git workflows, branching strategies, version management
   - `gitops-vs-gitflow.md` - GitOps vs Git Flow comparison
+- **tooling**: Tools and technologies used in the app
+  - `tooling-reference-what-is.md` - "What is" reference for all tools
 
 ### Career
 Career strategy, decision-making, and professional development topics.
@@ -88,6 +92,9 @@ Career strategy, decision-making, and professional development topics.
 #### Version Control
 - [GitOps vs Git Flow](./systems/version-control/gitops-vs-gitflow.md) - Comprehensive comparison with Life World OS application
 
+#### Tooling
+- [Tooling Reference – What Is](./systems/tooling/tooling-reference-what-is.md) - Reference for all tools used in the app
+
 ### Career
 
 #### Decision Making
@@ -101,6 +108,6 @@ Career strategy, decision-making, and professional development topics.
 
 ---
 
-**Last Updated**: 2025-01-27
+**Last Updated**: 2026-01-30
 
 
