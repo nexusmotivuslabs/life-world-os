@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest watch"
+    "test:watch": "vitest watch",
+    "test:recent": "vitest run src/pages/__tests__/BlogsPage.test.tsx src/services/__tests__/blogApi.test.ts src/components/__tests__/Header.test.tsx"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
