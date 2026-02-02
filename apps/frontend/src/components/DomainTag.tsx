@@ -18,8 +18,8 @@ export type BibleLawDomain =
   | 'STEWARDSHIP'
   | 'GENEROSITY'
 
-// Team domains that may overlap with Bible Law domains
-export type TeamDomain = 
+// Team domains – must match backend TeamDomain enum
+export type TeamDomain =
   | 'INVESTMENT'
   | 'TAX_OPTIMIZATION'
   | 'CASH_FLOW'
@@ -28,6 +28,14 @@ export type TeamDomain =
   | 'DEBT_MANAGEMENT'
   | 'EMERGENCY_FUND'
   | 'PLATFORM_ENGINEERING'
+  | 'CORE_MONEY_SYSTEM'
+  | 'HEALTH_CAPACITY'
+  | 'DECISION_ANALYSIS'
+  | 'SKILL_DEVELOPMENT'
+  | 'PROOF_BUILDING'
+  | 'TRUST_BUILDING'
+  | 'REPUTATION_DEFENSE'
+  | 'EGO_MANAGEMENT'
 
 interface DomainTagProps {
   domain: BibleLawDomain | TeamDomain | string
@@ -135,6 +143,64 @@ const domainConfig: Record<string, { label: string; color: string; bgColor: stri
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',
   },
+  CORE_MONEY_SYSTEM: {
+    label: 'Core Money System',
+    color: 'text-lime-400',
+    bgColor: 'bg-lime-500/10',
+    borderColor: 'border-lime-500/30',
+  },
+  HEALTH_CAPACITY: {
+    label: 'Health & Capacity',
+    color: 'text-pink-400',
+    bgColor: 'bg-pink-500/10',
+    borderColor: 'border-pink-500/30',
+  },
+  DECISION_ANALYSIS: {
+    label: 'Decision Analysis',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/30',
+  },
+  SKILL_DEVELOPMENT: {
+    label: 'Skill Development',
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/30',
+  },
+  PROOF_BUILDING: {
+    label: 'Proof Building',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+  },
+  TRUST_BUILDING: {
+    label: 'Trust Building',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+  },
+  REPUTATION_DEFENSE: {
+    label: 'Reputation Defense',
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/10',
+    borderColor: 'border-rose-500/30',
+  },
+  EGO_MANAGEMENT: {
+    label: 'Ego Management',
+    color: 'text-indigo-400',
+    bgColor: 'bg-indigo-500/10',
+    borderColor: 'border-indigo-500/30',
+  },
+}
+
+/** Get domain label and color config for use outside DomainTag */
+export function getDomainConfig(domain: string) {
+  return domainConfig[domain] || {
+    label: domain.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toLowerCase()),
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/10',
+    borderColor: 'border-gray-500/30',
+  }
 }
 
 const sizeClasses = {

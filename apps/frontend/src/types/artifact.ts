@@ -129,27 +129,74 @@ export const ARTIFACT_CATEGORY_COLORS: Record<ArtifactCategory, ArtifactMetadata
 }
 
 /**
- * Get category metadata
+ * Human-readable labels: RESOURCE -> Resource, STAT -> Stat, etc.
+ * Single source of truth for display across the app.
  */
-export function getArtifactCategoryMetadata(category: ArtifactCategory): ArtifactMetadata {
-  return ARTIFACT_CATEGORY_COLORS[category]
+export const ARTIFACT_CATEGORY_LABELS: Record<ArtifactCategory, string> = {
+  [ArtifactCategory.RESOURCE]: 'Resource',
+  [ArtifactCategory.STAT]: 'Stat',
+  [ArtifactCategory.SYSTEM]: 'System',
+  [ArtifactCategory.CONCEPT]: 'Concept',
+  [ArtifactCategory.LAW]: 'Law',
+  [ArtifactCategory.PRINCIPLE]: 'Principle',
+  [ArtifactCategory.FRAMEWORK]: 'Framework',
+  [ArtifactCategory.WEAPON]: 'Weapon',
+}
+
+/** Config shape for display (label + colour) - matches DomainTag pattern */
+export interface ArtifactCategoryConfig {
+  label: string
+  color: string
+  bgColor: string
+  borderColor: string
 }
 
 /**
- * Get category display name
+ * Get category config (label + colour). Handles unknown categories with fallback.
  */
-export function getArtifactCategoryLabel(category: ArtifactCategory): string {
-  const labels: Record<ArtifactCategory, string> = {
-    [ArtifactCategory.RESOURCE]: 'Resources',
-    [ArtifactCategory.STAT]: 'Stats',
-    [ArtifactCategory.SYSTEM]: 'Systems',
-    [ArtifactCategory.CONCEPT]: 'Concepts',
-    [ArtifactCategory.LAW]: 'Laws',
-    [ArtifactCategory.PRINCIPLE]: 'Principles',
-    [ArtifactCategory.FRAMEWORK]: 'Frameworks',
-    [ArtifactCategory.WEAPON]: 'Weapons',
+export function getArtifactCategoryConfig(category: ArtifactCategory | string): ArtifactCategoryConfig {
+  const meta = ARTIFACT_CATEGORY_COLORS[category as ArtifactCategory]
+  if (meta) {
+    return {
+      label: ARTIFACT_CATEGORY_LABELS[category as ArtifactCategory],
+      color: meta.color.text,
+      bgColor: meta.color.bg,
+      borderColor: meta.color.border,
+    }
   }
-  return labels[category]
+  const fallbackLabel = String(category).replace(/_/g, ' ').replace(/\b\w/g, c => c.toLowerCase())
+  return {
+    label: fallbackLabel,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/10',
+    borderColor: 'border-gray-500/30',
+  }
+}
+
+/**
+ * Get category metadata
+ */
+export function getArtifactCategoryMetadata(category: ArtifactCategory | string): ArtifactMetadata {
+  const meta = ARTIFACT_CATEGORY_COLORS[category as ArtifactCategory]
+  if (meta) return meta
+  const config = getArtifactCategoryConfig(category)
+  return {
+    category: category as ArtifactCategory,
+    color: {
+      text: config.color,
+      bg: config.bgColor,
+      border: config.borderColor,
+      label: config.color.replace('-400', '-300'),
+    },
+    rationale: '',
+  }
+}
+
+/**
+ * Get category display label (singular: Resource, Stat, System, etc.)
+ */
+export function getArtifactCategoryLabel(category: ArtifactCategory | string): string {
+  return getArtifactCategoryConfig(category).label
 }
 
 /**
@@ -157,14 +204,14 @@ export function getArtifactCategoryLabel(category: ArtifactCategory): string {
  */
 export function getArtifactCategoryDescription(category: ArtifactCategory): string {
   const descriptions: Record<ArtifactCategory, string> = {
-    [ArtifactCategory.RESOURCE]: 'Assets, currencies, and consumable items that enable actions',
-    [ArtifactCategory.STAT]: 'Measurable attributes that affect system behavior and capabilities',
-    [ArtifactCategory.SYSTEM]: 'Organized structures with defined rules and interactions',
-    [ArtifactCategory.CONCEPT]: 'Abstract ideas and mental models for understanding reality',
-    [ArtifactCategory.LAW]: 'Immutable rules that govern behavior and outcomes',
-    [ArtifactCategory.PRINCIPLE]: 'Fundamental truths that guide decision-making',
-    [ArtifactCategory.FRAMEWORK]: 'Structured approaches for analysis and problem-solving',
-    [ArtifactCategory.WEAPON]: 'Capabilities and tools that amplify effectiveness and provide strategic advantages',
+    [ArtifactCategory.RESOURCE]: 'Assets, currencies, and consumable items that enable actions.',
+    [ArtifactCategory.STAT]: 'Measurable attributes that affect system behavior and capabilities.',
+    [ArtifactCategory.SYSTEM]: 'Organized structures with defined rules and interactions.',
+    [ArtifactCategory.CONCEPT]: 'Abstract ideas and mental models for understanding reality.',
+    [ArtifactCategory.LAW]: 'Immutable rules that govern behavior and outcomes.',
+    [ArtifactCategory.PRINCIPLE]: 'Fundamental truths that guide decision-making.',
+    [ArtifactCategory.FRAMEWORK]: 'Structured approaches for analysis and problem-solving.',
+    [ArtifactCategory.WEAPON]: 'Capabilities and tools that amplify effectiveness and provide strategic advantages.',
   }
   return descriptions[category]
 }

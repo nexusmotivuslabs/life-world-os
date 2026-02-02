@@ -1,10 +1,12 @@
 /**
  * Loadout Page
- * 
- * Main page for managing loadouts - similar to COD/Halo loadout system
+ *
+ * Main page for managing loadouts - similar to COD/Halo loadout system.
+ * Follows the same template as other planes: load data in useEffect on mount,
+ * with loading and error state and retry (no separate loader component).
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Target, Plus, Trash2, Check } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { loadoutApi } from '../services/loadoutApi'
@@ -20,19 +22,13 @@ import LoadoutItemModal from '../components/LoadoutItemModal'
 import PowerLevelDisplay from '../components/PowerLevelDisplay'
 import { logger } from '../lib/logger'
 
-interface LoadoutPageProps {
-  initialData?: {
-    loadouts: Loadout[]
-    availableItems: LoadoutItem[]
-  }
-}
-
-export default function LoadoutPage({ initialData }: LoadoutPageProps) {
-  const [loadouts, setLoadouts] = useState<Loadout[]>(initialData?.loadouts || [])
+export default function LoadoutPage() {
+  const [loadouts, setLoadouts] = useState<Loadout[]>([])
   const [selectedLoadout, setSelectedLoadout] = useState<Loadout | null>(null)
-  const [availableItems, setAvailableItems] = useState<LoadoutItem[]>(initialData?.availableItems || [])
+  const [availableItems, setAvailableItems] = useState<LoadoutItem[]>([])
   const [powerLevel, setPowerLevel] = useState<PowerLevelBreakdown | null>(null)
-  const [loading, setLoading] = useState(!initialData)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectingSlot, setSelectingSlot] = useState<{
     loadoutId: string
     slotType: LoadoutSlotType
@@ -40,49 +36,42 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
   const [viewingItem, setViewingItem] = useState<LoadoutItem | null>(null)
   const [newLoadoutName, setNewLoadoutName] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const lastPowerLevelLoadoutIdRef = useRef<string | null>(null)
 
-  // Initialize from initialData on mount
-  useEffect(() => {
-    if (initialData) {
-      // Initialize selected loadout from initial data
-      const activeLoadout = initialData.loadouts.find(l => l.isActive) || initialData.loadouts[0]
-      if (activeLoadout) {
-        setSelectedLoadout(activeLoadout)
-      }
-    } else {
-      // Load data if not provided
-      loadData()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Only run once on mount
-
-  useEffect(() => {
-    if (selectedLoadout) {
-      loadPowerLevel(selectedLoadout.id)
-    }
-  }, [selectedLoadout])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
+      setError(null)
       const [loadoutsData, itemsData] = await Promise.all([
         loadoutApi.getLoadouts(),
         loadoutApi.getLoadoutItems(),
       ])
       setLoadouts(loadoutsData)
       setAvailableItems(itemsData)
-
-      // Set active loadout as selected, or first loadout
       const activeLoadout = loadoutsData.find(l => l.isActive) || loadoutsData[0]
       if (activeLoadout) {
         setSelectedLoadout(activeLoadout)
       }
-    } catch (error) {
-      logger.error('Failed to load loadouts', error instanceof Error ? error : new Error(String(error)))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load loadouts'
+      setError(message)
+      logger.error('Failed to load loadouts', err instanceof Error ? err : new Error(String(err)))
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // Fetch power level only when selected loadout id changes (avoids duplicate requests)
+  useEffect(() => {
+    if (!selectedLoadout) return
+    if (lastPowerLevelLoadoutIdRef.current === selectedLoadout.id) return
+    lastPowerLevelLoadoutIdRef.current = selectedLoadout.id
+    loadPowerLevel(selectedLoadout.id)
+  }, [selectedLoadout])
 
   const loadPowerLevel = async (loadoutId: string) => {
     try {
@@ -181,6 +170,8 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
       setLoadouts(loadouts.map(l => (l.id === updated.id ? updated : l)))
       setSelectedLoadout(updated)
       setSelectingSlot(null)
+      // Refetch power level after slot change (same loadout id, new slots)
+      loadPowerLevel(updated.id)
     } catch (error: any) {
       logger.error('Failed to update loadout', error instanceof Error ? error : new Error(String(error)))
       if (error.message?.includes('Preset loadouts cannot be modified')) {
@@ -194,6 +185,122 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
     if (!selectedLoadout) return null
     const slot = selectedLoadout.slots.find(s => s.slotType === slotType)
     return slot?.item || null
+  }
+
+  /** Star rating 1–5 from power level (0–500 scale) */
+  const getStars = (powerLevel: number) => {
+    const capped = Math.min(500, Math.max(0, powerLevel))
+    return Math.max(1, Math.ceil((capped / 500) * 5))
+  }
+
+  const renderSlotCard = (
+    slotType: LoadoutSlotType,
+    size: 'primary' | 'secondary' | 'tertiary'
+  ) => {
+    const item = getSlotItem(slotType)
+    const isPreset = selectedLoadout?.isPreset ?? false
+    const canEdit = selectedLoadout && !isPreset
+    const levelPct = item ? Math.min(100, (item.powerLevel / 500) * 100) : 0
+    const stars = item ? getStars(item.powerLevel) : 0
+
+    const handleClick = () => {
+      if (canEdit) setSelectingSlot({ loadoutId: selectedLoadout!.id, slotType })
+    }
+
+    const baseCardClass = `rounded-lg border transition-all ${
+      isPreset ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:scale-[1.02]'
+    } ${item ? 'bg-purple-500/10 border-purple-500/30' : 'bg-gray-700/50 border-gray-600 hover:border-gray-500'}`
+
+    const content = (
+      <>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-amber-500/90">
+            {SLOT_TYPE_LABELS[slotType]}
+          </span>
+          {item && (
+            <span className="text-xs font-mono text-purple-400">LVL{item.powerLevel}</span>
+          )}
+        </div>
+        {item ? (
+          <>
+            <div className="mb-2 flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <span
+                  key={i}
+                  className={`text-sm ${i <= stars ? 'text-amber-400' : 'text-gray-600'}`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+            <p className="font-semibold text-white truncate">{item.name}</p>
+            {size === 'primary' && (
+              <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 to-amber-500 rounded-full"
+                  style={{ width: `${levelPct}%` }}
+                />
+              </div>
+            )}
+            {size !== 'primary' && (
+              <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{item.description}</p>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setViewingItem(item)
+              }}
+              className="mt-2 text-xs font-medium text-amber-400 hover:text-amber-300 border border-amber-500/40 hover:border-amber-500/60 rounded px-2 py-1"
+            >
+              Inspect
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500 py-1">
+            {isPreset ? 'Preset item' : '+ Click to select'}
+          </p>
+        )}
+      </>
+    )
+
+    if (size === 'primary') {
+      return (
+        <div
+          key={slotType}
+          onClick={handleClick}
+          className={`${baseCardClass} p-6 min-h-[180px] flex flex-col`}
+        >
+          {content}
+        </div>
+      )
+    }
+    return (
+      <div
+        key={slotType}
+        onClick={handleClick}
+        className={`${baseCardClass} p-4 min-h-[120px] flex flex-col`}
+      >
+        {content}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-12">
+          <p className="text-red-400 text-xl mb-2">Error loading loadouts</p>
+          <p className="text-gray-400 text-sm mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => loadData()}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -408,76 +515,48 @@ export default function LoadoutPage({ initialData }: LoadoutPageProps) {
               {/* Power Level Display */}
               {powerLevel && <PowerLevelDisplay powerLevel={powerLevel} />}
 
-              {/* Loadout Slots */}
+              {/* Loadout Slots - COD-style layout */}
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold">{selectedLoadout.name}</h2>
-                  {selectedLoadout.isPreset && (
-                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/30">
-                      Preset Loadout (Read-only)
-                    </span>
-                  )}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-0.5">
+                    Loadouts
+                  </p>
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-2xl font-bold text-white">{selectedLoadout.name}</h2>
+                    {selectedLoadout.isPreset && (
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/30">
+                        Preset (Read-only)
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {selectedLoadout.isPreset && (
                   <p className="text-sm text-gray-400 mb-4">
                     This is a preset loadout and cannot be modified. Create a custom loadout to customize your setup.
                   </p>
                 )}
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.values(LoadoutSlotType).map((slotType) => {
-                    const item = getSlotItem(slotType)
-                    return (
-                      <div
-                        key={slotType}
-                        onClick={() => {
-                          if (!selectedLoadout.isPreset) {
-                            setSelectingSlot({ loadoutId: selectedLoadout.id, slotType })
-                          }
-                        }}
-                        className={`p-4 rounded-lg border transition-all ${
-                          selectedLoadout.isPreset
-                            ? 'cursor-not-allowed opacity-60'
-                            : 'cursor-pointer hover:scale-105'
-                        } ${
-                          item
-                            ? 'bg-purple-500/10 border-purple-500/30'
-                            : 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-sm text-gray-300">
-                            {SLOT_TYPE_LABELS[slotType]}
-                          </h3>
-                          {item && (
-                            <span className="text-xs text-purple-400">
-                              PL: {item.powerLevel}
-                            </span>
-                          )}
-                        </div>
-                        {item ? (
-                          <div>
-                            <p className="font-medium text-white">{item.name}</p>
-                            <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                              {item.description}
-                            </p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setViewingItem(item)
-                              }}
-                              className="mt-2 text-xs text-purple-400 hover:text-purple-300"
-                            >
-                              Inspect item
-                            </button>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-500">
-                            {selectedLoadout.isPreset ? 'Preset item' : 'Select item'}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })}
+                {!selectedLoadout.isPreset && (
+                  <p className="text-sm text-gray-400 mb-4">
+                    Click a slot to select a weapon or armour item; the selected item is saved to this loadout.
+                  </p>
+                )}
+
+                {/* Primary weapon - large top card */}
+                <div className="mb-4">
+                  {renderSlotCard(LoadoutSlotType.PRIMARY_WEAPON, 'primary')}
+                </div>
+
+                {/* Secondary + Grenade row */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {renderSlotCard(LoadoutSlotType.SECONDARY_WEAPON, 'secondary')}
+                  {renderSlotCard(LoadoutSlotType.GRENADE, 'secondary')}
+                </div>
+
+                {/* Armor, Tactical, Support row */}
+                <div className="grid grid-cols-3 gap-4">
+                  {renderSlotCard(LoadoutSlotType.ARMOR_ABILITY, 'tertiary')}
+                  {renderSlotCard(LoadoutSlotType.TACTICAL_PACKAGE, 'tertiary')}
+                  {renderSlotCard(LoadoutSlotType.SUPPORT_UPGRADE, 'tertiary')}
                 </div>
               </div>
             </div>

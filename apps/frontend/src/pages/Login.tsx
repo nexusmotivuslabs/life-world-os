@@ -43,17 +43,19 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { token, user, requiresFirstName } = await authApi.googleLogin(credential)
+      const { token } = await authApi.googleLogin(credential)
       localStorage.setItem('token', token)
-      if (user) localStorage.setItem('user', JSON.stringify(user))
-      // If Google didn't provide a name and user has none, send to set-first-name screen
-      if (requiresFirstName) {
-        navigate('/set-first-name', { replace: true })
-        return
-      }
+      // Redirect to choose-plane after successful Google login
       navigate('/choose-plane', { replace: true })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Google sign-in failed'
+      let errorMessage = 'Google sign-in failed'
+      if (err instanceof Error) {
+        errorMessage = err.message
+        // Check if it's a "requires sign-up" error
+        if (err.message.includes('Account not found') || err.message.includes('sign up')) {
+          errorMessage = 'Account not found. Please sign up first before using Google Sign-In.'
+        }
+      }
       setError(errorMessage)
       setLoading(false)
     }

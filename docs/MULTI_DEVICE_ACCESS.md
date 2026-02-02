@@ -1,5 +1,25 @@
 # Multi-Device Network Access
 
+**Goal**: Make the app accessible from other devices on your WiFi network (phones, tablets, other PCs).
+
+## Local Lite (npm run local-lite)
+
+When running `npm run local-lite`, the app is already configured for LAN access:
+
+1. **Frontend** (Vite) binds to `0.0.0.0:5002` – reachable from any device
+2. **Backend** (Express) binds to `0.0.0.0:5001` – reachable from any device
+3. **API URLs** default to relative paths – Vite proxies `/api` to the backend, so API calls work from any device
+
+**To access from another device:**
+- Find your LAN IP (shown when local-lite starts, or run `ipconfig getifaddr en0` on macOS)
+- Open `http://<YOUR_IP>:5002` in a browser on the other device
+
+**If API calls fail from other devices:** Remove or comment out `VITE_API_URL` in `apps/frontend/.env.local` so the app uses relative URLs.
+
+---
+
+## Docker / Nginx Setup
+
 **Goal**: Make `http://dev.lifeworld.com` accessible from other devices on your WiFi network
 
 ## Quick Setup

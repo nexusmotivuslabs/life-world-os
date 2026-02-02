@@ -3,7 +3,7 @@
 import { handleFetchError, logApiSuccess, createApiError } from './errorHandler'
 import { logger } from '../lib/logger'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 // Simple in-memory cache for Reality nodes
 // Cache expires after 5 minutes
@@ -31,6 +31,14 @@ function clearCache(): void {
   NODE_CACHE.clear()
 }
 
+function getAuthHeaders(): HeadersInit {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
+}
+
 export interface Agent {
   id: string
   type: string
@@ -54,6 +62,7 @@ export interface Team {
   icon?: string
   order: number
   agentCount?: number
+  teamLeadAgentId?: string
 }
 
 export interface Guide {
@@ -137,9 +146,7 @@ async function apiRequest<T>(
   try {
     const options: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     }
 
     if (body) {
@@ -274,7 +281,7 @@ export const powerLawsApi = {
    * Get all available Power Law domains with counts
    */
   async getDomains(): Promise<PowerLawDomain[]> {
-    const response = await fetch(`${API_BASE}/api/power-laws/domains`)
+    const response = await fetch(`${API_BASE}/api/power-laws/domains`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch Power Law domains')
     }
@@ -287,7 +294,7 @@ export const powerLawsApi = {
    */
   async getLawsByDomain(domain: string, category?: string): Promise<PowerLaw[]> {
     const categoryParam = category ? `&category=${category}` : ''
-    const response = await fetch(`${API_BASE}/api/power-laws?domain=${domain}${categoryParam}`)
+    const response = await fetch(`${API_BASE}/api/power-laws?domain=${domain}${categoryParam}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Power laws for domain: ${domain}`)
     }
@@ -299,7 +306,7 @@ export const powerLawsApi = {
    * Get all available categories with counts
    */
   async getCategories(): Promise<Array<{ category: string; count: number }>> {
-    const response = await fetch(`${API_BASE}/api/power-laws/categories`)
+    const response = await fetch(`${API_BASE}/api/power-laws/categories`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch Power Law categories')
     }
@@ -311,7 +318,7 @@ export const powerLawsApi = {
    * Get a specific Power law by ID
    */
   async getLawById(id: string): Promise<PowerLaw> {
-    const response = await fetch(`${API_BASE}/api/power-laws/${id}`)
+    const response = await fetch(`${API_BASE}/api/power-laws/${id}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Power law: ${id}`)
     }
@@ -322,7 +329,7 @@ export const powerLawsApi = {
    * Get a Power law by number and domain
    */
   async getLawByNumber(lawNumber: number, domain: string): Promise<PowerLaw> {
-    const response = await fetch(`${API_BASE}/api/power-laws/by-number/${lawNumber}?domain=${domain}`)
+    const response = await fetch(`${API_BASE}/api/power-laws/by-number/${lawNumber}?domain=${domain}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Power law ${lawNumber} for domain: ${domain}`)
     }
@@ -335,7 +342,7 @@ export const bibleLawsApi = {
    * Get all available Bible Law domains with counts
    */
   async getDomains(): Promise<BibleLawDomain[]> {
-    const response = await fetch(`${API_BASE}/api/bible-laws/domains`)
+    const response = await fetch(`${API_BASE}/api/bible-laws/domains`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch Bible Law domains')
     }
@@ -348,7 +355,7 @@ export const bibleLawsApi = {
    */
   async getLawsByDomain(domain: string, category?: string): Promise<BibleLaw[]> {
     const categoryParam = category ? `&category=${category}` : ''
-    const response = await fetch(`${API_BASE}/api/bible-laws?domain=${domain}${categoryParam}`)
+    const response = await fetch(`${API_BASE}/api/bible-laws?domain=${domain}${categoryParam}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible laws for domain: ${domain}`)
     }
@@ -360,7 +367,7 @@ export const bibleLawsApi = {
    * Get all available categories with counts
    */
   async getCategories(): Promise<Array<{ category: string; count: number }>> {
-    const response = await fetch(`${API_BASE}/api/bible-laws/categories`)
+    const response = await fetch(`${API_BASE}/api/bible-laws/categories`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch Bible Law categories')
     }
@@ -372,7 +379,7 @@ export const bibleLawsApi = {
    * Get a specific Bible law by ID
    */
   async getLawById(id: string): Promise<BibleLaw> {
-    const response = await fetch(`${API_BASE}/api/bible-laws/${id}`)
+    const response = await fetch(`${API_BASE}/api/bible-laws/${id}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible law: ${id}`)
     }
@@ -383,7 +390,7 @@ export const bibleLawsApi = {
    * Get a Bible law by number and domain
    */
   async getLawByNumber(lawNumber: number, domain: string): Promise<BibleLaw> {
-    const response = await fetch(`${API_BASE}/api/bible-laws/by-number/${lawNumber}?domain=${domain}`)
+    const response = await fetch(`${API_BASE}/api/bible-laws/by-number/${lawNumber}?domain=${domain}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible law ${lawNumber} for domain: ${domain}`)
     }

@@ -187,15 +187,15 @@ export const systems: System[] = [
     route: '/systems/trust', // TODO: Create trust system page
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10 border-blue-500/30',
-    status: 'coming-soon',
+    status: 'active',
     plane: 'systems',
     tier: SystemTier.CROSS_SYSTEM_STATES,
     tags: [
-      'Global Modifier',
-      'Affects All Systems',
-      'Competence × Reliability × Alignment',
-      'Opportunity Unlocker',
-      'Cost Reducer'
+      '3 Domain Teams',
+      '9 Expert Agents',
+      '6 Trust Products',
+      'Trust Analyst',
+      'Guided Workflows'
     ],
   },
   {
@@ -207,15 +207,15 @@ export const systems: System[] = [
     route: '/systems/reputation', // TODO: Create reputation system page
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10 border-purple-500/30',
-    status: 'coming-soon',
+    status: 'active',
     plane: 'systems',
     tier: SystemTier.CROSS_SYSTEM_STATES,
     tags: [
-      'Cross-System State',
-      'Opportunity Access',
-      'Compound Interest',
-      'Slow to Build',
-      'Fast to Destroy'
+      '3 Domain Teams',
+      '9 Expert Agents',
+      '6 Reputation Products',
+      'Reputation Guardian',
+      'Guided Workflows'
     ],
   },
   {
@@ -227,15 +227,15 @@ export const systems: System[] = [
     route: '/systems/optionality', // TODO: Create optionality system page
     color: 'text-green-400',
     bgColor: 'bg-green-500/10 border-green-500/30',
-    status: 'coming-soon',
+    status: 'active',
     plane: 'systems',
     tier: SystemTier.CROSS_SYSTEM_STATES,
     tags: [
-      'Strategic Freedom',
-      'Choice Multiplier',
-      'Risk Tolerance',
-      'Action Unlocker',
-      'Decays When Idle'
+      '3 Domain Teams',
+      '9 Expert Agents',
+      '6 Strategic Products',
+      'Decision Analyst',
+      'Guided Workflows'
     ],
   },
   {

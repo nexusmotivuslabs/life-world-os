@@ -897,6 +897,184 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
     console.log(`        → Seeded Education pathways under LEARNING`)
   }
 
+  // Optionality System Pathways
+  if (systemId === 'optionality') {
+    const optionalityPathways = [
+      {
+        title: 'REVERSIBLE_DECISIONS',
+        description: 'Low-cost decisions that can be undone',
+        children: [
+          { title: 'ROLE_CHANGES', description: 'Internal role transitions within organization' },
+          { title: 'SKILL_ACQUISITION', description: 'Learning new technical stacks and tools' },
+          { title: 'SIDE_PROJECTS', description: 'Low-risk exploration projects and experiments' },
+        ],
+      },
+      {
+        title: 'IRREVERSIBLE_DECISIONS',
+        description: 'High-cost decisions that permanently narrow future options',
+        children: [
+          { title: 'DEBT_COMMITMENTS', description: 'Long-term financial obligations and mortgages' },
+          { title: 'LIFESTYLE_INFLATION', description: 'Raising baseline expenses permanently' },
+          { title: 'REPUTATION_DAMAGE', description: 'Trust violations and burned bridges' },
+          { title: 'HEALTH_NEGLECT', description: 'Irreversible health consequences from neglect' },
+        ],
+      },
+      {
+        title: 'TRANSFERABLE_SKILLS',
+        description: 'Skills that compound across multiple domains',
+        children: [
+          { title: 'COMMUNICATION', description: 'Written and verbal communication skills' },
+          { title: 'SYSTEMS_THINKING', description: 'Understanding interconnections and feedback loops' },
+          { title: 'PROBLEM_DECOMPOSITION', description: 'Breaking complex problems into manageable parts' },
+          { title: 'LEARNING_HOW_TO_LEARN', description: 'Meta-learning and skill acquisition strategies' },
+        ],
+      },
+      {
+        title: 'PROOF_ARTIFACTS',
+        description: 'Durable outputs that demonstrate competence and impact',
+        children: [
+          { title: 'DOCUMENTATION', description: 'Design docs, technical guides, post-mortems' },
+          { title: 'METRICS', description: 'Before/after measurements and impact quantification' },
+          { title: 'REUSABLE_SYSTEMS', description: 'Tools and systems others can use' },
+          { title: 'DECISION_LOGS', description: 'Tracked decisions and learning over time' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < optionalityPathways.length; i++) {
+      const pathway = optionalityPathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.STRATEGIC,
+        immutable: true,
+        orderIndex: i + 1,
+        metadata: {
+          isPathway: true,
+          systemId: 'optionality',
+          seededAt: new Date().toISOString(),
+        },
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
+          await createNode({
+            id: childId,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.STRATEGIC,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: {
+              isPathway: true,
+              systemId: 'optionality',
+              seededAt: new Date().toISOString(),
+            },
+          })
+        }
+      }
+    }
+    console.log(`        → Seeded Optionality pathways under OPTIONALITY`)
+  }
+
+  // Reputation & Trust System Pathways
+  if (systemId === 'reputation' || systemId === 'trust') {
+    const reputationPathways = [
+      {
+        title: 'TRUST_PILLARS',
+        description: 'Three components of trust: competence, reliability, alignment',
+        children: [
+          { title: 'COMPETENCE', description: 'Technical ability and domain expertise' },
+          { title: 'RELIABILITY', description: 'Consistent delivery and dependable execution' },
+          { title: 'ALIGNMENT', description: 'Acting in shared interest with stakeholders' },
+        ],
+      },
+      {
+        title: 'REPUTATION_BURNS',
+        description: 'Fast ways to destroy reputation capital',
+        children: [
+          { title: 'OVERPROMISING', description: 'Committing beyond realistic capacity' },
+          { title: 'UNOWNED_FAILURE', description: 'Blaming systems or people instead of owning mistakes' },
+          { title: 'DEFENSIVENESS', description: 'Treating feedback as personal threat' },
+          { title: 'POSITION_SHIFTING', description: 'Changing story when proven wrong' },
+        ],
+      },
+      {
+        title: 'MICRO_DEPOSITS',
+        description: 'Daily reputation building through small actions',
+        children: [
+          { title: 'CONSISTENT_DELIVERY', description: 'Reliability under pressure and uncertainty' },
+          { title: 'EARLY_COMMUNICATION', description: 'Delivering bad news quickly to avoid surprises' },
+          { title: 'VISIBLE_CLOSURE', description: 'Explicitly closing loops and confirming resolution' },
+          { title: 'UNDER_PROMISE', description: 'Promising less and delivering more consistently' },
+        ],
+      },
+      {
+        title: 'EGO_MANAGEMENT',
+        description: 'Separating ego from identity to preserve reputation',
+        children: [
+          { title: 'CURIOSITY_RESPONSE', description: 'Responding to criticism with genuine questions' },
+          { title: 'IDENTITY_SEPARATION', description: 'Being wrong does not mean being worthless' },
+          { title: 'FEEDBACK_AS_DATA', description: 'Converting emotional criticism into useful signal' },
+          { title: 'COURSE_CORRECTION', description: 'Adjusting behavior without drama or defensiveness' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < reputationPathways.length; i++) {
+      const pathway = reputationPathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.CROSS_SYSTEM,
+        immutable: true,
+        orderIndex: i + 1,
+        metadata: {
+          isPathway: true,
+          systemId: systemId,
+          seededAt: new Date().toISOString(),
+        },
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
+          await createNode({
+            id: childId,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.CROSS_SYSTEM,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: {
+              isPathway: true,
+              systemId: systemId,
+              seededAt: new Date().toISOString(),
+            },
+          })
+        }
+      }
+    }
+    console.log(`        → Seeded Reputation/Trust pathways under ${systemId.toUpperCase()}`)
+  }
+
   // For other systems, create a basic universal concept structure
   if (!['health', 'money', 'finance', 'education'].includes(systemId)) {
     // Create at least one pathway node to ensure the system has universal concepts

@@ -47,16 +47,18 @@ const app = express()
 const PORT = process.env.PORT || 5001
 
 // Middleware
-// CORS configuration - allow both local and dev frontends
-// Local: port 5002, Dev: port 5173
+// CORS configuration - allow local, dev frontends, and LAN access
+const isDev = process.env.NODE_ENV !== 'production'
 app.use(cors({
-  origin: [
-    'http://localhost:5002',  // Local frontend
-    'http://localhost:5173',  // Dev frontend (Docker)
-    'http://localhost:3000',  // Grafana
-    'http://dev.lifeworld.com:5002',
-    'http://dev.lifeworld.com:5173',
-  ],
+  origin: isDev
+    ? true // Allow all origins in dev (enables LAN access from phones, tablets, etc.)
+    : [
+        'http://localhost:5002',
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://dev.lifeworld.com:5002',
+        'http://dev.lifeworld.com:5173',
+      ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -123,9 +125,13 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   try {
     await validateAndExit()
     
-    // Start server only if validation passes
-    app.listen(PORT, () => {
+    // Start server - bind to 0.0.0.0 so it's reachable from LAN (phones, tablets, etc.)
+    const HOST = process.env.HOST ?? '0.0.0.0'
+    app.listen(Number(PORT), HOST, () => {
       console.log(`🚀 Life World OS Backend running on http://localhost:${PORT}`)
+      if (HOST === '0.0.0.0') {
+        console.log(`   (Network: accessible from other devices on same LAN)`)
+      }
     })
   } catch (error) {
     console.error('❌ Failed to start application:', error)

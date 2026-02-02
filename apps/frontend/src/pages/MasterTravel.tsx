@@ -1,32 +1,30 @@
 /**
  * MasterTravel Page
- * 
+ *
  * Main interface for the Master Travel System featuring:
  * - Location query interface
  * - Alternative location recommendations
  * - Saved locations management
  */
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, MapPin, Search, Bookmark } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { MapPin, Search, Bookmark } from 'lucide-react'
 import { travelApi, Location } from '../services/travelApi'
 import { useToastStore } from '../store/useToastStore'
 import LocationQueryForm from '../components/travel/LocationQueryForm'
 import LocationResults from '../components/travel/LocationResults'
 import SavedLocationsView from '../components/travel/SavedLocationsView'
 import LocationDetailView from '../components/travel/LocationDetailView'
+import MasterSystemLayout from '../components/MasterSystemLayout'
+import { useSystemData } from '../hooks/useSystemData'
 
 export default function MasterTravel() {
   const { addToast } = useToastStore()
-  const [view, setView] = useState<'query' | 'saved' | 'details'>('query')
+  const [subView, setSubView] = useState<'find' | 'saved'>('find')
   const [locations, setLocations] = useState<Location[]>([])
-  const [hierarchy, setHierarchy] = useState<Array<{
-    category: string
-    count: number
-    locations: Location[]
-  }>>([])
+  const [hierarchy, setHierarchy] = useState<
+    Array<{ category: string; count: number; locations: Location[] }>
+  >([])
   const [summary, setSummary] = useState<{
     total: number
     categories: string[]
@@ -37,13 +35,18 @@ export default function MasterTravel() {
   const [error, setError] = useState<string | null>(null)
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
 
+  const { teams, agents } = useSystemData({
+    cacheKeyPrefix: 'master-travel',
+    fetchProducts: false,
+  })
+
   const handleQuery = async (description: string, location?: string) => {
     try {
       setLoading(true)
       setError(null)
       const result = await travelApi.queryLocations(description, location)
-      
-      if (!result || !result.locations || result.locations.length === 0) {
+
+      if (!result?.locations?.length) {
         setError('No locations found. Try adjusting your search description.')
         addToast({
           type: 'warning',
@@ -58,19 +61,14 @@ export default function MasterTravel() {
         addToast({
           type: 'success',
           title: 'Locations Found',
-          message: `Found ${result.summary.total} location(s) in ${result.summary.categories.length} category/categories`,
+          message: `Found ${result.summary?.total ?? 0} location(s)`,
         })
       }
-      setView('query')
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to query locations'
+      setSubView('find')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to query locations'
       setError(errorMessage)
-      addToast({
-        type: 'error',
-        title: 'Query Failed',
-        message: errorMessage,
-      })
+      addToast({ type: 'error', title: 'Query Failed', message: errorMessage })
       setLocations([])
     } finally {
       setLoading(false)
@@ -85,108 +83,86 @@ export default function MasterTravel() {
         title: 'Location Saved',
         message: 'Location has been saved to your list',
       })
-    } catch (error) {
+    } catch (err) {
       addToast({
         type: 'error',
         title: 'Failed to Save',
-        message: error instanceof Error ? error.message : 'Please try again',
+        message: err instanceof Error ? err.message : 'Please try again',
       })
     }
   }
 
   const handleViewDetails = (locationId: string) => {
     setSelectedLocationId(locationId)
-    setView('details')
+  }
+
+  if (selectedLocationId) {
+    return (
+      <LocationDetailView
+        locationId={selectedLocationId}
+        onBack={() => setSelectedLocationId(null)}
+      />
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          to="/systems"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Systems
-        </Link>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-600/20 rounded-lg">
-            <MapPin className="w-8 h-8 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold">Master Travel System</h1>
-            <p className="text-gray-400 mt-1">
-              Find location alternatives and travel recommendations
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="flex gap-4 mb-8 border-b border-gray-700">
-        <button
-          onClick={() => {
-            setView('query')
-            setSelectedLocationId(null)
-          }}
-          className={`px-4 py-2 font-medium transition-colors ${
-            view === 'query'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Search className="w-4 h-4 inline mr-2" />
-          Find Locations
-        </button>
-        <button
-          onClick={() => {
-            setView('saved')
-            setSelectedLocationId(null)
-          }}
-          className={`px-4 py-2 font-medium transition-colors ${
-            view === 'saved'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Bookmark className="w-4 h-4 inline mr-2" />
-          Saved Locations
-        </button>
-      </div>
-
-      {/* Query View */}
-      {view === 'query' && (
+    <MasterSystemLayout
+      title="Master Travel System"
+      description="Find location alternatives and travel recommendations"
+      mantra="Location is optionality."
+      icon={MapPin}
+      color="text-cyan-400"
+      bgColor="bg-cyan-600/20"
+      teams={teams}
+      agents={agents}
+      loading={false}
+      renderOverview={() => (
         <div className="space-y-8">
-          <LocationQueryForm onSubmit={handleQuery} loading={loading} />
-          {locations.length > 0 && (
-            <LocationResults
-              locations={locations}
-              hierarchy={hierarchy}
-              summary={summary}
-              loading={loading}
-              error={error}
-              onSave={handleSave}
-              onViewDetails={handleViewDetails}
-            />
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setSubView('find')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                subView === 'find'
+                  ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-500/30'
+                  : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+              }`}
+            >
+              <Search className="w-5 h-5" />
+              Find Locations
+            </button>
+            <button
+              onClick={() => setSubView('saved')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                subView === 'saved'
+                  ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-500/30'
+                  : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+              }`}
+            >
+              <Bookmark className="w-5 h-5" />
+              Saved Locations
+            </button>
+          </div>
+
+          {subView === 'find' && (
+            <>
+              <LocationQueryForm onSubmit={handleQuery} loading={loading} />
+              {locations.length > 0 && (
+                <LocationResults
+                  locations={locations}
+                  hierarchy={hierarchy}
+                  summary={summary}
+                  loading={loading}
+                  error={error}
+                  onSave={handleSave}
+                  onViewDetails={handleViewDetails}
+                />
+              )}
+            </>
           )}
+
+          {subView === 'saved' && <SavedLocationsView />}
         </div>
       )}
-
-      {/* Saved Locations View */}
-      {view === 'saved' && <SavedLocationsView />}
-
-      {/* Details View */}
-      {view === 'details' && selectedLocationId && (
-        <LocationDetailView
-          locationId={selectedLocationId}
-          onBack={() => {
-            setView('query')
-            setSelectedLocationId(null)
-          }}
-        />
-      )}
-    </div>
+    />
   )
 }
-

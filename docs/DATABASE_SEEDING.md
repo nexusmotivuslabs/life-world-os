@@ -78,13 +78,18 @@ docker exec life-world-os-backend-prod npm run seed
 
 The seed script (`apps/backend/prisma/seed.ts`) runs multiple seed scripts in order:
 
-1. **Core Reality Hierarchy** - Foundation nodes and structure
-2. **Energy States** - Energy system data
-3. **Laws and Principles** - Power Laws and Bible Laws
-4. **Weapons and Capabilities** - Loadout items
-5. **Money System** - Agents and Teams
-6. **Training and Knowledge** - Training modules, health knowledge, awareness layers
-7. **Development test users** (dev only) - Test and demo users for Life World OS login and health/capacity demos. See **[TEST_USERS.md](./TEST_USERS.md)** for emails, passwords, and usage.
+| Phase | Data | Where it appears in the app |
+|-------|------|-----------------------------|
+| **1. Core Reality Hierarchy** | `reality-root`, `constraints-of-reality`, laws-node, principles-node, frameworks-node, agents, environments, resources, engines, value, finance, systems, and full tree (categories, domains) | **Systems** plane “Foundational Reality” cards; **Knowledge** hierarchy tree; **Systems → Tree** view; **Artifacts → Hierarchy tree** |
+| **2. Energy States** | Energy states under `reality-root-states` | Energy / capacity system |
+| **3. Laws and Principles** | Power Laws, Bible Laws, linked to hierarchy | **Knowledge → Laws**; **Artifacts** (laws/principles); search |
+| **4. Weapons and Capabilities** | Loadout items | Loadouts / weapons UI |
+| **5. Money System** | Agents, Teams, Product Security | **Finance** (agents, teams); product security |
+| **6. Training and Knowledge** | Training modules, Health Knowledge, Awareness Layers | **Training**; **Knowledge** (meaning, awareness) |
+| **7. Artifacts** | Unified artifacts (linked to hierarchy) | **Artifacts** view |
+| **7 (dev only)** | **Test users** (test@example.com, demo@example.com, health/capacity demo users) | Login; dashboard; health demos. See **[TEST_USERS.md](./TEST_USERS.md)**. |
+
+**Important:** Reality nodes, hierarchy, laws, and artifacts are served by APIs that **require you to be logged in**. If you see “no data” on Systems or Knowledge, log in first (e.g. `test@example.com` / `password123`). The **Systems list** (Finance, Energy, Health cards) is static and does not come from the database.
 
 ## Seed Script Features
 
@@ -119,22 +124,24 @@ The seed script (`apps/backend/prisma/seed.ts`) runs multiple seed scripts in or
 
 ### Data Still Missing After Seeding
 
-1. **Verify seed ran successfully**
-   - Check the seed script output for errors
+1. **Log in** – Reality nodes, hierarchy, laws, and artifacts APIs require authentication. Use a seeded test user (e.g. `test@example.com` / `password123`). If you were not logged in, you would see empty Systems/Knowledge data even when the DB is seeded.
+
+2. **Verify seed ran successfully**
+   - Check the seed script output for errors (or `/tmp/life-world-seed.log` when using `npm run local`)
    - All phases should show ✅
 
-2. **Check database directly**
+3. **Check database directly**
    ```bash
    docker exec -it life-db-dev psql -U lifeworld_dev -d lifeworld_dev
    # Then run: SELECT COUNT(*) FROM "PowerLaw";
    ```
 
-3. **Check backend validation**
+4. **Check backend validation**
    ```bash
    docker logs life-world-os-backend-dev | grep validation
    ```
 
-4. **Restart backend** (sometimes needed to refresh cached data)
+5. **Restart backend** (sometimes needed to refresh cached data)
    ```bash
    docker restart life-world-os-backend-dev
    ```

@@ -2,7 +2,7 @@
 
 import { handleFetchError, logApiSuccess, createApiError } from './errorHandler'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 export interface Location {
   id: string
@@ -42,6 +42,14 @@ export interface LocationWithSaved {
 /**
  * Make an API request with detailed error handling
  */
+function getAuthHeaders(): HeadersInit {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
+}
+
 async function apiRequest<T>(
   endpoint: string,
   method: string = 'GET',
@@ -53,9 +61,7 @@ async function apiRequest<T>(
   try {
     const options: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     }
 
     if (body) {

@@ -3,7 +3,8 @@
 import { handleFetchError, logApiSuccess, createApiError } from './errorHandler'
 import { logger } from '../lib/logger'
 
-const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:5001'
+// Empty string = relative URLs (Vite proxy in dev; same-origin in prod)
+const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) ?? ''
 
 export async function request<T>(
   endpoint: string,

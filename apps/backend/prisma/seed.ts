@@ -97,6 +97,11 @@ async function main() {
     await runScriptFile('src/scripts/seedTeams.ts', 'Money Teams')
     await runScriptFile('src/scripts/seedProductSecurity.ts', 'Product Security')
 
+    // Phase 5.5: Career Systems (Optionality, Reputation, Trust)
+    console.log('\n🎯 PHASE 5.5: Career Systems')
+    console.log('─'.repeat(60))
+    await runScriptFile('src/scripts/seedCareerSystems.ts', 'Career Systems (Optionality, Reputation, Trust)')
+
     // Phase 6: Training and Knowledge
     console.log('\n📚 PHASE 6: Training and Knowledge')
     console.log('─'.repeat(60))

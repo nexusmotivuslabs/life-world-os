@@ -4,7 +4,15 @@
  * TypeScript service for interacting with the Awareness Layer API endpoints.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
+function getAuthHeaders(): HeadersInit {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
+}
 
 // Type definitions
 export type AwarenessLayerCategory = 'ROOT' | 'EXAMINE' | 'REFUTE'
@@ -91,7 +99,7 @@ export const awarenessApi = {
     const queryString = params.toString()
     const url = `${API_BASE}/api/awareness-layers${queryString ? `?${queryString}` : ''}`
 
-    const response = await fetch(url)
+    const response = await fetch(url, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch awareness layers')
     }
@@ -102,7 +110,7 @@ export const awarenessApi = {
    * Get all root awareness layers
    */
   async getRootLayers(): Promise<AwarenessLayersResponse> {
-    const response = await fetch(`${API_BASE}/api/awareness-layers/roots`)
+    const response = await fetch(`${API_BASE}/api/awareness-layers/roots`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch root awareness layers')
     }
@@ -113,7 +121,7 @@ export const awarenessApi = {
    * Get a specific awareness layer by ID
    */
   async getLayerById(id: string): Promise<AwarenessLayer> {
-    const response = await fetch(`${API_BASE}/api/awareness-layers/${id}`)
+    const response = await fetch(`${API_BASE}/api/awareness-layers/${id}`, { headers: getAuthHeaders() })
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error('Awareness layer not found')
@@ -127,7 +135,7 @@ export const awarenessApi = {
    * Get all children of a specific awareness layer
    */
   async getChildren(id: string): Promise<AwarenessLayersResponse> {
-    const response = await fetch(`${API_BASE}/api/awareness-layers/${id}/children`)
+    const response = await fetch(`${API_BASE}/api/awareness-layers/${id}/children`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch children')
     }
@@ -138,7 +146,7 @@ export const awarenessApi = {
    * Get awareness layers grouped by category
    */
   async getLayersByCategory(): Promise<CategoriesResponse> {
-    const response = await fetch(`${API_BASE}/api/awareness-layers/categories`)
+    const response = await fetch(`${API_BASE}/api/awareness-layers/categories`, { headers: getAuthHeaders() })
     if (!response.ok) {
       throw new Error('Failed to fetch layers by category')
     }
@@ -151,9 +159,7 @@ export const awarenessApi = {
   async createLayer(data: CreateAwarenessLayerRequest): Promise<AwarenessLayer> {
     const response = await fetch(`${API_BASE}/api/awareness-layers`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     })
     if (!response.ok) {
@@ -169,9 +175,7 @@ export const awarenessApi = {
   async updateLayer(id: string, data: UpdateAwarenessLayerRequest): Promise<AwarenessLayer> {
     const response = await fetch(`${API_BASE}/api/awareness-layers/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     })
     if (!response.ok) {
