@@ -12,10 +12,11 @@ export default defineConfig({
   },
   server: {
     port: 5002,
-    host: '0.0.0.0', // Listen on all interfaces
+    host: '0.0.0.0', // Listen on all interfaces - accessible from LAN
     strictPort: false,
     hmr: {
-      host: 'dev.lifeworld.com',
+      // Use client's host (works when accessing via LAN IP)
+      clientPort: 5002,
     },
     proxy: {
       '/api': {

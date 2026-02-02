@@ -88,7 +88,8 @@ fi
 
 if [ ! -f "apps/frontend/.env.local" ]; then
     mkdir -p apps/frontend
-    echo "VITE_API_URL=http://localhost:5001" > apps/frontend/.env.local
+    # Empty VITE_API_URL = relative URLs (proxy in dev); enables LAN access from other devices
+    touch apps/frontend/.env.local
     log_success "Created apps/frontend/.env.local"
 else
     log_success "apps/frontend/.env.local exists"
@@ -194,6 +195,14 @@ else
     fi
 fi
 
+# Detect LAN IP for network access
+LOCAL_IP=""
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "")
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "")
+fi
+
 # Summary
 echo -e "\n${GREEN}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║${NC}  ${GREEN}✅ Local Lite is RUNNING!${NC}                      ${GREEN}║${NC}"
@@ -206,6 +215,15 @@ echo -e "  Frontend:  ${GREEN}http://localhost:${FRONTEND_PORT}${NC}"
 echo -e "  Backend:   ${GREEN}http://localhost:5001${NC}"
 echo -e "  Health:    ${GREEN}http://localhost:5001/api/health${NC}"
 echo -e "  Database:  ${GREEN}localhost:5433${NC}"
+if [ -n "$LOCAL_IP" ]; then
+    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${MAGENTA}📱 Same Network (phones, tablets, other PCs)${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    echo -e "  Frontend:  ${GREEN}http://${LOCAL_IP}:${FRONTEND_PORT}${NC}"
+    echo -e "  Health:    ${GREEN}http://${LOCAL_IP}:5001/api/health${NC}"
+    echo -e "\n  ${YELLOW}Ensure devices are on the same WiFi.${NC}"
+    echo -e "  ${YELLOW}Tip: Remove VITE_API_URL from apps/frontend/.env.local if API calls fail.${NC}"
+fi
 echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${MAGENTA}📟 Backend & frontend logs (live below)${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"

@@ -1,0 +1,145 @@
+/**
+ * Artifact-to-System Mapping
+ *
+ * Each artifact belongs to one or more systems. This config drives filtering
+ * so artifacts are only shown in the context of their owning system(s).
+ */
+
+/** System IDs used across the app (aligns with MasterDomain, career systems, etc.) */
+export const ARTIFACT_SYSTEM_IDS = [
+  'finance',
+  'health',
+  'energy',
+  'travel',
+  'optionality',
+  'trust',
+  'reputation',
+  'loadout',
+  'meaning',
+  'reality',
+] as const
+
+export type ArtifactSystemId = (typeof ARTIFACT_SYSTEM_IDS)[number]
+
+/** Human-readable labels for system filter dropdown */
+export const ARTIFACT_SYSTEM_LABELS: Record<ArtifactSystemId, string> = {
+  finance: 'Finance',
+  health: 'Health',
+  energy: 'Energy',
+  travel: 'Travel',
+  optionality: 'Optionality',
+  trust: 'Trust',
+  reputation: 'Reputation',
+  loadout: 'Loadout',
+  meaning: 'Meaning',
+  reality: 'Reality',
+}
+
+/**
+ * Maps artifact IDs to the system(s) they belong to.
+ * An artifact can belong to multiple systems when it's cross-cutting.
+ */
+export const ARTIFACT_SYSTEM_MAP: Record<string, ArtifactSystemId[]> = {
+  // Resources
+  energy: ['energy'],
+  capacity: ['health'],
+  money: ['finance'],
+  oxygen: ['finance'],
+  water: ['health'],
+  armor: ['health'],
+  keys: ['optionality'],
+
+  // Stats
+  engines: ['finance'],
+  meaning: ['meaning'],
+  optionality: ['optionality'],
+
+  // Systems (meta-artifacts)
+  'money-system': ['finance'],
+  'energy-system': ['energy'],
+  'finance-system': ['finance'],
+  'health-system': ['health'],
+
+  // Concepts - universal / reality
+  'tier-system': ['reality'],
+
+  // Laws - knowledge / reality
+  'laws-power': ['reality'],
+  'bible-laws': ['reality'],
+
+  // Principles - by primary domain
+  'compound-growth-principle': ['finance', 'optionality'],
+  'energy-conservation-principle': ['energy', 'health'],
+  'risk-return-tradeoff': ['finance', 'optionality'],
+  'progressive-overload': ['health'],
+  'sustainable-balance': ['reality'],
+  'time-value-of-money': ['finance'],
+  'asymmetric-risk-reward': ['finance', 'optionality'],
+  'diversification-hedging': ['finance'],
+  'cash-flow-management': ['finance'],
+  'compound-interest': ['finance'],
+  'recovery-over-depletion': ['energy', 'health'],
+  'energy-conservation-law': ['energy'],
+  'sustainable-rhythm': ['energy', 'health'],
+  'capacity-building': ['health'],
+  'burnout-prevention': ['health'],
+
+  // Frameworks
+  'financial-frameworks': ['finance'],
+  'energy-frameworks': ['energy'],
+  'strategic-frameworks': ['optionality', 'reality'],
+}
+
+/**
+ * System ID for dynamically created artifacts (weapons, engines, reality nodes).
+ * Used when artifact ID doesn't match ARTIFACT_SYSTEM_MAP.
+ */
+export const DYNAMIC_ARTIFACT_SYSTEMS: Record<string, ArtifactSystemId> = {
+  weapon: 'loadout',
+  engine: 'finance',
+  'reality-node': 'reality',
+}
+
+/**
+ * Default system for artifacts not in the map (e.g. new static artifacts).
+ * 'reality' = universal knowledge, shown in all system contexts.
+ */
+export const DEFAULT_ARTIFACT_SYSTEM: ArtifactSystemId = 'reality'
+
+/**
+ * Resolve which system(s) an artifact belongs to.
+ * Algorithm:
+ * 1. Check ARTIFACT_SYSTEM_MAP by exact id
+ * 2. For dynamic artifacts (weapon-*, engine-*), use prefix mapping
+ * 3. Fall back to DEFAULT_ARTIFACT_SYSTEM
+ */
+export function getArtifactSystems(artifactId: string): ArtifactSystemId[] {
+  if (ARTIFACT_SYSTEM_MAP[artifactId]) {
+    return [...ARTIFACT_SYSTEM_MAP[artifactId]]
+  }
+  if (artifactId.startsWith('weapon-')) {
+    return [DYNAMIC_ARTIFACT_SYSTEMS.weapon]
+  }
+  if (artifactId.startsWith('engine-') || artifactId.includes('engine-type')) {
+    return [DYNAMIC_ARTIFACT_SYSTEMS.engine]
+  }
+  if (artifactId.startsWith('reality-') || artifactId.startsWith('node-')) {
+    return [DYNAMIC_ARTIFACT_SYSTEMS['reality-node']]
+  }
+  return [DEFAULT_ARTIFACT_SYSTEM]
+}
+
+/**
+ * Filter artifacts to those belonging to the given system.
+ * When systemId is null/undefined, returns all artifacts (no filter).
+ */
+export function filterArtifactsBySystem<T extends { id: string }>(
+  artifacts: T[],
+  systemId: ArtifactSystemId | null | undefined
+): T[] {
+  if (!systemId) return artifacts
+  return artifacts.filter((a) => {
+    const systems = getArtifactSystems(a.id)
+    return systems.includes(systemId)
+  })
+}

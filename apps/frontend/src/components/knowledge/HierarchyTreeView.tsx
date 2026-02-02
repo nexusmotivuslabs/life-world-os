@@ -605,7 +605,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                 </button>
                 {error?.includes('port 5001') && (
                   <a
-                    href="http://localhost:5001/api/health"
+                    href="/api/health"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded border border-blue-500/30 text-sm transition-colors flex items-center gap-2"

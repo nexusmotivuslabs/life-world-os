@@ -8,6 +8,7 @@ import ProductDetailView from './components/ProductDetailView'
 import ExploreSystems from './components/ExploreSystems'
 import Layout from './components/Layout'
 import MasterDomainRouter from './components/MasterDomainRouter'
+import CareerSystemRouter from './components/CareerSystemRouter'
 import SystemHealth from './pages/SystemHealth'
 import TierView from './pages/TierView'
 import ArtifactsView from './components/ArtifactsView'
@@ -19,7 +20,7 @@ import KnowledgePlane from './pages/KnowledgePlane'
 import SystemsPlane from './pages/SystemsPlane'
 import InsightPlane from './pages/InsightPlane'
 import ConfigurationPlane from './pages/ConfigurationPlane'
-import LoadoutPageLoader from './components/LoadoutPageLoader'
+import LoadoutPage from './pages/LoadoutPage'
 import BlogsPage from './pages/BlogsPage'
 import GuideBot from './components/GuideBot'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -177,6 +178,14 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+          {/* Career/Cross-System Systems - Trust, Reputation, Optionality */}
+          <Route path="/systems/:systemId" element={
+            <ProtectedRoute>
+              <Layout>
+                <CareerSystemRouter />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Legacy dashboard route - redirect to systems/list */}
           <Route path="/dashboard" element={
@@ -270,14 +279,7 @@ function App() {
           <Route path="/loadouts" element={
             <ProtectedRoute>
               <Layout>
-                <LoadoutsLanding />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/loadouts/manage" element={
-            <ProtectedRoute>
-              <Layout>
-                <LoadoutPageLoader />
+                <LoadoutPage />
               </Layout>
             </ProtectedRoute>
           } />

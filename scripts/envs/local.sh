@@ -281,8 +281,20 @@ else
 fi
 cd ../..
 
-# Step 6: Start backend
-log_service "Step 6: Backend Service"
+# Step 6: Seed database (test users, hierarchy, etc.)
+log_service "Step 6: Seed Database"
+
+log_info "Seeding database (development data, test users)..."
+cd apps/backend
+if NODE_ENV=development npm run seed > /tmp/life-world-seed.log 2>&1; then
+    log_success "Database seeded (test@example.com / demo@example.com — password123)"
+else
+    log_warning "Seed may have partial errors (check /tmp/life-world-seed.log); continuing..."
+fi
+cd ../..
+
+# Step 7: Start backend
+log_service "Step 7: Backend Service"
 
 log_info "Starting backend server (port 5001)..."
 cd apps/backend
@@ -330,8 +342,8 @@ if [ "$BACKEND_READY" = false ]; then
     fi
 fi
 
-# Step 7: Start frontend
-log_service "Step 7: Frontend Service"
+# Step 8: Start frontend
+log_service "Step 8: Frontend Service"
 
 log_info "Starting frontend server (port 5173)..."
 cd apps/frontend
@@ -436,6 +448,13 @@ if [ "$GRAF_READY" = true ]; then
 else
     echo -e "  Grafana:    ${YELLOW}Starting or not available${NC}"
 fi
+
+echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${MAGENTA}🧪 Seeded Data (test logins)${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+echo -e "  ${GREEN}test@example.com${NC} / ${GREEN}demo@example.com${NC}  →  password: ${GREEN}password123${NC}"
+echo -e "  (See ${YELLOW}docs/TEST_USERS.md${NC} for full list.)"
+echo ""
 
 echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${MAGENTA}📝 Logs${NC}"

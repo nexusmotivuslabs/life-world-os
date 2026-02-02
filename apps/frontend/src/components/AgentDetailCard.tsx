@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Lightbulb, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import KeyDetailsList from './KeyDetailsList'
 import { Agent } from '../services/financeApi'
 
 interface AgentMetadata {
@@ -85,13 +86,14 @@ export default function AgentDetailCard({ agent }: AgentDetailCardProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2 space-y-2 pl-4 border-l-2 border-blue-500/30"
+                className="mt-2 pl-4 border-l-2 border-blue-500/30"
               >
-                {metadata.proTips?.map((tip, index) => (
-                  <div key={index} className="text-sm text-gray-300 py-2">
-                    {tip}
-                  </div>
-                ))}
+                <KeyDetailsList
+                  items={metadata.proTips ?? []}
+                  hideTitle
+                  bulletColor="bg-blue-400"
+                  contentClassName=""
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -122,13 +124,14 @@ export default function AgentDetailCard({ agent }: AgentDetailCardProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2 space-y-2 pl-4 border-l-2 border-red-500/30"
+                className="mt-2 pl-4 border-l-2 border-red-500/30"
               >
-                {metadata.whatToAvoid?.map((item, index) => (
-                  <div key={index} className="text-sm text-gray-300 py-2">
-                    {item}
-                  </div>
-                ))}
+                <KeyDetailsList
+                  items={metadata.whatToAvoid ?? []}
+                  hideTitle
+                  bulletColor="bg-red-400"
+                  contentClassName=""
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -159,13 +162,14 @@ export default function AgentDetailCard({ agent }: AgentDetailCardProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2 space-y-2 pl-4 border-l-2 border-green-500/30"
+                className="mt-2 pl-4 border-l-2 border-green-500/30"
               >
-                {metadata.bestPractices?.map((practice, index) => (
-                  <div key={index} className="text-sm text-gray-300 py-2">
-                    {practice}
-                  </div>
-                ))}
+                <KeyDetailsList
+                  items={metadata.bestPractices ?? []}
+                  hideTitle
+                  bulletColor="bg-green-400"
+                  contentClassName=""
+                />
               </motion.div>
             )}
           </AnimatePresence>

@@ -4,15 +4,21 @@
  * Frontend API client for user artifacts (saved recommendations, calculations, etc.)
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
+function getAuthHeaders(): HeadersInit {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
+}
 
 async function apiRequest<T>(endpoint: string, method: string = 'GET', body?: any): Promise<T> {
   const url = `${API_BASE}${endpoint}`
   const options: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
   }
 
   if (body && method !== 'GET') {

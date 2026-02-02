@@ -96,9 +96,9 @@ export default function MyPage({ initialData }: MyPageProps) {
 4. **Reusability**: The `usePageDataLoader` hook can be used for any page
 5. **Type Safety**: TypeScript ensures data structure consistency
 
-## Example: LoadoutPage
+## Example
 
-See `components/LoadoutPageLoader.tsx` and `pages/LoadoutPage.tsx` for a complete implementation.
+See the `usePageDataLoader` hook ([hooks/usePageDataLoader.ts](hooks/usePageDataLoader.ts)) and [pages/LoadoutPage.tsx](pages/LoadoutPage.tsx) for implementation examples.
 
 ## Hook: usePageDataLoader
 
