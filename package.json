@@ -43,6 +43,8 @@
     "restore-db:dev": "cd apps/backend && NODE_ENV=development tsx ../../seeds/scripts/restoreDump.ts dev",
     "restore-db:staging": "cd apps/backend && NODE_ENV=staging tsx ../../seeds/scripts/restoreDump.ts staging",
     "smoke-test": "./scripts/utils/smoke-test.sh",
+    "test": "npm run test -w life-world-os-backend && npm run test -w life-world-os-frontend",
+    "test:coverage": "npm run test:coverage -w life-world-os-backend && npm run test:coverage -w life-world-os-frontend",
     "test:e2e": "playwright test",
     "test:e2e:no-server": "SKIP_WEBSERVER=1 playwright test",
     "test:e2e:ui": "playwright test --ui",

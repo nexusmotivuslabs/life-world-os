@@ -40,7 +40,7 @@ describe('loadoutService', () => {
   })
 
   describe('getUserLoadouts', () => {
-    it('calls ensurePresetLoadouts then findMany with userId', async () => {
+    it('returns loadouts when user has loadouts without calling ensurePresetLoadouts', async () => {
       const userId = 'user-123'
       const mockLoadouts = [
         {
@@ -56,8 +56,7 @@ describe('loadoutService', () => {
 
       const result = await getUserLoadouts(userId)
 
-      expect(ensurePresetLoadouts).toHaveBeenCalledTimes(1)
-      expect(ensurePresetLoadouts).toHaveBeenCalledWith(userId)
+      expect(ensurePresetLoadouts).not.toHaveBeenCalled()
       expect(prisma.loadout.findMany).toHaveBeenCalledWith({
         where: { userId },
         include: {
@@ -71,17 +70,33 @@ describe('loadoutService', () => {
       expect(result).toEqual(mockLoadouts)
     })
 
-    it('returns empty array when user has no loadouts', async () => {
-      vi.mocked(prisma.loadout.findMany).mockResolvedValue([])
+    it('calls ensurePresetLoadouts when user has no loadouts, then returns loadouts from second findMany', async () => {
+      const userId = 'user-456'
+      const mockLoadouts = [
+        {
+          id: 'loadout-preset',
+          userId,
+          name: 'Preset',
+          isActive: true,
+          isPreset: true,
+          slots: [],
+        },
+      ]
+      vi.mocked(prisma.loadout.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(mockLoadouts as never)
 
-      const result = await getUserLoadouts('user-456')
+      const result = await getUserLoadouts(userId)
 
-      expect(result).toEqual([])
+      expect(ensurePresetLoadouts).toHaveBeenCalledTimes(1)
+      expect(ensurePresetLoadouts).toHaveBeenCalledWith(userId)
+      expect(prisma.loadout.findMany).toHaveBeenCalledTimes(2)
+      expect(result).toEqual(mockLoadouts)
     })
   })
 
   describe('getActiveLoadout', () => {
-    it('calls ensurePresetLoadouts then findFirst with isActive true', async () => {
+    it('returns active loadout when found without calling ensurePresetLoadouts', async () => {
       const userId = 'user-123'
       const mockLoadout = {
         id: 'loadout-active',
@@ -95,7 +110,7 @@ describe('loadoutService', () => {
 
       const result = await getActiveLoadout(userId)
 
-      expect(ensurePresetLoadouts).toHaveBeenCalledWith(userId)
+      expect(ensurePresetLoadouts).not.toHaveBeenCalled()
       expect(prisma.loadout.findFirst).toHaveBeenCalledWith({
         where: { userId, isActive: true },
         include: {
@@ -105,11 +120,34 @@ describe('loadoutService', () => {
       expect(result).toEqual(mockLoadout)
     })
 
-    it('returns null when no active loadout', async () => {
+    it('calls ensurePresetLoadouts when no active loadout, then returns loadout from second findFirst', async () => {
+      const userId = 'user-456'
+      const mockLoadout = {
+        id: 'loadout-active',
+        userId,
+        name: 'Active',
+        isActive: true,
+        isPreset: true,
+        slots: [],
+      }
+      vi.mocked(prisma.loadout.findFirst)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockLoadout as never)
+
+      const result = await getActiveLoadout(userId)
+
+      expect(ensurePresetLoadouts).toHaveBeenCalledTimes(1)
+      expect(ensurePresetLoadouts).toHaveBeenCalledWith(userId)
+      expect(prisma.loadout.findFirst).toHaveBeenCalledTimes(2)
+      expect(result).toEqual(mockLoadout)
+    })
+
+    it('returns null when no active loadout and ensurePresetLoadouts does not create one', async () => {
       vi.mocked(prisma.loadout.findFirst).mockResolvedValue(null)
 
       const result = await getActiveLoadout('user-456')
 
+      expect(ensurePresetLoadouts).toHaveBeenCalledTimes(1)
       expect(result).toBeNull()
     })
   })

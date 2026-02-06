@@ -39,8 +39,8 @@ describe('energyService', () => {
 
   describe('getEffectiveEnergy', () => {
     it('should return full energy when capacity is high and not in burnout', () => {
-      const result = getEffectiveEnergy(100, 90, false)
-      expect(result).toBe(110) // Capacity >= 80 gives 110 cap
+      const result = getEffectiveEnergy(120, 90, false)
+      expect(result).toBe(110) // Capacity >= 80 gives 110 cap; min(120, 110) = 110
     })
 
     it('should cap energy at 100 when capacity is medium', () => {

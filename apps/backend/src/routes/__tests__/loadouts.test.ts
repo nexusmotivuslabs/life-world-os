@@ -115,7 +115,10 @@ describe('Loadouts Routes', () => {
       }
 
       expect(statusSpy).toHaveBeenCalledWith(500)
-      expect(jsonSpy).toHaveBeenCalledWith({ error: 'Failed to get loadout items' })
+      expect(jsonSpy).toHaveBeenCalledWith({
+        error: 'Failed to get loadout items',
+        message: 'DB error',
+      })
     })
   })
 })

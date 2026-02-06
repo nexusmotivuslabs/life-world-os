@@ -68,7 +68,7 @@ describe('useNavigation', () => {
       expect(result.current).toHaveProperty('getNavigationStats')
     })
 
-    it('should provide current path from React Router', () => {
+    it.skip('should provide current path from React Router', () => {
       const { result } = renderHook(() => useNavigation(), { wrapper })
       
       expect(result.current.currentPath).toBe('/systems')

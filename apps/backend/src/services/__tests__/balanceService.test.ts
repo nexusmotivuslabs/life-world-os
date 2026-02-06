@@ -22,11 +22,11 @@ describe('balanceService', () => {
 
     it('should detect imbalance when one category is significantly below average', () => {
       const categoryXP: CategoryXP = {
-        capacity: 500, // Low
-        engines: 2000,
-        oxygen: 2000,
-        meaning: 2000,
-        optionality: 2000,
+        capacity: 0, // Level 1
+        engines: 15000, // Level 16
+        oxygen: 15000,
+        meaning: 15000,
+        optionality: 15000,
       }
 
       const result = calculateBalance(categoryXP)
@@ -39,11 +39,11 @@ describe('balanceService', () => {
 
     it('should detect multiple imbalances', () => {
       const categoryXP: CategoryXP = {
-        capacity: 500,
-        engines: 500,
-        oxygen: 2000,
-        meaning: 2000,
-        optionality: 2000,
+        capacity: 0,
+        engines: 0,
+        oxygen: 20000,
+        meaning: 20000,
+        optionality: 20000,
       }
 
       const result = calculateBalance(categoryXP)
@@ -54,15 +54,15 @@ describe('balanceService', () => {
 
     it('should calculate average level correctly', () => {
       const categoryXP: CategoryXP = {
-        capacity: 1000,
-        engines: 2000,
-        oxygen: 1500,
-        meaning: 1500,
-        optionality: 1000,
+        capacity: 1000, // Level 2
+        engines: 2000, // Level 3
+        oxygen: 1500, // Level 2
+        meaning: 1500, // Level 2
+        optionality: 1000, // Level 2
       }
 
       const result = calculateBalance(categoryXP)
-      const expectedAverage = (1 + 2 + 1.5 + 1.5 + 1) / 5 // Levels: 1, 2, 1.5, 1.5, 1
+      const expectedAverage = (2 + 3 + 2 + 2 + 2) / 5 // 11/5 = 2.2
 
       expect(result.averageLevel).toBeCloseTo(expectedAverage, 1)
     })
@@ -77,9 +77,10 @@ describe('balanceService', () => {
       }
 
       const result = calculateBalance(categoryXP)
+      // Each 0 XP gives level 1 (floor(0/1000)+1), average = 1
 
       expect(result.isBalanced).toBe(true)
-      expect(result.averageLevel).toBe(0)
+      expect(result.averageLevel).toBe(1)
     })
 
     it('should handle very high XP values', () => {
