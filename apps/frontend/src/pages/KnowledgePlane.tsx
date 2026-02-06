@@ -320,9 +320,9 @@ export default function KnowledgePlane() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/knowledge')}
+              onClick={() => navigate(activeSection === 'artifacts' ? '/choose-plane' : '/knowledge')}
               className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-              title="Back to Knowledge Planes"
+              title={activeSection === 'artifacts' ? 'Back to home' : 'Back to Knowledge Planes'}
             >
               <ChevronRight className="w-5 h-5 text-gray-400 rotate-180" />
             </button>

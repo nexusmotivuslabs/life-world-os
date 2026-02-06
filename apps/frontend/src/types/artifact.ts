@@ -19,6 +19,7 @@ export enum ArtifactCategory {
   LAW = 'LAW',
   PRINCIPLE = 'PRINCIPLE',
   FRAMEWORK = 'FRAMEWORK',
+  KNOWLEDGE = 'KNOWLEDGE',
   WEAPON = 'WEAPON',
 }
 
@@ -116,6 +117,16 @@ export const ARTIFACT_CATEGORY_COLORS: Record<ArtifactCategory, ArtifactMetadata
     },
     rationale: 'Indigo represents depth, structure, and integration. Frameworks provide deep structural understanding and integrate multiple concepts, and indigo conveys depth and sophistication.',
   },
+  [ArtifactCategory.KNOWLEDGE]: {
+    category: ArtifactCategory.KNOWLEDGE,
+    color: {
+      text: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/30',
+      label: 'text-amber-300',
+    },
+    rationale: 'Amber represents insight, illumination, and practical wisdom. Knowledge artifacts distil the vital 20% of understanding for each domain, and amber conveys the warmth of applied understanding.',
+  },
   [ArtifactCategory.WEAPON]: {
     category: ArtifactCategory.WEAPON,
     color: {
@@ -140,6 +151,7 @@ export const ARTIFACT_CATEGORY_LABELS: Record<ArtifactCategory, string> = {
   [ArtifactCategory.LAW]: 'Law',
   [ArtifactCategory.PRINCIPLE]: 'Principle',
   [ArtifactCategory.FRAMEWORK]: 'Framework',
+  [ArtifactCategory.KNOWLEDGE]: 'Knowledge',
   [ArtifactCategory.WEAPON]: 'Weapon',
 }
 
@@ -211,6 +223,7 @@ export function getArtifactCategoryDescription(category: ArtifactCategory): stri
     [ArtifactCategory.LAW]: 'Immutable rules that govern behavior and outcomes.',
     [ArtifactCategory.PRINCIPLE]: 'Fundamental truths that guide decision-making.',
     [ArtifactCategory.FRAMEWORK]: 'Structured approaches for analysis and problem-solving.',
+    [ArtifactCategory.KNOWLEDGE]: 'Pareto-optimised knowledge — the vital 20% that gives 80% of understanding for each domain.',
     [ArtifactCategory.WEAPON]: 'Capabilities and tools that amplify effectiveness and provide strategic advantages.',
   }
   return descriptions[category]

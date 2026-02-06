@@ -127,13 +127,16 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
   // Convert RealityNode to TreeNode format
   const convertToTreeNode = (node: RealityNode): TreeNode => {
+    const metadata = node.metadata || {}
+    // Ensure description/summary is available for display (universal concepts use metadata.summary)
+    const description = node.description || metadata.summary
     return {
       id: node.id,
       label: node.title,
       type: getTreeNodeType(node.nodeType),
       category: node.category || undefined,
       immutable: node.immutable || false,
-      data: node.metadata || {},
+      data: { ...metadata, description },
       children: [] // Will be populated by recursive loading
     }
   }
@@ -389,12 +392,13 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     )
   }
 
-  // Check if a node has no data (no description, no children, no meaningful metadata)
+  // Check if a node has no data (no description/summary, no children, no meaningful metadata)
   const hasNoData = (node: TreeNode): boolean => {
-    const hasDescription = node.data?.description && node.data.description.trim().length > 0
+    const desc = node.data?.description || node.data?.summary
+    const hasDescription = desc && String(desc).trim().length > 0
     const hasChildren = node.children && node.children.length > 0
     const hasMetadata = node.data && Object.keys(node.data).length > 0 && 
-      Object.keys(node.data).some(key => key !== 'description' && node.data[key] != null)
+      Object.keys(node.data).some(key => !['description', 'summary'].includes(key) && node.data[key] != null)
     
     return !hasDescription && !hasChildren && !hasMetadata
   }
@@ -423,15 +427,20 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     const lockTitle = node.immutable ? 'Immutable' : 'No data available'
     const displayName = getDisplayName(node.label)
 
+    // Check if a node has a structured knowledge template or universal concept worth displaying
+    const hasKnowledgeTemplate = (n: TreeNode) =>
+      n.type === 'law' || n.type === 'principle' || n.type === 'framework' ||
+      n.data?._templateType === 'knowledge' || n.data?.isUniversalConcept === true
+
     const handleRowClick = (e: React.MouseEvent) => {
       // If clicking the chevron area, toggle expansion
       if (hasChildren && (e.target as HTMLElement).closest('button[data-chevron]')) {
         toggleNode(node.id)
         return
       }
-      // If clicking the info button, show details modal
+      // If clicking the info button, show details modal (only if node has knowledge)
       if ((e.target as HTMLElement).closest('button[title="View details"]')) {
-        setSelectedNode(node)
+        if (hasKnowledgeTemplate(node)) setSelectedNode(node)
         return
       }
       // If clicking the external link button, navigate to artifacts
@@ -439,13 +448,11 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         navigateToArtifact(node)
         return
       }
-      // For leaf nodes (laws, principles, etc.), navigate to artifacts view
-      // For parent nodes, toggle expansion or show details
-      if (!hasChildren && (node.type === 'law' || node.type === 'principle' || node.type === 'framework')) {
-        navigateToArtifact(node)
-      } else {
-        // Otherwise, select the node (shows details modal)
+      // Row click (not the arrow): open modal in window for nodes with content
+      if (hasKnowledgeTemplate(node) || node.data?.isUniversalConcept) {
         setSelectedNode(node)
+      } else if (hasChildren) {
+        toggleNode(node.id)
       }
     }
 
@@ -509,14 +516,14 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" title={lockTitle} />
             )}
             <div className="hidden sm:block">{getCategoryBadge(node.category)}</div>
-            {node.data?.description && (
+            {(node.data?.description || node.data?.summary) && (
               <span className="text-xs text-gray-500 ml-1 sm:ml-2 italic truncate hidden md:inline">
-                - {node.data.description}
+                - {node.data?.description || node.data?.summary}
               </span>
             )}
           </div>
-          {/* Show external link button for laws, principles, frameworks */}
-          {(node.type === 'law' || node.type === 'principle' || node.type === 'framework') && (
+          {/* Show external link button for nodes that have artifact representations */}
+          {(node.type === 'law' || node.type === 'principle' || node.type === 'framework' || node.data?._templateType === 'knowledge' || node.data?.isUniversalConcept === true) && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -528,16 +535,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               <ExternalLink className="w-4 h-4" />
             </button>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setSelectedNode(node)
-            }}
-            className="p-1 rounded hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-            title="View details"
-          >
-            <Info className="w-4 h-4" />
-          </button>
+          {hasKnowledgeTemplate(node) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedNode(node)
+              }}
+              className="p-1 rounded hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+              title="View details"
+            >
+              <Info className="w-4 h-4" />
+            </button>
+          )}
         </div>
         {hasChildren && isExpanded && (
           <div className="border-l-2 border-gray-700/50 ml-2">
@@ -801,21 +810,33 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedNode(null)}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {(selectedNode.type === 'law' || selectedNode.type === 'principle' || selectedNode.type === 'framework' || selectedNode.data?._templateType === 'knowledge' || selectedNode.data?.isUniversalConcept === true) && (
+                    <button
+                      onClick={() => navigateToArtifact(selectedNode)}
+                      className="p-2 hover:bg-green-500/20 rounded-lg transition-colors text-gray-400 hover:text-green-400 flex items-center gap-1"
+                      title="View artifact"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="text-sm hidden sm:inline">View artifact</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedNode(null)}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                </div>
               </div>
 
               {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Description */}
-                {selectedNode.data?.description && (
+                {/* Description / Summary */}
+                {(selectedNode.data?.description || selectedNode.data?.summary) && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                    <p className="text-gray-300 leading-relaxed">{selectedNode.data.description}</p>
+                    <p className="text-gray-300 leading-relaxed">{selectedNode.data?.description || selectedNode.data?.summary}</p>
                   </div>
                 )}
 
@@ -960,14 +981,53 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                   </>
                 )}
 
+                {/* Knowledge Template Fields (Pareto-optimised structured knowledge for pathway nodes) */}
+                {selectedNode.data?._templateType === 'knowledge' && (
+                  <>
+                    {selectedNode.data?.definition && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Definition</h3>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.definition}</p>
+                      </div>
+                    )}
+                    {selectedNode.data?.keyInsight && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Key Insight</h3>
+                        <p className="text-gray-300 leading-relaxed bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{selectedNode.data.keyInsight}</p>
+                      </div>
+                    )}
+                    {selectedNode.data?.howItWorks && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">How It Works</h3>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.howItWorks}</p>
+                      </div>
+                    )}
+                    {selectedNode.data?.keyRisks && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Key Risks</h3>
+                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedNode.data.keyRisks}</p>
+                      </div>
+                    )}
+                    {selectedNode.data?.practicalApplication && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Practical Application</h3>
+                        <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">{selectedNode.data.practicalApplication}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 {/* Fallback: Generic Metadata Display */}
                 {selectedNode.type !== 'law' && selectedNode.type !== 'principle' && selectedNode.type !== 'framework' && 
+                 selectedNode.data?._templateType !== 'knowledge' &&
                  selectedNode.data && Object.keys(selectedNode.data).length > 1 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-3">Details</h3>
                     <div className="space-y-3">
                       {Object.entries(selectedNode.data).map(([key, value]) => {
-                        if (key === 'description') return null
+                        // Filter out internal/system metadata fields
+                        const internalKeys = ['description', '_templateType', '_version', '_lastSynced', 'seededAt', 'systemId', 'isPathway', 'isBranch', 'branchType', 'isReference', 'sourceRealityNodeId']
+                        if (internalKeys.includes(key)) return null
                         
                         return (
                           <div key={key} className="bg-gray-700/50 rounded-lg p-4">

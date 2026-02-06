@@ -7,6 +7,18 @@
  */
 
 import { PrismaClient, RealityNodeType, RealityNodeCategory } from '@prisma/client'
+import {
+  SYSTEM_UNIVERSAL_CONCEPT_MAP,
+  getFundamentalLawNodeId,
+  getPowerLawDomainNodeId,
+  getBibleLawDomainNodeId,
+  getStrategicPrincipleNodeId,
+  getSystemicPrincipleNodeId,
+  getCrossSystemPrincipleNodeId,
+  getFrameworkNodeId,
+} from '../config/systemUniversalConceptConfig'
+import { PATHWAY_KNOWLEDGE } from './pathwayKnowledgeData'
+import { invalidateRealityNodeCaches } from '../lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -535,8 +547,30 @@ function getUniversalConceptForSystem(systemId: string): string {
   return conceptMap[systemId] || 'CONCEPT'
 }
 
+// Helper: build pathway metadata with optional structured knowledge
+function buildPathwayMetadata(title: string, systemId: string) {
+  const knowledge = PATHWAY_KNOWLEDGE[title]
+  return {
+    ...(knowledge ? { _templateType: 'knowledge' as const, ...knowledge } : {}),
+    isPathway: true,
+    systemId,
+    seededAt: new Date().toISOString(),
+  }
+}
+
+// Helper: build universal concept metadata (summary + artifact link for reading)
+function buildUniversalConceptMetadata(nodeId: string, systemId: string, summary: string) {
+  return {
+    summary,
+    artifactId: `reality-node-${nodeId}`,
+    isUniversalConcept: true,
+    systemId,
+    seededAt: new Date().toISOString(),
+  }
+}
+
 // Seed system-specific pathways
-async function seedSystemPathways(systemId: string, universalConceptId: string, systemNodeId: string) {
+async function seedSystemPathways(systemId: string, universalConceptId: string, systemNodeId: string, pathwayOrderOffset: number = 0) {
   // Health System Pathways
   if (systemId === 'health') {
     const healthPathways = [
@@ -623,12 +657,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
         nodeType: RealityNodeType.CATEGORY,
         category: RealityNodeCategory.BIOLOGICAL,
         immutable: true,
-        orderIndex: i + 1,
-        metadata: {
-          isPathway: true,
-          systemId: 'health',
-          seededAt: new Date().toISOString(),
-        },
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'health'),
       })
 
       // Add children pathways
@@ -645,11 +675,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
             category: RealityNodeCategory.BIOLOGICAL,
             immutable: true,
             orderIndex: j + 1,
-            metadata: {
-              isPathway: true,
-              systemId: 'health',
-              seededAt: new Date().toISOString(),
-            },
+            metadata: buildPathwayMetadata(child.title, 'health'),
           })
 
           // Add grandchildren if they exist (e.g., MACRONUTRIENTS -> Protein, Carbs, Fats -> FRUIT/Protein)
@@ -666,11 +692,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
                 category: RealityNodeCategory.BIOLOGICAL,
                 immutable: true,
                 orderIndex: k + 1,
-                metadata: {
-                  isPathway: true,
-                  systemId: 'health',
-                  seededAt: new Date().toISOString(),
-                },
+                metadata: buildPathwayMetadata(grandchild.title, 'health'),
               })
 
               // Add great-grandchildren for Protein (FRUIT/Protein)
@@ -684,11 +706,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
                   category: RealityNodeCategory.BIOLOGICAL,
                   immutable: true,
                   orderIndex: 1,
-                  metadata: {
-                    isPathway: true,
-                    systemId: 'health',
-                    seededAt: new Date().toISOString(),
-                  },
+                  metadata: buildPathwayMetadata('FRUIT_PROTEIN', 'health'),
                 })
               }
             }
@@ -756,12 +774,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
         nodeType: RealityNodeType.CATEGORY,
         category: RealityNodeCategory.ECONOMIC,
         immutable: true,
-        orderIndex: i + 1,
-        metadata: {
-          isPathway: true,
-          systemId: 'finance',
-          seededAt: new Date().toISOString(),
-        },
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'finance'),
       })
 
       // Add children pathways
@@ -778,11 +792,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
             category: RealityNodeCategory.ECONOMIC,
             immutable: true,
             orderIndex: j + 1,
-            metadata: {
-              isPathway: true,
-              systemId: 'finance',
-              seededAt: new Date().toISOString(),
-            },
+            metadata: buildPathwayMetadata(child.title, 'finance'),
           })
 
           // Add grandchildren if they exist
@@ -798,11 +808,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
                 category: RealityNodeCategory.ECONOMIC,
                 immutable: true,
                 orderIndex: k + 1,
-                metadata: {
-                  isPathway: true,
-                  systemId: 'finance',
-                  seededAt: new Date().toISOString(),
-                },
+                metadata: buildPathwayMetadata(grandchild.title, 'finance'),
               })
             }
           }
@@ -864,12 +870,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
         nodeType: RealityNodeType.CATEGORY,
         category: RealityNodeCategory.FOUNDATIONAL,
         immutable: true,
-        orderIndex: i + 1,
-        metadata: {
-          isPathway: true,
-          systemId: 'education',
-          seededAt: new Date().toISOString(),
-        },
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'education'),
       })
 
       // Add children pathways
@@ -885,16 +887,119 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
             category: RealityNodeCategory.FOUNDATIONAL,
             immutable: true,
             orderIndex: j + 1,
-            metadata: {
-              isPathway: true,
-              systemId: 'education',
-              seededAt: new Date().toISOString(),
-            },
+            metadata: buildPathwayMetadata(child.title, 'education'),
           })
         }
       }
     }
     console.log(`        → Seeded Education pathways under LEARNING`)
+  }
+
+  // Energy System Pathways
+  if (systemId === 'energy') {
+    const energyPathways = [
+      {
+        title: 'PHYSICAL_ENERGY',
+        description: 'Sleep, Exercise, Nutrition — the biological fuel supply',
+        children: [
+          { title: 'SLEEP_ENERGY', description: 'Sleep as the primary energy restoration mechanism' },
+          { title: 'EXERCISE_ENERGY', description: 'Physical activity as energy capacity builder' },
+          { title: 'NUTRITION_ENERGY', description: 'Food quality and timing for sustained energy' },
+          { title: 'CIRCADIAN_RHYTHM', description: 'Biological clock alignment for peak performance' },
+        ],
+      },
+      {
+        title: 'MENTAL_ENERGY',
+        description: 'Focus, Cognitive Load, Decision Fatigue',
+        children: [
+          { title: 'FOCUS_CAPACITY', description: 'Sustained attention as depletable energy resource' },
+          { title: 'COGNITIVE_LOAD', description: 'Mental bandwidth management and conservation' },
+          { title: 'DECISION_FATIGUE', description: 'Decision quality degradation over time' },
+          { title: 'CREATIVE_ENERGY', description: 'Generative thinking and idea production cycles' },
+        ],
+      },
+      {
+        title: 'EMOTIONAL_ENERGY',
+        description: 'Motivation, Resilience, Emotional Regulation',
+        children: [
+          { title: 'MOTIVATION', description: 'Intrinsic and extrinsic drive as energy source' },
+          { title: 'RESILIENCE', description: 'Recovery capacity after setbacks and stress' },
+          { title: 'EMOTIONAL_REGULATION', description: 'Managing emotional states to conserve energy' },
+        ],
+      },
+      {
+        title: 'ENERGY_MANAGEMENT',
+        description: 'Allocation, Conservation, Renewal cycles',
+        children: [
+          { title: 'ENERGY_ALLOCATION', description: 'Directing energy to highest-value activities' },
+          { title: 'ENERGY_CONSERVATION', description: 'Eliminating energy drains and waste' },
+          { title: 'ENERGY_RENEWAL', description: 'Active recovery and restoration practices' },
+          { title: 'ENERGY_AUDIT', description: 'Tracking and measuring energy patterns' },
+        ],
+      },
+      {
+        title: 'SOCIAL_ENERGY',
+        description: 'Relationships, Community, Connection — energy from and for meaningful interactions',
+        children: [
+          { title: 'RELATIONSHIP_ENERGY', description: 'How relationships charge or drain your energy' },
+          { title: 'SOLITUDE_VS_CONNECTION', description: 'Balancing alone time with social recharging' },
+          { title: 'ENERGY_CONTAGION', description: 'How others affect your energy state' },
+        ],
+      },
+      {
+        title: 'RESTORATIVE_ENERGY',
+        description: 'Recovery, Rest, Downtime — active practices that rebuild depleted energy',
+        children: [
+          { title: 'ACTIVE_REST', description: 'Intentional recovery vs passive consumption' },
+          { title: 'SLEEP_HYGIENE', description: 'Environment and habits for quality restoration' },
+          { title: 'MICRO_RECOVERY', description: 'Short breaks that prevent energy collapse' },
+        ],
+      },
+      {
+        title: 'ENVIRONMENTAL_ENERGY',
+        description: 'Light, Space, Nature — how your surroundings affect energy levels',
+        children: [
+          { title: 'LIGHT_EXPOSURE', description: 'Natural light, timing, and impact on alertness and sleep' },
+          { title: 'SPACE_DESIGN', description: 'Workspace layout and clutter effects on focus' },
+          { title: 'NATURE_CONNECTION', description: 'Green space and outdoor exposure for restoration' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < energyPathways.length; i++) {
+      const pathway = energyPathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.BIOLOGICAL,
+        immutable: true,
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'energy'),
+      })
+
+      // Add children pathways
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          await createNode({
+            id: `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.BIOLOGICAL,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: buildPathwayMetadata(child.title, 'energy'),
+          })
+        }
+      }
+    }
+    console.log(`        → Seeded Energy pathways under ENERGY`)
   }
 
   // Optionality System Pathways
@@ -952,12 +1057,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
         nodeType: RealityNodeType.CATEGORY,
         category: RealityNodeCategory.STRATEGIC,
         immutable: true,
-        orderIndex: i + 1,
-        metadata: {
-          isPathway: true,
-          systemId: 'optionality',
-          seededAt: new Date().toISOString(),
-        },
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'optionality'),
       })
 
       // Add children pathways
@@ -974,11 +1075,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
             category: RealityNodeCategory.STRATEGIC,
             immutable: true,
             orderIndex: j + 1,
-            metadata: {
-              isPathway: true,
-              systemId: 'optionality',
-              seededAt: new Date().toISOString(),
-            },
+            metadata: buildPathwayMetadata(child.title, 'optionality'),
           })
         }
       }
@@ -1041,12 +1138,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
         nodeType: RealityNodeType.CATEGORY,
         category: RealityNodeCategory.CROSS_SYSTEM,
         immutable: true,
-        orderIndex: i + 1,
-        metadata: {
-          isPathway: true,
-          systemId: systemId,
-          seededAt: new Date().toISOString(),
-        },
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, systemId),
       })
 
       // Add children pathways
@@ -1063,11 +1156,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
             category: RealityNodeCategory.CROSS_SYSTEM,
             immutable: true,
             orderIndex: j + 1,
-            metadata: {
-              isPathway: true,
-              systemId: systemId,
-              seededAt: new Date().toISOString(),
-            },
+            metadata: buildPathwayMetadata(child.title, systemId),
           })
         }
       }
@@ -1076,7 +1165,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
   }
 
   // For other systems, create a basic universal concept structure
-  if (!['health', 'money', 'finance', 'education'].includes(systemId)) {
+  if (!['health', 'money', 'finance', 'education', 'energy'].includes(systemId)) {
     // Create at least one pathway node to ensure the system has universal concepts
     await createNode({
       id: `${universalConceptId}-concepts`,
@@ -1086,15 +1175,283 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
-      orderIndex: 1,
-      metadata: {
-        isPathway: true,
-        systemId: systemId,
-        seededAt: new Date().toISOString(),
-      },
+      orderIndex: 1 + pathwayOrderOffset,
+      metadata: buildPathwayMetadata('CONCEPTS', systemId),
     })
     console.log(`        → Created basic universal concepts for ${systemId}`)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Lookup maps for law/principle/framework data (used by seedUniversalConceptBranches)
+// ---------------------------------------------------------------------------
+const fundamentalLawMap = new Map(FUNDAMENTAL_LAWS.map(l => [l.title, l]))
+const strategicPrincipleMap = new Map(STRATEGIC_PRINCIPLES.map(p => [p.title, p]))
+const systemicPrincipleMap = new Map(SYSTEMIC_PRINCIPLES.map(p => [p.title, p]))
+const crossSystemPrincipleMap = new Map(CROSS_SYSTEM_PRINCIPLES.map(p => [p.title, p]))
+
+// frameworkMap is created lazily after FRAMEWORKS is defined (below)
+let _frameworkMap: Map<string, typeof FRAMEWORKS[number]> | null = null
+function getFrameworkMap() {
+  if (!_frameworkMap) {
+    _frameworkMap = new Map(FRAMEWORKS.map(f => [f.title, f]))
+  }
+  return _frameworkMap
+}
+
+const toSlug = (title: string) => title.toLowerCase().replace(/_/g, '-')
+
+/**
+ * Seed LAWS / PRINCIPLES / FRAMEWORKS branch nodes under a system's universal concept,
+ * then populate each branch with reference nodes pointing to existing global nodes.
+ *
+ * This ensures that every system in the root tree exposes the universal concepts
+ * (laws, principles, frameworks) that apply to it as navigable branches.
+ */
+async function seedUniversalConceptBranches(
+  systemId: string,
+  universalConceptId: string,
+) {
+  const mapping = SYSTEM_UNIVERSAL_CONCEPT_MAP[systemId]
+  if (!mapping) {
+    console.log(`        → No universal concept mapping for ${systemId}, skipping branches`)
+    return
+  }
+
+  // ── Create the three branch category nodes ──────────────────────────────
+
+  const lawsBranchId = `${universalConceptId}-laws`
+  await createNode({
+    id: lawsBranchId,
+    title: 'LAWS',
+    description: `Universal laws that apply to the ${systemId} system. Laws are immutable constraints of reality.`,
+    parentId: universalConceptId,
+    nodeType: RealityNodeType.CATEGORY,
+    category: RealityNodeCategory.FOUNDATIONAL,
+    immutable: true,
+    orderIndex: 0,
+    metadata: {
+      isBranch: true,
+      branchType: 'laws',
+      systemId,
+      seededAt: new Date().toISOString(),
+    },
+  })
+
+  const principlesBranchId = `${universalConceptId}-principles`
+  await createNode({
+    id: principlesBranchId,
+    title: 'PRINCIPLES',
+    description: `Strategic and systemic principles that guide the ${systemId} system.`,
+    parentId: universalConceptId,
+    nodeType: RealityNodeType.CATEGORY,
+    category: RealityNodeCategory.FOUNDATIONAL,
+    immutable: true,
+    orderIndex: 1,
+    metadata: {
+      isBranch: true,
+      branchType: 'principles',
+      systemId,
+      seededAt: new Date().toISOString(),
+    },
+  })
+
+  const frameworksBranchId = `${universalConceptId}-frameworks`
+  await createNode({
+    id: frameworksBranchId,
+    title: 'FRAMEWORKS',
+    description: `Practical frameworks for applying laws and principles within the ${systemId} system.`,
+    parentId: universalConceptId,
+    nodeType: RealityNodeType.CATEGORY,
+    category: RealityNodeCategory.FOUNDATIONAL,
+    immutable: true,
+    orderIndex: 2,
+    metadata: {
+      isBranch: true,
+      branchType: 'frameworks',
+      systemId,
+      seededAt: new Date().toISOString(),
+    },
+  })
+
+  // ── Populate LAWS branch ────────────────────────────────────────────────
+
+  let lawOrder = 1
+
+  // Fundamental law references
+  for (const lawTitle of mapping.fundamentalLaws) {
+    const sourceId = getFundamentalLawNodeId(lawTitle)
+    const law = fundamentalLawMap.get(lawTitle)
+    await createNode({
+      id: `${lawsBranchId}-ref-${toSlug(lawTitle)}`,
+      title: lawTitle,
+      description: law?.description || `Fundamental law applied to ${systemId} system.`,
+      parentId: lawsBranchId,
+      nodeType: RealityNodeType.LAW,
+      category: RealityNodeCategory.FUNDAMENTAL,
+      immutable: true,
+      orderIndex: lawOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // Power Law domain references
+  for (const domain of mapping.powerLawDomains) {
+    const sourceId = getPowerLawDomainNodeId(domain)
+    await createNode({
+      id: `${lawsBranchId}-ref-power-${domain.toLowerCase()}`,
+      title: `48 Laws of Power: ${domain}`,
+      description: `48 Laws of Power applied to the ${domain} domain.`,
+      parentId: lawsBranchId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.POWER,
+      immutable: true,
+      orderIndex: lawOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        domain,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // Bible Law domain references
+  for (const domain of mapping.bibleLawDomains) {
+    const sourceId = getBibleLawDomainNodeId(domain)
+    await createNode({
+      id: `${lawsBranchId}-ref-biblical-${domain.toLowerCase()}`,
+      title: `Biblical Laws: ${domain}`,
+      description: `Biblical principles applied to the ${domain} domain.`,
+      parentId: lawsBranchId,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.BIBLICAL,
+      immutable: true,
+      orderIndex: lawOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        domain,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // ── Populate PRINCIPLES branch ──────────────────────────────────────────
+
+  let principleOrder = 1
+
+  // Strategic principle references
+  for (const title of mapping.strategicPrinciples) {
+    const sourceId = getStrategicPrincipleNodeId(title)
+    const principle = strategicPrincipleMap.get(title)
+    await createNode({
+      id: `${principlesBranchId}-ref-${toSlug(title)}`,
+      title,
+      description: principle?.description || `Strategic principle applied to ${systemId} system.`,
+      parentId: principlesBranchId,
+      nodeType: RealityNodeType.PRINCIPLE,
+      category: RealityNodeCategory.STRATEGIC,
+      immutable: true,
+      orderIndex: principleOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // Systemic principle references
+  for (const title of mapping.systemicPrinciples) {
+    const sourceId = getSystemicPrincipleNodeId(title)
+    const principle = systemicPrincipleMap.get(title)
+    await createNode({
+      id: `${principlesBranchId}-ref-${toSlug(title)}`,
+      title,
+      description: principle?.description || `Systemic principle applied to ${systemId} system.`,
+      parentId: principlesBranchId,
+      nodeType: RealityNodeType.PRINCIPLE,
+      category: RealityNodeCategory.SYSTEMIC,
+      immutable: true,
+      orderIndex: principleOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // Cross-system principle references
+  for (const title of mapping.crossSystemPrinciples) {
+    const sourceId = getCrossSystemPrincipleNodeId(title)
+    const principle = crossSystemPrincipleMap.get(title)
+    await createNode({
+      id: `${principlesBranchId}-ref-cross-${toSlug(title)}`,
+      title,
+      description: principle?.description || `Cross-system principle applied to ${systemId} system.`,
+      parentId: principlesBranchId,
+      nodeType: RealityNodeType.PRINCIPLE,
+      category: RealityNodeCategory.CROSS_SYSTEM as any,
+      immutable: true,
+      orderIndex: principleOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // ── Populate FRAMEWORKS branch ──────────────────────────────────────────
+
+  const fwMap = getFrameworkMap()
+  let frameworkOrder = 1
+
+  for (const title of mapping.frameworks) {
+    const sourceId = getFrameworkNodeId(title)
+    const framework = fwMap.get(title)
+    await createNode({
+      id: `${frameworksBranchId}-ref-${toSlug(title)}`,
+      title,
+      description: framework?.description || `Framework applied to ${systemId} system.`,
+      parentId: frameworksBranchId,
+      nodeType: RealityNodeType.FRAMEWORK,
+      category: RealityNodeCategory.STRATEGIC,
+      immutable: true,
+      orderIndex: frameworkOrder++,
+      metadata: {
+        isReference: true,
+        sourceRealityNodeId: sourceId,
+        systemId,
+        seededAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  // ── Summary ─────────────────────────────────────────────────────────────
+
+  const totalRefs =
+    mapping.fundamentalLaws.length +
+    mapping.powerLawDomains.length +
+    mapping.bibleLawDomains.length +
+    mapping.strategicPrinciples.length +
+    mapping.systemicPrinciples.length +
+    mapping.crossSystemPrinciples.length +
+    mapping.frameworks.length
+
+  console.log(`        → Seeded universal concept branches (LAWS/PRINCIPLES/FRAMEWORKS) with ${totalRefs} references for ${systemId}`)
 }
 
 // Pareto-selected top 5 frameworks
@@ -2050,20 +2407,17 @@ export async function seedRealityHierarchy() {
 
     // Create Universal Concept for Finance (MONEY)
     const financeUniversalConceptId = `${FINANCE_ID}-universal-concept`
+    const financeSummary = 'Universal concept for Finance system. The foundational domain knowledge that governs financial systems.'
     const financeUniversalConcept = await createNode({
       id: financeUniversalConceptId,
       title: 'MONEY',
-      description: 'Universal concept for Finance system. The foundational domain knowledge that governs financial systems.',
+      description: financeSummary,
       parentId: FINANCE_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
       orderIndex: 1, // First index - root artifact
-      metadata: {
-        isUniversalConcept: true,
-        systemId: 'finance',
-        seededAt: new Date().toISOString(),
-      },
+      metadata: buildUniversalConceptMetadata(financeUniversalConceptId, 'finance', financeSummary),
     })
     console.log('  → Created Universal Concept: MONEY')
 
@@ -2152,25 +2506,25 @@ export async function seedRealityHierarchy() {
         // Create Universal Concept for this system (system-specific root)
         const universalConceptTitle = getUniversalConceptForSystem(system.id)
         const universalConceptId = `${systemNode.id}-universal-concept`
+        const universalConceptSummary = `Universal concept for ${system.name} system. The foundational domain knowledge that governs this system.`
         const universalConceptNode = await createNode({
           id: universalConceptId,
           title: universalConceptTitle,
-          description: `Universal concept for ${system.name} system. The foundational domain knowledge that governs this system.`,
+          description: universalConceptSummary,
           parentId: systemNode.id,
           nodeType: RealityNodeType.CATEGORY,
           category: RealityNodeCategory.FOUNDATIONAL,
           immutable: true,
           orderIndex: 1, // First index - root artifact
-          metadata: {
-            isUniversalConcept: true,
-            systemId: system.id,
-            seededAt: new Date().toISOString(),
-          },
+          metadata: buildUniversalConceptMetadata(universalConceptId, system.id, universalConceptSummary),
         })
         console.log(`      → Created Universal Concept: ${universalConceptTitle}`)
 
-        // Add system-specific pathways
-        await seedSystemPathways(system.id, universalConceptId, systemNode.id)
+        // Seed LAWS / PRINCIPLES / FRAMEWORKS branches under the universal concept
+        await seedUniversalConceptBranches(system.id, universalConceptId)
+
+        // Add system-specific pathways (offset by 3 for the new LAWS/PRINCIPLES/FRAMEWORKS branches)
+        await seedSystemPathways(system.id, universalConceptId, systemNode.id, 3)
 
         // Create sub-systems if they exist (limit to 3 per system, level 4)
         if (system.subSystems && system.subSystems.length > 0) {
@@ -2201,6 +2555,10 @@ export async function seedRealityHierarchy() {
 
     // Note: Power Laws and Bible Laws linking happens after they are seeded
     // See linkLawsToRealityHierarchy() function for the linking phase
+
+    // Invalidate backend caches so fresh data is served immediately
+    await invalidateRealityNodeCaches()
+    console.log('\n🗑️  Invalidated reality node caches')
 
     console.log('\n✅ Reality hierarchy seeded successfully!')
     console.log('   Structure: REALITY -> 6 top-level (Constraints, Agents, Environments, Resources, Value, Systems) -> children -> grandchildren -> great-grandchildren')

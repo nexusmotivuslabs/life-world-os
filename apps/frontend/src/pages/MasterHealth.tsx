@@ -103,7 +103,7 @@ export default function MasterHealth() {
         teams={teams}
         agents={agents}
         loading={totalLoading}
-        rootNodeId="constraints-of-reality"
+        rootNodeId="systems-node-survival_tier-health-universal-concept"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (

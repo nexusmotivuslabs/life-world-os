@@ -13,10 +13,8 @@ import {
 import { motion } from 'framer-motion'
 import SleepLogForm from '../components/SleepLogForm'
 import EnergyStatusCard from '../components/EnergyStatusCard'
-import DomainLawsView from '../components/DomainLawsView'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
-import { MasterDomain } from '../types'
 
 /**
  * MasterEnergy Page
@@ -80,7 +78,7 @@ export default function MasterEnergy() {
       teams={teams}
       agents={agents}
       loading={totalLoading}
-      renderConcepts={() => <DomainLawsView domain={MasterDomain.ENERGY} />}
+      rootNodeId="systems-node-stability_tier-energy-universal-concept"
       renderOverview={({ setView }) => (
         <div className="space-y-8">
           {energyStatus && (

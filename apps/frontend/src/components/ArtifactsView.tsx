@@ -41,7 +41,8 @@ import {
   Lightbulb,
   Network,
   Grid3x3,
-  LayoutGrid
+  LayoutGrid,
+  Layers
 } from 'lucide-react'
 import { getMasterRoute } from '../config/routes'
 import { MasterDomain } from '../types'
@@ -89,6 +90,7 @@ interface Artifact {
   category: ArtifactCategory
   icon: React.ComponentType<{ className?: string }>
   route?: string
+  systemId?: ArtifactSystemId // For system-based filtering (e.g. reality nodes)
   details?: string[] // Generic details about what this artifact is
   examples?: string[] // Real-world practical examples for readers to take action
   tags?: string[] // Additional metadata tags for filtering
@@ -132,7 +134,7 @@ const artifacts: Artifact[] = [
     description: 'Foundation for system performance. High Capacity enables sustained operation across Finance, Health, and Energy systems. Low Capacity degrades all system effectiveness and increases burnout risk.',
     category: ArtifactCategory.STAT,
     icon: HeartPulse,
-    tags: ['health', 'resilience', 'survival', 'systems'],
+    tags: ['health', 'resilience', 'survival', 'systems', 'burnout', 'recovery'],
     details: [
       'Range: 0-100.',
       'Modifies usable Energy cap across all systems.',
@@ -718,7 +720,7 @@ const artifacts: Artifact[] = [
     description: 'Proactively manage energy depletion before it becomes chronic and leads to burnout.',
     category: ArtifactCategory.PRINCIPLE,
     icon: Lightbulb,
-    tags: ['energy', 'burnout', 'prevention', 'health'],
+    tags: ['energy', 'burnout', 'prevention', 'health', 'recovery', 'stressor', 'cognitive-decline'],
     details: [
       'Early warning signs matter.',
       'Prevention > Recovery.',
@@ -761,7 +763,7 @@ const artifacts: Artifact[] = [
     description: 'Structured approaches for capacity management, recovery planning, and performance optimization.',
     category: ArtifactCategory.FRAMEWORK,
     icon: Network,
-    tags: ['energy', 'capacity', 'recovery', 'performance'],
+    tags: ['energy', 'capacity', 'recovery', 'performance', 'burnout', 'stressor'],
     details: [
       'Capacity Management Framework.',
       'Recovery Planning Framework.',
@@ -878,15 +880,24 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
         setIsLoadingRealityNodes(true)
         // Clear cache to ensure fresh data
         realityNodeApi.clearCache()
-        // Fetch all LAW and PRINCIPLE type nodes
-        const [lawsResponse, principlesResponse] = await Promise.all([
+        // Fetch all LAW, PRINCIPLE, FRAMEWORK, and CATEGORY type nodes
+        const [lawsResponse, principlesResponse, frameworksResponse, categoryResponse] = await Promise.all([
           realityNodeApi.getNodes({ nodeType: 'LAW' }),
-          realityNodeApi.getNodes({ nodeType: 'PRINCIPLE' })
+          realityNodeApi.getNodes({ nodeType: 'PRINCIPLE' }),
+          realityNodeApi.getNodes({ nodeType: 'FRAMEWORK' }),
+          realityNodeApi.getNodes({ nodeType: 'CATEGORY' }),
         ])
+        
+        // Include category nodes: knowledge templates and universal concepts
+        const categoryNodes = (categoryResponse.nodes || []).filter(
+          (n: any) => n.metadata?._templateType === 'knowledge' || n.metadata?.isUniversalConcept === true || n.metadata?.summary
+        )
         
         const allNodes = [
           ...(lawsResponse.nodes || []),
-          ...(principlesResponse.nodes || [])
+          ...(principlesResponse.nodes || []),
+          ...(frameworksResponse.nodes || []),
+          ...categoryNodes,
         ]
         setRealityNodes(allNodes)
       } catch (error: any) {
@@ -1079,11 +1090,32 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       }
     })
 
-    // Add Reality Node artifacts (Laws and Principles)
+    // Add Reality Node artifacts (Laws, Principles, Frameworks, Knowledge, Universal Concepts)
     const realityNodeArtifacts: Artifact[] = realityNodes.map(node => {
       const isLaw = node.nodeType === 'LAW'
-      const category = isLaw ? ArtifactCategory.LAW : ArtifactCategory.PRINCIPLE
-      const icon = isLaw ? BookOpen : Lightbulb
+      const isFramework = node.nodeType === 'FRAMEWORK'
+      const isKnowledge = node.metadata?._templateType === 'knowledge'
+      const isUniversalConcept = node.metadata?.isUniversalConcept === true
+      
+      // Determine category and icon based on node type
+      let artifactCategory: ArtifactCategory
+      let icon
+      if (isUniversalConcept) {
+        artifactCategory = ArtifactCategory.CONCEPT
+        icon = Layers
+      } else if (isKnowledge) {
+        artifactCategory = ArtifactCategory.KNOWLEDGE
+        icon = Brain
+      } else if (isFramework) {
+        artifactCategory = ArtifactCategory.FRAMEWORK
+        icon = Network
+      } else if (isLaw) {
+        artifactCategory = ArtifactCategory.LAW
+        icon = BookOpen
+      } else {
+        artifactCategory = ArtifactCategory.PRINCIPLE
+        icon = Lightbulb
+      }
       
       // Build tags from category and metadata
       const tags: string[] = []
@@ -1098,6 +1130,16 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       }
       if (node.metadata?.bibleLawId) {
         tags.push('bible-law')
+      }
+      if (node.metadata?.systemId) {
+        tags.push(node.metadata.systemId.toLowerCase())
+      }
+      if (isKnowledge) {
+        tags.push('knowledge')
+      }
+      // Include pathway knowledge tags (e.g. stressor, cortisol, burnout)
+      if (Array.isArray(node.metadata?.tags)) {
+        tags.push(...node.metadata.tags)
       }
       
       // Build details array
@@ -1119,21 +1161,31 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       }
       // Extract template metadata based on node type
       const metadata: Record<string, unknown> = {}
-      if (isLaw && node.metadata) {
+      if (isUniversalConcept && node.metadata?.summary) {
+        metadata.summary = node.metadata.summary
+      }
+      if (isKnowledge && node.metadata) {
+        // Knowledge template fields
+        if (node.metadata.definition) metadata.definition = node.metadata.definition
+        if (node.metadata.keyInsight) metadata.keyInsight = node.metadata.keyInsight
+        if (node.metadata.howItWorks) metadata.howItWorks = node.metadata.howItWorks
+        if (node.metadata.keyRisks) metadata.keyRisks = node.metadata.keyRisks
+        if (node.metadata.practicalApplication) metadata.practicalApplication = node.metadata.practicalApplication
+      } else if (isLaw && node.metadata) {
         // Law template fields
         if (node.metadata.derivedFrom) metadata.derivedFrom = node.metadata.derivedFrom
         if (node.metadata.statement) metadata.statement = node.metadata.statement
         if (node.metadata.recursiveBehavior) metadata.recursiveBehavior = node.metadata.recursiveBehavior
         if (node.metadata.violationOutcome) metadata.violationOutcome = node.metadata.violationOutcome
         if (node.metadata.whyThisLawPersists) metadata.whyThisLawPersists = node.metadata.whyThisLawPersists
-      } else if (!isLaw && node.nodeType === 'PRINCIPLE' && node.metadata) {
+      } else if (node.nodeType === 'PRINCIPLE' && node.metadata) {
         // Principle template fields
         if (node.metadata.alignedWith) metadata.alignedWith = node.metadata.alignedWith
         if (node.metadata.principle) metadata.principle = node.metadata.principle
         if (node.metadata.whyItWorks) metadata.whyItWorks = node.metadata.whyItWorks
         if (node.metadata.violationPattern) metadata.violationPattern = node.metadata.violationPattern
         if (node.metadata.predictableResult) metadata.predictableResult = node.metadata.predictableResult
-      } else if (node.nodeType === 'FRAMEWORK' && node.metadata) {
+      } else if (isFramework && node.metadata) {
         // Framework template fields
         if (node.metadata.basedOn) metadata.basedOn = node.metadata.basedOn
         if (node.metadata.purpose) metadata.purpose = node.metadata.purpose
@@ -1142,16 +1194,17 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
         if (node.metadata.whenNotToUse) metadata.whenNotToUse = node.metadata.whenNotToUse
       }
 
-      // Determine category for frameworks
-      const finalCategory = node.nodeType === 'FRAMEWORK' ? ArtifactCategory.FRAMEWORK : category
-
+      const description = node.metadata?.summary || node.description || (isUniversalConcept ? `Universal concept for ${node.metadata?.systemId || 'system'}.` : `A ${isLaw ? 'law' : isFramework ? 'framework' : isKnowledge ? 'knowledge' : 'principle'} from the reality hierarchy.`)
+      const nodeSystemId = node.metadata?.systemId
+      const artifactSystemId = nodeSystemId && ARTIFACT_SYSTEM_IDS.includes(nodeSystemId as ArtifactSystemId) ? (nodeSystemId as ArtifactSystemId) : undefined
       return {
         id: `reality-node-${node.id}`,
         name: node.title,
-        description: node.description || `A ${isLaw ? 'law' : node.nodeType === 'FRAMEWORK' ? 'framework' : 'principle'} from the reality hierarchy.`,
-        category: finalCategory,
+        description,
+        category: artifactCategory,
         icon,
-        route: `/knowledge/hierarchy?node=${node.id}`, // Link to hierarchy view
+        route: `/knowledge/hierarchy?node=${node.id}`,
+        systemId: artifactSystemId,
         tags,
         details: details.length > 0 ? details : undefined,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
@@ -1201,19 +1254,21 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       .filter((ref): ref is Artifact => ref !== undefined)
   }
 
-  // Handle artifact ID from URL query parameter
+  // Handle artifact ID from URL query parameter - open the exact artifact selected
   useEffect(() => {
     const artifactId = searchParams.get('id')
     if (artifactId && allArtifacts.length > 0) {
       const artifact = getArtifactById(artifactId)
       if (artifact) {
         setSelectedArtifact(artifact)
-        // Clear the ID from URL after selecting (optional, keeps URL clean)
-        // searchParams.delete('id')
-        // navigate(`/knowledge/artifacts${searchParams.toString() ? `?${searchParams.toString()}` : ''}`, { replace: true })
+        // Set category and system filter so the list shows the artifact (not "All")
+        setSelectedCategory(artifact.category)
+        if (artifact.systemId && !systemId) {
+          setSystemFilter(artifact.systemId)
+        }
       }
     }
-  }, [searchParams, allArtifacts, getArtifactById])
+  }, [searchParams, allArtifacts, getArtifactById, systemId])
 
   const handleArtifactClick = (artifact: Artifact) => {
     setSelectedArtifact(artifact)
@@ -1227,6 +1282,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
     ArtifactCategory.LAW,
     ArtifactCategory.PRINCIPLE,
     ArtifactCategory.FRAMEWORK,
+    ArtifactCategory.KNOWLEDGE,
     ArtifactCategory.WEAPON,
   ]
   
@@ -2018,6 +2074,42 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
                           <div>
                             <h3 className="text-xl font-semibold text-white mb-3">When Not to Use</h3>
                             <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedArtifact.metadata.whenNotToUse}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Knowledge Template Fields */}
+                    {selectedArtifact.category === ArtifactCategory.KNOWLEDGE && selectedArtifact.metadata && (
+                      <>
+                        {selectedArtifact.metadata.definition && (
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-3">Definition</h3>
+                            <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{String(selectedArtifact.metadata.definition)}</p>
+                          </div>
+                        )}
+                        {selectedArtifact.metadata.keyInsight && (
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-3">Key Insight</h3>
+                            <p className="text-gray-300 leading-relaxed bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.keyInsight)}</p>
+                          </div>
+                        )}
+                        {selectedArtifact.metadata.howItWorks && (
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-3">How It Works</h3>
+                            <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{String(selectedArtifact.metadata.howItWorks)}</p>
+                          </div>
+                        )}
+                        {selectedArtifact.metadata.keyRisks && (
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-3">Key Risks</h3>
+                            <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.keyRisks)}</p>
+                          </div>
+                        )}
+                        {selectedArtifact.metadata.practicalApplication && (
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-3">Practical Application</h3>
+                            <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.practicalApplication)}</p>
                           </div>
                         )}
                       </>

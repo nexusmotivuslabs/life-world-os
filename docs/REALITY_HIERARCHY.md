@@ -65,33 +65,78 @@ REALITY (immutable root, displayed as "ROOT")
 │   └── FINANCE (system)
 │       └── [Finance categories]
 │
-└── SYSTEMS (immutable, FOUNDATIONAL) ⭐ NEW
+└── SYSTEMS (immutable, FOUNDATIONAL)
     ├── SURVIVAL_TIER
     │   └── HEALTH
+    │       ├── Universal Concept: BIOLOGY
+    │       │   ├── LAWS (branch → references to global laws)
+    │       │   │   ├── LAW_OF_ENTROPY (ref)
+    │       │   │   ├── LAW_OF_ENERGY (ref)
+    │       │   │   ├── LAW_OF_CAUSE_EFFECT (ref)
+    │       │   │   └── Biblical Laws: ENERGY (ref)
+    │       │   ├── PRINCIPLES (branch → references to global principles)
+    │       │   │   ├── MARGIN_OF_SAFETY (ref)
+    │       │   │   ├── SYSTEMS_THINKING (ref)
+    │       │   │   ├── FEEDBACK_LOOPS (ref)
+    │       │   │   └── ADAPTATION (ref)
+    │       │   ├── FRAMEWORKS (branch → references to global frameworks)
+    │       │   │   ├── GOAL_HIERARCHY_FRAMEWORK (ref)
+    │       │   │   └── RISK_ASSESSMENT_FRAMEWORK (ref)
+    │       │   └── [Domain pathways: ENERGY, NEUROSCIENCE, ...]
     │       └── [Sub-systems: Capacity, Recovery, Resilience]
     │
     ├── STABILITY_TIER
     │   ├── MONEY
+    │   │   ├── Universal Concept: MONEY
+    │   │   │   ├── LAWS (branch)
+    │   │   │   │   ├── LAW_OF_COMPOUNDING (ref)
+    │   │   │   │   ├── LAW_OF_TIME (ref)
+    │   │   │   │   ├── LAW_OF_CAUSE_EFFECT (ref)
+    │   │   │   │   ├── 48 Laws of Power: MONEY (ref)
+    │   │   │   │   ├── Biblical Laws: MONEY (ref)
+    │   │   │   │   ├── Biblical Laws: INVESTMENT (ref)
+    │   │   │   │   ├── Biblical Laws: STEWARDSHIP (ref)
+    │   │   │   │   └── Biblical Laws: GENEROSITY (ref)
+    │   │   │   ├── PRINCIPLES (branch)
+    │   │   │   │   ├── LEVERAGE (ref)
+    │   │   │   │   ├── MARGIN_OF_SAFETY (ref)
+    │   │   │   │   ├── OPPORTUNITY_COST (ref)
+    │   │   │   │   ├── SYSTEMS_THINKING (ref)
+    │   │   │   │   └── FEEDBACK_LOOPS (ref)
+    │   │   │   ├── FRAMEWORKS (branch)
+    │   │   │   │   ├── PARETO_PRINCIPLE (ref)
+    │   │   │   │   ├── RISK_ASSESSMENT_FRAMEWORK (ref)
+    │   │   │   │   └── DECISION_MATRIX (ref)
+    │   │   │   └── [Domain pathways: INVESTMENT, CASH_FLOW, CAPITAL]
     │   │   └── [Sub-systems: Products, Agents, Teams]
     │   └── ENERGY
+    │       ├── Universal Concept: ENERGY
+    │       │   ├── LAWS / PRINCIPLES / FRAMEWORKS (branches with refs)
+    │       │   └── [Domain pathways]
     │       └── [Sub-systems: States, Levels, Buffs]
     │
     ├── GROWTH_TIER
+    │   ├── EDUCATION
+    │   │   └── Universal Concept: LEARNING (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │   ├── INVESTMENT
+    │   │   └── Universal Concept: INVESTMENT (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │   └── TRAINING
+    │       └── Universal Concept: TRAINING (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │
     ├── LEVERAGE_TIER
     │   └── [Future systems]
     │
     ├── EXPRESSION_TIER
     │   ├── TRAVEL
+    │   │   └── Universal Concept: TRAVEL (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │   └── MEANING
+    │       └── Universal Concept: MEANING (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │
     └── CROSS_SYSTEM_STATES
-        ├── TRUST (system node)
-        ├── REPUTATION (system node)
-        ├── OPTIONALITY (system node)
-        └── ENERGY_RESERVE (system node)
+        ├── TRUST (+ Universal Concept with LAWS / PRINCIPLES / FRAMEWORKS)
+        ├── REPUTATION (+ Universal Concept with LAWS / PRINCIPLES / FRAMEWORKS)
+        ├── OPTIONALITY (+ Universal Concept with LAWS / PRINCIPLES / FRAMEWORKS)
+        └── ENERGY_RESERVE (+ Universal Concept with LAWS / PRINCIPLES / FRAMEWORKS)
 ```
 
 ## Category System
@@ -109,6 +154,26 @@ Laws and principles are organized using a **category field** that replaces the p
 - **CROSS_SYSTEM** - Cross-system state modifiers (Trust, Reputation, Optionality, Energy Reserve) - act as both principles and system modifiers
 - **SYSTEM_TIER** - System tier categories (Survival, Stability, Growth, Leverage, Expression, Cross-System States)
 - **SYSTEM** - Individual systems and sub-systems (Health, Money, Energy, etc.)
+
+## Universal Concept Branches (Per-System)
+
+Every system in the hierarchy has a **Universal Concept** node (e.g. BIOLOGY for Health, MONEY for Finance). Under each universal concept, the first three branches are always:
+
+1. **LAWS** - Fundamental, Power, and Biblical laws that apply to this system
+2. **PRINCIPLES** - Strategic, systemic, and cross-system principles that apply
+3. **FRAMEWORKS** - Practical frameworks for applying laws and principles
+
+These branches contain **reference nodes** that point to global law/principle/framework nodes under `CONSTRAINTS_OF_REALITY`. Each reference node has `metadata.isReference = true` and `metadata.sourceRealityNodeId` linking back to the canonical global node. This avoids data duplication while making each system's tree self-contained and navigable.
+
+After the three branch nodes, system-specific **domain pathways** follow (e.g. INVESTMENT, CASH_FLOW, CAPITAL for finance; ENERGY, NEUROSCIENCE, RESPIRATORY for health).
+
+### Mapping Configuration
+
+The system-to-concept mapping is defined in `apps/backend/src/config/systemUniversalConceptConfig.ts`. It specifies, for each system ID, which fundamental laws, Power Law domains, Bible Law domains, strategic/systemic/cross-system principles, and frameworks apply. The seed script (`seedRealityHierarchy.ts`) reads this mapping to create the branch and reference nodes.
+
+### Artifact Alignment
+
+The backend mapping is aligned with the frontend `ARTIFACT_SYSTEM_MAP` in `apps/frontend/src/config/artifactSystemConfig.ts`. The canonical backend system ID for the finance system is `money`; the frontend uses `finance`. The config exports a `getCanonicalSystemId()` helper for translation.
 
 ## Database Schema
 

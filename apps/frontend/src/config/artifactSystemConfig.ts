@@ -132,13 +132,18 @@ export function getArtifactSystems(artifactId: string): ArtifactSystemId[] {
 /**
  * Filter artifacts to those belonging to the given system.
  * When systemId is null/undefined, returns all artifacts (no filter).
+ * Artifacts with optional systemId (e.g. reality node artifacts) use that for filtering.
  */
-export function filterArtifactsBySystem<T extends { id: string }>(
+export function filterArtifactsBySystem<T extends { id: string; systemId?: ArtifactSystemId }>(
   artifacts: T[],
   systemId: ArtifactSystemId | null | undefined
 ): T[] {
   if (!systemId) return artifacts
   return artifacts.filter((a) => {
+    // Prefer explicit systemId when present (e.g. from reality node metadata)
+    if (a.systemId) {
+      return a.systemId === systemId
+    }
     const systems = getArtifactSystems(a.id)
     return systems.includes(systemId)
   })

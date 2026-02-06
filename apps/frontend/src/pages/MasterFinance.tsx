@@ -49,7 +49,7 @@ export default function MasterFinance() {
         teams={teams}
         agents={agents}
         loading={loading}
-        rootNodeId="constraints-of-reality"
+        rootNodeId="systems-node-stability_tier-money-universal-concept"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (
