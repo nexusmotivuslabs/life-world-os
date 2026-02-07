@@ -464,7 +464,21 @@ const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
       orderIndex: 2,
     },
   ],
-  LEVERAGE_TIER: [],
+  LEVERAGE_TIER: [
+    {
+      id: 'software',
+      name: 'SOFTWARE',
+      description: 'Design, build, and operate software systems. For anyone in tech developing systems—architecture, algorithms, delivery, and quality.',
+      mantra: 'Systems compound; clarity compounds.',
+      route: '/master/software',
+      orderIndex: 1,
+      subSystems: [
+        { name: 'ARCHITECTURE', description: 'System design and structure' },
+        { name: 'DELIVERY', description: 'Build, deploy, and operate' },
+        { name: 'QUALITY', description: 'Testing, reliability, and feedback' },
+      ],
+    },
+  ],
   EXPRESSION_TIER: [
     {
       id: 'travel',
@@ -543,6 +557,7 @@ function getUniversalConceptForSystem(systemId: string): string {
     'education': 'LEARNING',
     'travel': 'TRAVEL',
     'meaning': 'MEANING',
+    'software': 'SOFTWARE_SYSTEMS',
   }
   return conceptMap[systemId] || 'CONCEPT'
 }
@@ -780,8 +795,13 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
 
       // Add children pathways
       if (pathway.children) {
-        for (let j = 0; j < pathway.children.length; j++) {
-          const child = pathway.children[j]
+        const children = pathway.children as Array<{
+          title: string
+          description: string
+          children?: Array<{ title: string; description: string }>
+        }>
+        for (let j = 0; j < children.length; j++) {
+          const child = children[j]
           const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
           await createNode({
             id: childId,
@@ -1083,6 +1103,113 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
     console.log(`        → Seeded Optionality pathways under OPTIONALITY`)
   }
 
+  // Software System Pathways
+  if (systemId === 'software') {
+    const softwarePathways = [
+      {
+        title: 'ARCHITECTURE',
+        description: 'System design, boundaries, and decomposition',
+        children: [
+          { title: 'BOUNDARIES', description: 'Clear ownership and separation of concerns' },
+          { title: 'DECOMPOSITION', description: 'Breaking systems into cohesive components' },
+          { title: 'TRADE_OFFS', description: 'Balancing performance, cost, and complexity' },
+        ],
+      },
+      {
+        title: 'ALGORITHMS_DATA_STRUCTURES',
+        description: 'Core computation and data organization',
+        children: [
+          { title: 'ALGORITHMS', description: 'Procedures for solving problems efficiently' },
+          { title: 'DATA_STRUCTURES', description: 'Organizing data for access and updates' },
+          { title: 'COMPLEXITY', description: 'Time and space trade-offs in solutions' },
+        ],
+      },
+      {
+        title: 'DELIVERY_DEVOPS',
+        description: 'Build, deploy, and operate software systems',
+        children: [
+          { title: 'CI_CD', description: 'Automated build, test, and deployment pipelines' },
+          { title: 'OBSERVABILITY', description: 'Logs, metrics, and traces for system health' },
+          { title: 'DEPLOYMENT', description: 'Release strategies and rollout safety' },
+        ],
+      },
+      {
+        title: 'QUALITY_TESTING',
+        description: 'Testing, reliability, and feedback loops',
+        children: [
+          { title: 'TESTING', description: 'Validation across unit, integration, and end-to-end' },
+          { title: 'RELIABILITY', description: 'Availability, resilience, and error budgets' },
+          { title: 'FEEDBACK_LOOPS', description: 'Learning from incidents and user behavior' },
+        ],
+      },
+      {
+        title: 'LANGUAGES',
+        description: 'Core programming languages for software systems',
+        children: [
+          { title: 'JAVA', description: 'JVM-based backend and enterprise systems' },
+          { title: 'GO', description: 'Efficient systems and cloud-native services' },
+          { title: 'PYTHON', description: 'Automation, scripting, and data systems' },
+          { title: 'JAVASCRIPT_TYPESCRIPT', description: 'Web platforms and cross-stack development' },
+          { title: 'C_SHARP', description: 'Enterprise apps and .NET ecosystem' },
+          { title: 'RUST', description: 'Memory-safe systems and performance-critical code' },
+        ],
+      },
+      {
+        title: 'API_DESIGN',
+        description: 'Designing stable and usable service interfaces',
+        children: [
+          { title: 'REST', description: 'Resource-oriented API design' },
+          { title: 'GRAPHQL', description: 'Flexible query-based API design' },
+          { title: 'VERSIONING', description: 'Managing compatibility and evolution' },
+        ],
+      },
+      {
+        title: 'AGILE_DELIVERY',
+        description: 'Iterative planning, execution, and feedback',
+        children: [
+          { title: 'SCRUM', description: 'Time-boxed delivery with defined roles' },
+          { title: 'KANBAN', description: 'Flow-based delivery with WIP limits' },
+          { title: 'BACKLOGS', description: 'Prioritized work queues and refinement' },
+        ],
+      },
+    ]
+
+    for (let i = 0; i < softwarePathways.length; i++) {
+      const pathway = softwarePathways[i]
+      const pathwayId = `${universalConceptId}-${pathway.title.toLowerCase().replace(/_/g, '-')}`
+      await createNode({
+        id: pathwayId,
+        title: pathway.title,
+        description: pathway.description,
+        parentId: universalConceptId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.DIGITAL,
+        immutable: true,
+        orderIndex: i + 1 + pathwayOrderOffset,
+        metadata: buildPathwayMetadata(pathway.title, 'software'),
+      })
+
+      if (pathway.children) {
+        for (let j = 0; j < pathway.children.length; j++) {
+          const child = pathway.children[j]
+          const childId = `${pathwayId}-${child.title.toLowerCase().replace(/_/g, '-')}`
+          await createNode({
+            id: childId,
+            title: child.title,
+            description: child.description,
+            parentId: pathwayId,
+            nodeType: RealityNodeType.CATEGORY,
+            category: RealityNodeCategory.DIGITAL,
+            immutable: true,
+            orderIndex: j + 1,
+            metadata: buildPathwayMetadata(child.title, 'software'),
+          })
+        }
+      }
+    }
+    console.log(`        → Seeded Software pathways under SOFTWARE_SYSTEMS`)
+  }
+
   // Reputation & Trust System Pathways
   if (systemId === 'reputation' || systemId === 'trust') {
     const reputationPathways = [
@@ -1165,7 +1292,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
   }
 
   // For other systems, create a basic universal concept structure
-  if (!['health', 'money', 'finance', 'education', 'energy'].includes(systemId)) {
+  if (!['health', 'money', 'finance', 'education', 'energy', 'software'].includes(systemId)) {
     // Create at least one pathway node to ensure the system has universal concepts
     await createNode({
       id: `${universalConceptId}-concepts`,

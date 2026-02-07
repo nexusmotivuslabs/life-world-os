@@ -124,7 +124,8 @@ REALITY (immutable root, displayed as "ROOT")
     │       └── Universal Concept: TRAINING (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │
     ├── LEVERAGE_TIER
-    │   └── [Future systems]
+    │   └── SOFTWARE
+    │       └── Universal Concept: SOFTWARE_SYSTEMS (+ LAWS / PRINCIPLES / FRAMEWORKS)
     │
     ├── EXPRESSION_TIER
     │   ├── TRAVEL

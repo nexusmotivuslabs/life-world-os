@@ -17,6 +17,7 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI for embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { getSystemTeamDomains } from '../../../../config/systemTeamAgentConfig.js'
 
 import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
@@ -61,17 +62,41 @@ const consultTeamUseCase = new ConsultTeamUseCase(
  */
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const teams = await teamRepository.findAll()
+    const systemId = typeof req.query.systemId === 'string' ? req.query.systemId : undefined
+    const domains = getSystemTeamDomains(systemId)
+    const teams = domains.length > 0
+      ? await prisma.team.findMany({
+          where: { domain: { in: domains } },
+          orderBy: { order: 'asc' },
+          include: {
+            _count: { select: { teamAgents: true } },
+          },
+        })
+      : systemId
+        ? []
+        : await teamRepository.findAll()
     res.json({
-      teams: teams.map(team => ({
-        id: team.id,
-        name: team.name,
-        domain: team.domain,
-        description: team.description,
-        icon: team.icon,
-        order: team.order,
-        agentCount: team.getAgents().length,
-      })),
+      teams: teams.map(team => (
+        'getAgents' in team
+          ? {
+              id: team.id,
+              name: team.name,
+              domain: team.domain,
+              description: team.description,
+              icon: team.icon,
+              order: team.order,
+              agentCount: team.getAgents().length,
+            }
+          : {
+              id: team.id,
+              name: team.name,
+              domain: team.domain,
+              description: team.description,
+              icon: team.icon,
+              order: team.order,
+              agentCount: team._count.teamAgents,
+            }
+      )),
     })
   } catch (error: any) {
     // RESILIENCE: Return 200 with empty array instead of 500 error

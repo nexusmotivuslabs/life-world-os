@@ -17,6 +17,7 @@ import { OllamaEmbeddingAdapter } from '../../infrastructure/adapters/embeddings
 // import { OpenAIEmbeddingAdapter } from '../../infrastructure/adapters/embeddings/OpenAIEmbeddingAdapter.js' // Alternative: use OpenAI for embeddings
 import { PgVectorDatabaseAdapter } from '../../infrastructure/adapters/vectorDb/PgVectorDatabaseAdapter.js'
 import { prisma } from '../../../../lib/prisma.js'
+import { getSystemAgentTypes } from '../../../../config/systemTeamAgentConfig.js'
 
 import { authenticateToken, AuthRequest } from '../../../../middleware/auth.js'
 
@@ -59,9 +60,14 @@ const chatWithAgentUseCase = new ChatWithAgentUseCase(
  */
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const agentsList = await prisma.agent.findMany({
-      orderBy: { order: 'asc' },
-    })
+    const systemId = typeof req.query.systemId === 'string' ? req.query.systemId : undefined
+    const agentTypes = getSystemAgentTypes(systemId)
+    const agentsList = systemId && agentTypes.length === 0
+      ? []
+      : await prisma.agent.findMany({
+          where: agentTypes.length > 0 ? { type: { in: agentTypes } } : undefined,
+          orderBy: { order: 'asc' },
+        })
     
     res.json({
       agents: agentsList.map(agent => ({

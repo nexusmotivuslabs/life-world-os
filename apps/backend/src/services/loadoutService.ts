@@ -225,11 +225,11 @@ export async function updateLoadout(
     })
   }
 
-  // Update loadout
+  // Update loadout (only include name when provided, to support rename-only updates)
   return prisma.loadout.update({
     where: { id: loadoutId },
     data: {
-      name: data.name,
+      ...(data.name !== undefined && { name: data.name }),
     },
     include: {
       slots: {

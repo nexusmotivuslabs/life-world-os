@@ -1411,6 +1411,295 @@ const agents = [
     },
     guides: [],
   },
+  // ============================================================================
+  // ENERGY SYSTEM AGENTS
+  // ============================================================================
+  {
+    type: AgentType.ENERGY_ANALYST,
+    name: 'The Energy Analyst',
+    description: 'Tracks energy patterns and identifies the biggest drains and gains',
+    expertise: 'Energy analysis, pattern detection, capacity planning, performance profiling',
+    avatar: '⚡',
+    order: 30,
+    metadata: {
+      proTips: [
+        'Track energy in weekly cycles, not daily snapshots',
+        'Protect peak energy hours for highest-leverage work',
+        'Measure drains before adding new optimizations',
+      ],
+      whatToAvoid: [
+        'Over-scheduling peak energy blocks',
+        'Ignoring recovery after high-output sessions',
+      ],
+      bestPractices: [
+        'Use a simple weekly energy audit',
+        'Align deep work with peak energy windows',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.ENERGY_COACH,
+    name: 'The Energy Coach',
+    description: 'Builds sustainable energy routines and focus habits',
+    expertise: 'Energy routines, focus training, habit design, workload pacing',
+    avatar: '🔋',
+    order: 31,
+    metadata: {
+      proTips: [
+        'Consistency beats intensity for energy stability',
+        'Stack recovery habits after effort',
+      ],
+      whatToAvoid: [
+        'Hero mode work cycles without rest',
+        'Late-day cognitive overload',
+      ],
+      bestPractices: [
+        'Use fixed recovery rituals',
+        'Limit high-focus sessions to 90 minutes',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.ENERGY_RECOVERY_COACH,
+    name: 'The Recovery Strategist',
+    description: 'Specialist in energy recovery and burnout prevention',
+    expertise: 'Recovery planning, downtime design, burnout prevention',
+    avatar: '🌙',
+    order: 32,
+    metadata: {
+      proTips: [
+        'Recovery is planned, not accidental',
+        'Short recovery loops beat long crashes',
+      ],
+      whatToAvoid: [
+        'Ignoring early fatigue signals',
+        'Treating recovery as optional',
+      ],
+      bestPractices: [
+        'Schedule recovery before adding commitments',
+        'Protect sleep consistency',
+      ],
+    },
+    guides: [],
+  },
+  // ============================================================================
+  // TRAVEL SYSTEM AGENTS
+  // ============================================================================
+  {
+    type: AgentType.TRAVEL_PLANNER,
+    name: 'The Travel Planner',
+    description: 'Plans travel itineraries optimized for time and budget',
+    expertise: 'Itinerary design, budget planning, travel optimization',
+    avatar: '🧭',
+    order: 33,
+    metadata: {
+      proTips: [
+        'Plan around constraints first: time, money, energy',
+        'Batch locations to reduce transit overhead',
+      ],
+      whatToAvoid: [
+        'Overpacking schedules',
+        'Ignoring recovery days',
+      ],
+      bestPractices: [
+        'Use a must-do, should-do, nice-to-do list',
+        'Leave buffer time for delays',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.TRAVEL_LOGISTICS_COORDINATOR,
+    name: 'The Logistics Coordinator',
+    description: 'Handles bookings, routing, and operational travel details',
+    expertise: 'Routing, bookings, transportation logistics, timing',
+    avatar: '🧳',
+    order: 34,
+    metadata: {
+      proTips: [
+        'Optimize transfers to reduce missed connections',
+        'Keep all confirmations centralized',
+      ],
+      whatToAvoid: [
+        'Tight transfer windows',
+        'Scattered booking records',
+      ],
+      bestPractices: [
+        'Use a single itinerary tracker',
+        'Confirm changes 24 hours before travel',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.TRAVEL_SAFETY_ADVISOR,
+    name: 'The Safety Advisor',
+    description: 'Ensures safety protocols and contingency planning',
+    expertise: 'Safety planning, contingency strategy, risk mitigation',
+    avatar: '🛡️',
+    order: 35,
+    metadata: {
+      proTips: [
+        'Plan contingencies for high-risk segments',
+        'Keep digital and physical backups',
+      ],
+      whatToAvoid: [
+        'Ignoring local advisories',
+        'Single-point-of-failure plans',
+      ],
+      bestPractices: [
+        'Register key contacts and emergency steps',
+        'Keep core documents accessible offline',
+      ],
+    },
+    guides: [],
+  },
+  // ============================================================================
+  // MEANING SYSTEM AGENTS
+  // ============================================================================
+  {
+    type: AgentType.PURPOSE_GUIDE,
+    name: 'The Purpose Guide',
+    description: 'Helps clarify long-term purpose and direction',
+    expertise: 'Purpose discovery, narrative alignment, long-term direction',
+    avatar: '✨',
+    order: 36,
+    metadata: {
+      proTips: [
+        'Purpose is clarified by action, not thought alone',
+        'Track energy and fulfillment signals weekly',
+      ],
+      whatToAvoid: [
+        'Chasing external validation as purpose',
+        'Waiting for certainty before acting',
+      ],
+      bestPractices: [
+        'Document your top values and revisit quarterly',
+        'Choose projects that align with core values',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.VALUES_COACH,
+    name: 'The Values Coach',
+    description: 'Aligns daily decisions with stated values',
+    expertise: 'Values alignment, decision hygiene, integrity building',
+    avatar: '🧩',
+    order: 37,
+    metadata: {
+      proTips: [
+        'Values must show up in calendar and budget',
+        'Small violations compound into misalignment',
+      ],
+      whatToAvoid: [
+        'Declaring values you do not practice',
+        'Ignoring misalignment signals',
+      ],
+      bestPractices: [
+        'Use a weekly alignment check',
+        'Say no to misaligned commitments',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.REFLECTION_FACILITATOR,
+    name: 'The Reflection Facilitator',
+    description: 'Guides structured reflection and meaning integration',
+    expertise: 'Reflection practice, insight synthesis, narrative integration',
+    avatar: '🪞',
+    order: 38,
+    metadata: {
+      proTips: [
+        'Reflection is most powerful after key events',
+        'Capture insights while they are fresh',
+      ],
+      whatToAvoid: [
+        'Using reflection as avoidance',
+        'Leaving insights unacted on',
+      ],
+      bestPractices: [
+        'Use short weekly reflection prompts',
+        'Translate insights into next actions',
+      ],
+    },
+    guides: [],
+  },
+  // ============================================================================
+  // SOFTWARE SYSTEM AGENTS
+  // ============================================================================
+  {
+    type: AgentType.SOFTWARE_ARCHITECT,
+    name: 'The Software Architect',
+    description: 'Designs system boundaries, interfaces, and long-term structure',
+    expertise: 'System architecture, decomposition, interface design, trade-offs',
+    avatar: '🏗️',
+    order: 39,
+    metadata: {
+      proTips: [
+        'Design for change, not just for scale',
+        'Make boundaries explicit and enforce them',
+      ],
+      whatToAvoid: [
+        'Over-engineering early',
+        'Hidden coupling between services',
+      ],
+      bestPractices: [
+        'Document the trade-offs explicitly',
+        'Align architecture with team ownership',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.DEVOPS_ENGINEER,
+    name: 'The DevOps Engineer',
+    description: 'Builds delivery pipelines and operational reliability',
+    expertise: 'CI/CD, deployments, observability, infrastructure automation',
+    avatar: '🚀',
+    order: 40,
+    metadata: {
+      proTips: [
+        'Make releases boring by default',
+        'Instrument before you optimize',
+      ],
+      whatToAvoid: [
+        'Manual deployment steps',
+        'Opaque production behavior',
+      ],
+      bestPractices: [
+        'Automate rollbacks',
+        'Use canaries for risky changes',
+      ],
+    },
+    guides: [],
+  },
+  {
+    type: AgentType.QA_ENGINEER,
+    name: 'The QA Engineer',
+    description: 'Ensures quality through testing strategy and coverage',
+    expertise: 'Testing strategy, quality gates, regression prevention',
+    avatar: '✅',
+    order: 41,
+    metadata: {
+      proTips: [
+        'Test the highest-risk paths first',
+        'Keep tests fast and deterministic',
+      ],
+      whatToAvoid: [
+        'Flaky tests and unowned failures',
+        'Relying only on manual QA',
+      ],
+      bestPractices: [
+        'Balance unit, integration, and end-to-end tests',
+        'Automate regression checks',
+      ],
+    },
+    guides: [],
+  },
 ]
 
 async function main() {

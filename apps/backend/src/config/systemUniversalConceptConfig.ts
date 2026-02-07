@@ -155,6 +155,17 @@ export const SYSTEM_UNIVERSAL_CONCEPT_MAP: Record<string, SystemConceptMapping> 
     frameworks: ['GOAL_HIERARCHY_FRAMEWORK'],
   },
 
+  // ── LEVERAGE TIER ───────────────────────────────────────────────────────
+  software: {
+    fundamentalLaws: ['LAW_OF_COMPOUNDING', 'LAW_OF_ENTROPY', 'LAW_OF_CAUSE_EFFECT'],
+    powerLawDomains: ['CAREER', 'BUSINESS'],
+    bibleLawDomains: [],
+    strategicPrinciples: ['LEVERAGE', 'SYSTEMS_THINKING', 'FIRST_PRINCIPLES'],
+    systemicPrinciples: ['FEEDBACK_LOOPS', 'HIERARCHY', 'ADAPTATION'],
+    crossSystemPrinciples: [],
+    frameworks: ['DOMAIN_APPLICATION_FRAMEWORK', 'GOAL_HIERARCHY_FRAMEWORK'],
+  },
+
   // ── EXPRESSION TIER ─────────────────────────────────────────────────────
   travel: {
     fundamentalLaws: ['LAW_OF_TIME', 'LAW_OF_ENERGY'],
