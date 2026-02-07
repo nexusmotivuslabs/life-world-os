@@ -192,6 +192,7 @@ export function getMasterDomainDisplayName(domain: MasterDomain): string {
     [MasterDomain.FINANCE]: 'Finance',
     [MasterDomain.ENERGY]: 'Energy',
     [MasterDomain.TRAVEL]: 'Travel',
+    [MasterDomain.SOFTWARE]: 'Software',
     [MasterDomain.HEALTH]: 'Health',
     [MasterDomain.MEANING]: 'Meaning',
   }

@@ -183,6 +183,7 @@ export enum MasterDomain {
   FINANCE = 'finance',
   ENERGY = 'energy',
   TRAVEL = 'travel',
+  SOFTWARE = 'software',
   HEALTH = 'health',
   MEANING = 'meaning',
 }

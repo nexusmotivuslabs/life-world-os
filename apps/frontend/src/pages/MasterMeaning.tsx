@@ -15,6 +15,7 @@ import { motion } from 'framer-motion'
 import CloudGauge from '../components/CloudGauge'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
+import { MasterDomain } from '../types'
 
 /**
  * MasterMeaning Page
@@ -38,6 +39,7 @@ export default function MasterMeaning() {
 
   const { teams, agents } = useSystemData({
     cacheKeyPrefix: 'master-meaning',
+    systemId: MasterDomain.MEANING,
     fetchProducts: false,
   })
 

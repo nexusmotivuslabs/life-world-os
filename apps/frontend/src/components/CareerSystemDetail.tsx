@@ -30,6 +30,7 @@ import {
   OPTIONALITY_AGENT_TYPES,
   TRUST_TEAM_DOMAINS,
   TRUST_AGENT_TYPES,
+  REPUTATION_TEAM_DOMAINS,
 } from '../config/systemConfig'
 
 interface CareerSystemDetailProps {
@@ -67,7 +68,7 @@ const systemConfigs: Record<string, SystemConfig> = {
     icon: Award,
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10 border-purple-500/30',
-    teamDomains: TRUST_TEAM_DOMAINS,
+    teamDomains: REPUTATION_TEAM_DOMAINS,
     agentTypes: TRUST_AGENT_TYPES,
   },
   optionality: {
@@ -92,6 +93,7 @@ export default function CareerSystemDetail({ systemId }: CareerSystemDetailProps
 
   const { teams, agents, products, loading } = useSystemData({
     cacheKeyPrefix: `career-system-${systemId}`,
+    systemId,
     agentTypes: [...config.agentTypes],
     teamDomains: [...config.teamDomains],
     fetchProducts: true,

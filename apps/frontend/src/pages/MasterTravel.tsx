@@ -17,6 +17,7 @@ import SavedLocationsView from '../components/travel/SavedLocationsView'
 import LocationDetailView from '../components/travel/LocationDetailView'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
+import { MasterDomain } from '../types'
 
 export default function MasterTravel() {
   const { addToast } = useToastStore()
@@ -37,6 +38,7 @@ export default function MasterTravel() {
 
   const { teams, agents } = useSystemData({
     cacheKeyPrefix: 'master-travel',
+    systemId: MasterDomain.TRAVEL,
     fetchProducts: false,
   })
 

@@ -15,6 +15,7 @@ import SleepLogForm from '../components/SleepLogForm'
 import EnergyStatusCard from '../components/EnergyStatusCard'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
+import { MasterDomain } from '../types'
 
 /**
  * MasterEnergy Page
@@ -34,6 +35,7 @@ export default function MasterEnergy() {
 
   const { teams, agents } = useSystemData({
     cacheKeyPrefix: 'master-energy',
+    systemId: MasterDomain.ENERGY,
     fetchProducts: false,
   })
 

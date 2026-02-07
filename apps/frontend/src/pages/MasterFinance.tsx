@@ -32,6 +32,7 @@ export default function MasterFinance() {
 
   const { teams, agents, products, productsLoading, loading } = useSystemData({
     cacheKeyPrefix: 'master-finance',
+    systemId: MasterDomain.FINANCE,
     agentTypes: [...FINANCE_AGENT_TYPES],
     teamDomains: [...FINANCE_TEAM_DOMAINS],
     fetchProducts: true,

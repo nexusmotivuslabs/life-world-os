@@ -19,6 +19,8 @@ import { logger } from '../lib/logger'
 export interface UseSystemDataOptions {
   /** System-specific cache key prefix */
   cacheKeyPrefix: string
+  /** System ID used for backend filtering (finance, health, software, etc.) */
+  systemId?: string
   /** Agent types to filter by (e.g. INVESTOR, FINANCIAL_ADVISOR for Finance) */
   agentTypes?: string[]
   /** Team domains to filter by (e.g. INVESTMENT, TAX_OPTIMIZATION for Finance) */
@@ -40,6 +42,7 @@ export interface UseSystemDataResult {
 export function useSystemData(options: UseSystemDataOptions): UseSystemDataResult {
   const {
     cacheKeyPrefix,
+    systemId,
     agentTypes,
     teamDomains,
     productFilter,
@@ -50,14 +53,16 @@ export function useSystemData(options: UseSystemDataOptions): UseSystemDataResul
   const [productsLoading, setProductsLoading] = useState(false)
 
   const shouldFetchAgentsTeams =
-    (agentTypes && agentTypes.length > 0) || (teamDomains && teamDomains.length > 0)
+    (agentTypes && agentTypes.length > 0) ||
+    (teamDomains && teamDomains.length > 0) ||
+    !!systemId
 
   const {
     data: agentsData,
     loading: agentsLoading,
   } = useDataFetch(
     async () => {
-      const response = await agentsApi.list()
+      const response = await agentsApi.list(systemId)
       return validateApiResponse(AgentsResponseSchema, response, { agents: [] })
     },
     {
@@ -76,7 +81,7 @@ export function useSystemData(options: UseSystemDataOptions): UseSystemDataResul
     loading: teamsLoading,
   } = useDataFetch(
     async () => {
-      const response = await teamsApi.list()
+      const response = await teamsApi.list(systemId)
       return validateApiResponse(TeamsResponseSchema, response, { teams: [] })
     },
     {

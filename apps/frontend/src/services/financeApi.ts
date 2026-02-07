@@ -192,8 +192,9 @@ async function apiRequest<T>(
 }
 
 export const agentsApi = {
-  async list(): Promise<{ agents: Agent[] }> {
-    return apiRequest<{ agents: Agent[] }>('/api/agents', 'GET')
+  async list(systemId?: string): Promise<{ agents: Agent[] }> {
+    const query = systemId ? `?systemId=${encodeURIComponent(systemId)}` : ''
+    return apiRequest<{ agents: Agent[] }>(`/api/agents${query}`, 'GET')
   },
   async get(agentId: string): Promise<Agent> {
     return apiRequest<Agent>(`/api/agents/${agentId}`, 'GET')
@@ -201,8 +202,9 @@ export const agentsApi = {
 }
 
 export const teamsApi = {
-  async list(): Promise<{ teams: Team[] }> {
-    return apiRequest<{ teams: Team[] }>('/api/teams', 'GET')
+  async list(systemId?: string): Promise<{ teams: Team[] }> {
+    const query = systemId ? `?systemId=${encodeURIComponent(systemId)}` : ''
+    return apiRequest<{ teams: Team[] }>(`/api/teams${query}`, 'GET')
   },
   async get(teamId: string): Promise<Team> {
     return apiRequest<Team>(`/api/teams/${teamId}`, 'GET')

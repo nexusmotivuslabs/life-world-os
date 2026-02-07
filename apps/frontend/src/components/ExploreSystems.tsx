@@ -142,6 +142,24 @@ export const systems: System[] = [
     ],
   },
   {
+    id: 'master-software',
+    name: 'Software',
+    mantra: 'Systems compound; clarity compounds.',
+    description: 'Design, build, and operate software systems for tech practitioners',
+    icon: Network,
+    route: getMasterRoute(MasterDomain.SOFTWARE),
+    color: 'text-indigo-400',
+    bgColor: 'bg-indigo-500/10 border-indigo-500/30',
+    status: 'active',
+    tier: SystemTier.LEVERAGE,
+    tags: [
+      'Architecture Patterns',
+      'Delivery and DevOps',
+      'Quality and Testing',
+      'API Design'
+    ],
+  },
+  {
     id: 'training',
     name: 'Training',
     mantra: 'Skills compound, habits compound.',
@@ -367,6 +385,7 @@ export default function ExploreSystems({ searchQuery: externalSearchQuery }: Exp
             const systemReleaseId = system.id === 'master-finance' ? 'finance' :
                                    system.id === 'energy' ? 'energy' :
                                    system.id === 'health-capacity' ? 'health' :
+                                   system.id === 'master-software' ? 'software' :
                                    system.id === 'investments' ? 'investment' :
                                    system.id === 'training' ? 'training' :
                                    system.id === 'master-meaning' ? 'meaning' : null

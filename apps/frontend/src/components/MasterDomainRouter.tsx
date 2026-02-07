@@ -9,6 +9,7 @@ import MasterFinance from '../pages/MasterFinance'
 import MasterEnergy from '../pages/MasterEnergy'
 import MasterTravel from '../pages/MasterTravel'
 import MasterHealth from '../pages/MasterHealth'
+import MasterSoftware from '../pages/MasterSoftware'
 import { MasterDomain } from '../types'
 import { FeatureErrorBoundary } from './ErrorBoundary'
 
@@ -23,6 +24,8 @@ export default function MasterDomainRouter() {
         return 'Master Energy System'
       case MasterDomain.TRAVEL:
         return 'Master Travel System'
+      case MasterDomain.SOFTWARE:
+        return 'Master Software System'
       case MasterDomain.HEALTH:
         return 'Health / Capacity System'
       case MasterDomain.MEANING:
@@ -49,6 +52,12 @@ export default function MasterDomainRouter() {
       return (
         <FeatureErrorBoundary featureName={getFeatureName()}>
           <MasterTravel />
+        </FeatureErrorBoundary>
+      )
+    case MasterDomain.SOFTWARE:
+      return (
+        <FeatureErrorBoundary featureName={getFeatureName()}>
+          <MasterSoftware />
         </FeatureErrorBoundary>
       )
     case MasterDomain.HEALTH:

@@ -38,8 +38,8 @@ export const releaseStatuses: Record<string, ReleaseInfo> = {
     attributes: {
       status: ReleaseStatus.LIVE,
       version: '2.0.0',
-      notes: 'V2 Release - Phase 2: Refactored Tier 0 and Tier 1 systems. Finance, Energy, and Health systems are live.',
-      lastUpdated: '2025-01-25',
+      notes: 'V2 Release - Phase 2: Refactored Tier 0 and Tier 1 systems. Finance, Energy, Health, and Software systems are live.',
+      lastUpdated: '2026-02-06',
     },
   },
   insight: {
@@ -102,6 +102,16 @@ export const releaseStatuses: Record<string, ReleaseInfo> = {
       version: '2.0.0',
       notes: 'V2 Release - Phase 2: Refactored Tier 1 system. Shares components and engine with Finance system.',
       lastUpdated: '2025-01-25',
+    },
+  },
+  software: {
+    id: 'software',
+    name: 'Software System',
+    attributes: {
+      status: ReleaseStatus.LIVE,
+      version: '2.0.0',
+      notes: 'Leverage tier system for software architecture, delivery, and quality.',
+      lastUpdated: '2026-02-06',
     },
   },
   investment: {

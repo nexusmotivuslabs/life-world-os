@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Target, Plus, Trash2, Check } from 'lucide-react'
+import { Target, Plus, Trash2, Check, Pencil, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { loadoutApi } from '../services/loadoutApi'
 import {
@@ -36,6 +36,8 @@ export default function LoadoutPage() {
   const [viewingItem, setViewingItem] = useState<LoadoutItem | null>(null)
   const [newLoadoutName, setNewLoadoutName] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [renamingLoadoutId, setRenamingLoadoutId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const lastPowerLevelLoadoutIdRef = useRef<string | null>(null)
 
   const loadData = useCallback(async () => {
@@ -109,6 +111,31 @@ export default function LoadoutPage() {
       setSelectedLoadout(updated)
     } catch (error) {
       logger.error('Failed to activate loadout', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  const handleRenameLoadout = async (loadoutId: string, newName: string) => {
+    if (!newName.trim()) return
+
+    const loadout = loadouts.find(l => l.id === loadoutId)
+    if (loadout?.isPreset) {
+      alert('Preset loadouts cannot be renamed. Create a custom loadout instead.')
+      return
+    }
+
+    try {
+      const updated = await loadoutApi.updateLoadout(loadoutId, { name: newName.trim() })
+      setLoadouts(loadouts.map(l => (l.id === updated.id ? updated : l)))
+      if (selectedLoadout?.id === loadoutId) {
+        setSelectedLoadout(updated)
+      }
+      setRenamingLoadoutId(null)
+      setRenameValue('')
+    } catch (error: any) {
+      logger.error('Failed to rename loadout', error instanceof Error ? error : new Error(String(error)))
+      if (error.message?.includes('Preset loadouts cannot be modified')) {
+        alert('Preset loadouts cannot be renamed.')
+      }
     }
   }
 
@@ -452,46 +479,95 @@ export default function LoadoutPage() {
                               ? 'bg-purple-500/20 border-purple-500/50'
                               : 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
                           }`}
-                          onClick={() => setSelectedLoadout(loadout)}
+                          onClick={() => !renamingLoadoutId && setSelectedLoadout(loadout)}
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="font-semibold">{loadout.name}</h3>
-                                {loadout.isActive && (
-                                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
-                                    Active
-                                  </span>
-                                )}
-                              </div>
+                            <div className="flex-1 min-w-0">
+                              {renamingLoadoutId === loadout.id ? (
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="text"
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleRenameLoadout(loadout.id, renameValue)
+                                      if (e.key === 'Escape') {
+                                        setRenamingLoadoutId(null)
+                                        setRenameValue('')
+                                      }
+                                    }}
+                                    className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleRenameLoadout(loadout.id, renameValue)}
+                                    className="p-1.5 bg-purple-600/20 hover:bg-purple-600/30 rounded border border-purple-500/30"
+                                    title="Save"
+                                  >
+                                    <Check className="w-4 h-4 text-purple-400" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setRenamingLoadoutId(null)
+                                      setRenameValue('')
+                                    }}
+                                    className="p-1.5 bg-gray-600/20 hover:bg-gray-600/30 rounded border border-gray-500/30"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-4 h-4 text-gray-400" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold truncate">{loadout.name}</h3>
+                                  {loadout.isActive && (
+                                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
+                                      Active
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                               <p className="text-xs text-gray-400 mt-1">
                                 {loadout.slots.length} / 6 slots filled
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              {!loadout.isActive && (
+                            {renamingLoadoutId !== loadout.id && (
+                              <div className="flex items-center gap-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleActivateLoadout(loadout.id)
+                                    setRenamingLoadoutId(loadout.id)
+                                    setRenameValue(loadout.name)
                                   }}
-                                  className="p-1.5 bg-green-600/20 hover:bg-green-600/30 rounded border border-green-500/30"
-                                  title="Activate"
+                                  className="p-1.5 bg-amber-600/20 hover:bg-amber-600/30 rounded border border-amber-500/30"
+                                  title="Rename"
                                 >
-                                  <Check className="w-4 h-4 text-green-400" />
+                                  <Pencil className="w-4 h-4 text-amber-400" />
                                 </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteLoadout(loadout.id)
-                                }}
-                                className="p-1.5 bg-red-600/20 hover:bg-red-600/30 rounded border border-red-500/30"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                              </button>
-                            </div>
+                                {!loadout.isActive && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleActivateLoadout(loadout.id)
+                                    }}
+                                    className="p-1.5 bg-green-600/20 hover:bg-green-600/30 rounded border border-green-500/30"
+                                    title="Activate"
+                                  >
+                                    <Check className="w-4 h-4 text-green-400" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteLoadout(loadout.id)
+                                  }}
+                                  className="p-1.5 bg-red-600/20 hover:bg-red-600/30 rounded border border-red-500/30"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-400" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       ))}
@@ -522,8 +598,60 @@ export default function LoadoutPage() {
                     Loadouts
                   </p>
                   <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-2xl font-bold text-white">{selectedLoadout.name}</h2>
-                    {selectedLoadout.isPreset && (
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {renamingLoadoutId === selectedLoadout.id ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <input
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenameLoadout(selectedLoadout.id, renameValue)
+                              if (e.key === 'Escape') {
+                                setRenamingLoadoutId(null)
+                                setRenameValue('')
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xl font-bold"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleRenameLoadout(selectedLoadout.id, renameValue)}
+                            className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg"
+                            title="Save"
+                          >
+                            <Check className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setRenamingLoadoutId(null)
+                              setRenameValue('')
+                            }}
+                            className="p-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+                            title="Cancel"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <h2 className="text-2xl font-bold text-white truncate">{selectedLoadout.name}</h2>
+                          {!selectedLoadout.isPreset && (
+                            <button
+                              onClick={() => {
+                                setRenamingLoadoutId(selectedLoadout.id)
+                                setRenameValue(selectedLoadout.name)
+                              }}
+                              className="p-2 bg-amber-600/20 hover:bg-amber-600/30 rounded-lg border border-amber-500/30"
+                              title="Rename loadout"
+                            >
+                              <Pencil className="w-5 h-5 text-amber-400" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {selectedLoadout.isPreset && renamingLoadoutId !== selectedLoadout.id && (
                       <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/30">
                         Preset (Read-only)
                       </span>

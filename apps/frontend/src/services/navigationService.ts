@@ -82,6 +82,14 @@ const navigationHierarchy: NavigationNode[] = [
     tier: SystemTier.EXPRESSION,
   },
   {
+    id: 'software-system',
+    title: 'Software',
+    path: '/master/software',
+    parentId: 'system-tiers',
+    nodeType: 'system',
+    tier: SystemTier.LEVERAGE,
+  },
+  {
     id: 'meaning-system',
     title: 'Meaning',
     path: '/master/meaning',

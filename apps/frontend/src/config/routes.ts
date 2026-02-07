@@ -253,6 +253,14 @@ export const routes: Record<string, RouteConfig> = {
     requiresAuth: true,
     description: 'Find location alternatives and travel recommendations',
   },
+  masterSoftware: {
+    path: getMasterRoute(MasterDomain.SOFTWARE),
+    label: 'Software',
+    parent: '/explore',
+    icon: BarChart3,
+    requiresAuth: true,
+    description: 'Design, build, and operate software systems for tech practitioners',
+  },
   masterHealth: {
     path: getMasterRoute(MasterDomain.HEALTH),
     label: 'Health',
@@ -358,6 +366,7 @@ export const buildBreadcrumbs = (currentPath: string): RouteConfig[] => {
         [MasterDomain.FINANCE]: 'masterFinance',
         [MasterDomain.ENERGY]: 'masterEnergy',
         [MasterDomain.TRAVEL]: 'masterTravel',
+        [MasterDomain.SOFTWARE]: 'masterSoftware',
         [MasterDomain.HEALTH]: 'masterHealth',
         [MasterDomain.MEANING]: 'masterMeaning',
       }

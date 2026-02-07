@@ -42,6 +42,7 @@ export default function MasterHealth() {
 
   const { teams, agents, products, productsLoading, loading } = useSystemData({
     cacheKeyPrefix: 'master-health',
+    systemId: MasterDomain.HEALTH,
     agentTypes: [...HEALTH_AGENT_TYPES],
     teamDomains: [...HEALTH_TEAM_DOMAINS],
     fetchProducts: true,
