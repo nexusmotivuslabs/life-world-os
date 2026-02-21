@@ -17,6 +17,13 @@ import {
   getCrossSystemPrincipleNodeId,
   getFrameworkNodeId,
 } from '../config/systemUniversalConceptConfig'
+import {
+  getFundamentalLawSystemLenses,
+  getStrategicPrincipleSystemLenses,
+  getSystemicPrincipleSystemLenses,
+  getCrossSystemPrincipleSystemLenses,
+  getFrameworkSystemLenses,
+} from '../config/systemLensData'
 import { PATHWAY_KNOWLEDGE } from './pathwayKnowledgeData'
 import { invalidateRealityNodeCaches } from '../lib/cache'
 
@@ -390,7 +397,7 @@ interface SystemData {
 }
 
 const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
-  SURVIVAL_TIER: [
+  CORE_TIER_0: [
     {
       id: 'health',
       name: 'HEALTH',
@@ -404,6 +411,34 @@ const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
         { name: 'RESILIENCE', description: 'Mental and physical resilience' },
       ],
     },
+    {
+      id: 'career',
+      name: 'CAREER',
+      description: 'Income generation, professional development, and strategic optionality. Engines, Trust, Reputation, Optionality.',
+      mantra: 'If career shakes but character is stable, you adapt.',
+      route: '/master/career',
+      orderIndex: 2,
+      subSystems: [
+        { name: 'ENGINES', description: 'Income sources and output' },
+        { name: 'TRUST', description: 'Competence, reliability, alignment' },
+        { name: 'OPTIONALITY', description: 'Strategic freedom and choices' },
+      ],
+    },
+    {
+      id: 'relationships',
+      name: 'RELATIONSHIPS',
+      description: 'Trust, reputation, and relational capital. Governs access to opportunities, partnerships, and resources.',
+      mantra: 'If relationship shakes but character is stable, you respond calmly.',
+      route: '/master/relationships',
+      orderIndex: 3,
+      subSystems: [
+        { name: 'TRUST', description: 'Trust building and alignment' },
+        { name: 'REPUTATION', description: 'Reputation defense and signal' },
+      ],
+    },
+  ],
+  SURVIVAL_TIER: [
+    // Health moved to CORE_TIER_0 as core pillar
   ],
   STABILITY_TIER: [
     {
@@ -536,6 +571,7 @@ const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
 // Helper to get tier order index
 function getTierOrderIndex(tierName: string): number {
   const tierOrder: Record<string, number> = {
+    CORE_TIER_0: 0,
     SURVIVAL_TIER: 1,
     STABILITY_TIER: 2,
     GROWTH_TIER: 3,
@@ -558,6 +594,8 @@ function getUniversalConceptForSystem(systemId: string): string {
     'travel': 'TRAVEL',
     'meaning': 'MEANING',
     'software': 'SOFTWARE_SYSTEMS',
+    'career': 'CAREER',
+    'relationships': 'RELATIONSHIPS',
   }
   return conceptMap[systemId] || 'CONCEPT'
 }
@@ -1210,8 +1248,8 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
     console.log(`        → Seeded Software pathways under SOFTWARE_SYSTEMS`)
   }
 
-  // Reputation & Trust System Pathways
-  if (systemId === 'reputation' || systemId === 'trust') {
+  // Reputation, Trust, Career & Relationships System Pathways
+  if (systemId === 'reputation' || systemId === 'trust' || systemId === 'career' || systemId === 'relationships') {
     const reputationPathways = [
       {
         title: 'TRUST_PILLARS',
@@ -1292,7 +1330,7 @@ async function seedSystemPathways(systemId: string, universalConceptId: string, 
   }
 
   // For other systems, create a basic universal concept structure
-  if (!['health', 'money', 'finance', 'education', 'energy', 'software'].includes(systemId)) {
+  if (!['health', 'money', 'finance', 'education', 'energy', 'software', 'optionality', 'reputation', 'trust', 'career', 'relationships'].includes(systemId)) {
     // Create at least one pathway node to ensure the system has universal concepts
     await createNode({
       id: `${universalConceptId}-concepts`,
@@ -2281,10 +2319,11 @@ export async function seedRealityHierarchy() {
     console.log('  → Created DERIVED_CONDITIONS hierarchy with Scarcity, Trade-offs, Opportunity Cost, Irreversibility, and Degrees of Freedom')
     console.log('  → Created FREEDOM with children: Autonomy, Agency, Choice, and Capability')
 
-    // Seed Fundamental Laws (5 Pareto-selected)
+    // Seed Fundamental Laws (5 Pareto-selected) with system lenses
     console.log('  → Seeding Fundamental Laws...')
     for (let i = 0; i < FUNDAMENTAL_LAWS.length; i++) {
       const law = FUNDAMENTAL_LAWS[i]
+      const systemLenses = getFundamentalLawSystemLenses(law.title)
       await createNode({
         id: `${LAWS_ID}-fundamental-${law.title.toLowerCase().replace(/_/g, '-')}`,
         title: law.title,
@@ -2303,14 +2342,16 @@ export async function seedRealityHierarchy() {
           recursiveBehavior: law.recursiveBehavior || '',
           violationOutcome: law.violationOutcome || '',
           whyThisLawPersists: law.whyThisLawPersists || '',
+          ...(Object.keys(systemLenses).length > 0 && { systemLenses }),
         },
       })
     }
 
-    // Seed Strategic Principles (5 Pareto-selected)
+    // Seed Strategic Principles (5 Pareto-selected) with system lenses
     console.log('  → Seeding Strategic Principles...')
     for (let i = 0; i < STRATEGIC_PRINCIPLES.length; i++) {
       const principle = STRATEGIC_PRINCIPLES[i]
+      const systemLenses = getStrategicPrincipleSystemLenses(principle.title)
       await createNode({
         id: `${PRINCIPLES_ID}-strategic-${principle.title.toLowerCase().replace(/_/g, '-')}`,
         title: principle.title,
@@ -2329,14 +2370,16 @@ export async function seedRealityHierarchy() {
           whyItWorks: principle.whyItWorks || '',
           violationPattern: principle.violationPattern || '',
           predictableResult: principle.predictableResult || '',
+          ...(Object.keys(systemLenses).length > 0 && { systemLenses }),
         },
       })
     }
 
-    // Seed Systemic Principles (5 Pareto-selected)
+    // Seed Systemic Principles (5 Pareto-selected) with system lenses
     console.log('  → Seeding Systemic Principles...')
     for (let i = 0; i < SYSTEMIC_PRINCIPLES.length; i++) {
       const principle = SYSTEMIC_PRINCIPLES[i]
+      const systemLenses = getSystemicPrincipleSystemLenses(principle.title)
       await createNode({
         id: `${PRINCIPLES_ID}-systemic-${principle.title.toLowerCase().replace(/_/g, '-')}`,
         title: principle.title,
@@ -2355,14 +2398,16 @@ export async function seedRealityHierarchy() {
           whyItWorks: principle.whyItWorks || '',
           violationPattern: principle.violationPattern || '',
           predictableResult: principle.predictableResult || '',
+          ...(Object.keys(systemLenses).length > 0 && { systemLenses }),
         },
       })
     }
 
-    // Seed Cross-System State Principles (also act as modifiers)
+    // Seed Cross-System State Principles (also act as modifiers) with system lenses
     console.log('  → Seeding Cross-System State Principles...')
     for (let i = 0; i < CROSS_SYSTEM_PRINCIPLES.length; i++) {
       const principle = CROSS_SYSTEM_PRINCIPLES[i]
+      const systemLenses = getCrossSystemPrincipleSystemLenses(principle.title)
       await createNode({
         id: `${PRINCIPLES_ID}-cross-system-${principle.title.toLowerCase().replace(/_/g, '-')}`,
         title: principle.title,
@@ -2382,14 +2427,16 @@ export async function seedRealityHierarchy() {
           violationPattern: principle.violationPattern || '',
           predictableResult: principle.predictableResult || '',
           ...principle.metadata, // Include cross-system modifier metadata
+          ...(Object.keys(systemLenses).length > 0 && { systemLenses }),
         },
       })
     }
 
-    // Seed Frameworks (5 Pareto-selected)
+    // Seed Frameworks (5 Pareto-selected) with system lenses
     console.log('  → Seeding Frameworks...')
     for (let i = 0; i < FRAMEWORKS.length; i++) {
       const framework = FRAMEWORKS[i]
+      const systemLenses = getFrameworkSystemLenses(framework.title)
       await createNode({
         id: `${FRAMEWORKS_ID}-${framework.title.toLowerCase().replace(/_/g, '-')}`,
         title: framework.title,
@@ -2408,6 +2455,7 @@ export async function seedRealityHierarchy() {
           structure: framework.structure || '',
           whenToUse: framework.whenToUse || '',
           whenNotToUse: framework.whenNotToUse || '',
+          ...(Object.keys(systemLenses).length > 0 && { systemLenses }),
         },
       })
     }
@@ -2703,10 +2751,23 @@ export async function seedRealityHierarchy() {
   }
 }
 
+// Build domain -> systemIds so power law nodes can be tied to systems (for filtering and tags)
+function getPowerLawDomainToSystemIds(): Record<string, string[]> {
+  const domainToSystemIds: Record<string, string[]> = {}
+  for (const [systemId, mapping] of Object.entries(SYSTEM_UNIVERSAL_CONCEPT_MAP)) {
+    for (const domain of mapping.powerLawDomains) {
+      if (!domainToSystemIds[domain]) domainToSystemIds[domain] = []
+      domainToSystemIds[domain].push(systemId)
+    }
+  }
+  return domainToSystemIds
+}
+
 // Export linking functions for use after Power Laws and Bible Laws are seeded
 // These functions create their own PrismaClient instance
 export async function linkPowerLawsToHierarchy(lawsParentId: string = 'laws-node') {
   const linkPrisma = new PrismaClient()
+  const domainToSystemIds = getPowerLawDomainToSystemIds()
   try {
     // Create POWER category under LAWS if it doesn't exist
     const powerCategoryId = `${lawsParentId}-power`
@@ -2784,9 +2845,18 @@ export async function linkPowerLawsToHierarchy(lawsParentId: string = 'laws-node
         },
       })
 
-      // Create RealityNodes for each Power Law
+      // Create RealityNodes for each Power Law (tied to systems via metadata.systemIds)
+      const systemIdsForDomain = domainToSystemIds[domain] ?? []
       for (const law of domainLaws) {
         const lawNodeId = `${domainCategoryId}-law-${law.lawNumber}`
+        const baseMetadata = {
+          lawNumber: law.lawNumber,
+          domain: law.domain,
+          powerLawId: law.id,
+          category: law.category,
+          order: law.order,
+          ...(systemIdsForDomain.length > 0 && { systemIds: systemIdsForDomain }),
+        }
         await linkPrisma.realityNode.upsert({
           where: { id: lawNodeId },
           update: {
@@ -2797,13 +2867,7 @@ export async function linkPowerLawsToHierarchy(lawsParentId: string = 'laws-node
             category: RealityNodeCategory.POWER,
             immutable: false,
             orderIndex: law.lawNumber,
-            metadata: {
-              lawNumber: law.lawNumber,
-              domain: law.domain,
-              powerLawId: law.id,
-              category: law.category,
-              order: law.order,
-            },
+            metadata: baseMetadata,
           },
           create: {
             id: lawNodeId,
@@ -2814,13 +2878,7 @@ export async function linkPowerLawsToHierarchy(lawsParentId: string = 'laws-node
             category: RealityNodeCategory.POWER,
             immutable: false,
             orderIndex: law.lawNumber,
-            metadata: {
-              lawNumber: law.lawNumber,
-              domain: law.domain,
-              powerLawId: law.id,
-              category: law.category,
-              order: law.order,
-            },
+            metadata: baseMetadata,
           },
         })
       }

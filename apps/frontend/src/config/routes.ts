@@ -23,7 +23,8 @@ import {
   Layers,
   Search,
   List,
-  Sword
+  Sword,
+  Users
 } from 'lucide-react'
 import { ComponentType } from 'react'
 
@@ -229,6 +230,14 @@ export const routes: Record<string, RouteConfig> = {
     requiresAuth: true,
     description: 'Technical articles and insights',
   },
+  actions: {
+    path: '/actions',
+    label: 'Actions',
+    parent: '/choose-plane',
+    icon: Target,
+    requiresAuth: true,
+    description: 'Context → Actions: set your context, get up to 3 recommended actions',
+  },
   masterFinance: {
     path: getMasterRoute(MasterDomain.FINANCE),
     label: 'Finance',
@@ -276,6 +285,22 @@ export const routes: Record<string, RouteConfig> = {
     icon: Sparkles,
     requiresAuth: true,
     description: 'Purpose, values alignment, and spiritual/psychological resilience. Includes Awareness Layers as interpretation context.',
+  },
+  masterCareer: {
+    path: getMasterRoute(MasterDomain.CAREER),
+    label: 'Career',
+    parent: '/explore',
+    icon: TrendingUp,
+    requiresAuth: true,
+    description: 'Income generation, professional development, and strategic optionality. Core tier 0 pillar.',
+  },
+  masterRelationships: {
+    path: getMasterRoute(MasterDomain.RELATIONSHIPS),
+    label: 'Relationships',
+    parent: '/explore',
+    icon: Users,
+    requiresAuth: true,
+    description: 'Trust, reputation, and relational capital. Core tier 0 pillar.',
   },
   masterFinanceProduct: {
     path: getMasterProductRoute(MasterDomain.FINANCE, ':productId'),
@@ -369,6 +394,8 @@ export const buildBreadcrumbs = (currentPath: string): RouteConfig[] => {
         [MasterDomain.SOFTWARE]: 'masterSoftware',
         [MasterDomain.HEALTH]: 'masterHealth',
         [MasterDomain.MEANING]: 'masterMeaning',
+        [MasterDomain.CAREER]: 'masterCareer',
+        [MasterDomain.RELATIONSHIPS]: 'masterRelationships',
       }
       
       const routeKey = domainMap[domain]

@@ -16,7 +16,8 @@ import {
   TrendingUp,
   Zap,
   Sparkles,
-  Network
+  Network,
+  Home
 } from 'lucide-react'
 import { SystemTier, TIER_METADATA } from '../types'
 
@@ -74,6 +75,8 @@ export default function GenericTierView({
 
   const getTierIcon = (tier: SystemTier) => {
     switch (tier) {
+      case SystemTier.CORE_TIER_0:
+        return Home
       case SystemTier.SURVIVAL:
         return AlertTriangle
       case SystemTier.STABILITY:
@@ -105,20 +108,23 @@ export default function GenericTierView({
 
   const getRequiredTiers = (tier: SystemTier): SystemTier[] => {
     switch (tier) {
+      case SystemTier.SURVIVAL:
+        return [SystemTier.CORE_TIER_0]
       case SystemTier.STABILITY:
-        return [SystemTier.SURVIVAL]
+        return [SystemTier.CORE_TIER_0, SystemTier.SURVIVAL]
       case SystemTier.GROWTH:
-        return [SystemTier.SURVIVAL, SystemTier.STABILITY]
+        return [SystemTier.CORE_TIER_0, SystemTier.SURVIVAL, SystemTier.STABILITY]
       case SystemTier.LEVERAGE:
-        return [SystemTier.SURVIVAL, SystemTier.STABILITY, SystemTier.GROWTH]
+        return [SystemTier.CORE_TIER_0, SystemTier.SURVIVAL, SystemTier.STABILITY, SystemTier.GROWTH]
       case SystemTier.EXPRESSION:
-        return [SystemTier.SURVIVAL, SystemTier.STABILITY, SystemTier.GROWTH]
+        return [SystemTier.CORE_TIER_0, SystemTier.SURVIVAL, SystemTier.STABILITY, SystemTier.GROWTH]
       default:
         return []
     }
   }
 
   const tierOrder: SystemTier[] = [
+    SystemTier.CORE_TIER_0,
     SystemTier.SURVIVAL,
     SystemTier.STABILITY,
     SystemTier.GROWTH,

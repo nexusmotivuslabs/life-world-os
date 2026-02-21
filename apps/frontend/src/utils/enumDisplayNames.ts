@@ -195,6 +195,8 @@ export function getMasterDomainDisplayName(domain: MasterDomain): string {
     [MasterDomain.SOFTWARE]: 'Software',
     [MasterDomain.HEALTH]: 'Health',
     [MasterDomain.MEANING]: 'Meaning',
+    [MasterDomain.CAREER]: 'Career',
+    [MasterDomain.RELATIONSHIPS]: 'Relationships',
   }
   return displayNames[domain] || domain
 }
@@ -204,6 +206,7 @@ export function getMasterDomainDisplayName(domain: MasterDomain): string {
  */
 export function getSystemTierDisplayName(tier: SystemTier): string {
   const displayNames: Record<SystemTier, string> = {
+    [SystemTier.CORE_TIER_0]: 'Core Systems',
     [SystemTier.SURVIVAL]: 'Survival',
     [SystemTier.STABILITY]: 'Stability',
     [SystemTier.GROWTH]: 'Growth',
@@ -220,10 +223,24 @@ export function getSystemTierDisplayName(tier: SystemTier): string {
  * - LAW_OF_COMPOUNDING -> "Law of Compounding"
  * - STAFF_SERGEANT -> "Staff Sergeant"
  * - WORK_PROJECT -> "Work Project"
+ * - "LAW OF TIME" (spaces) -> "Law Of Time"
  */
 export function enumToDisplayName(enumValue: string): string {
   return enumValue
-    .split('_')
+    .split(/[\s_]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+/**
+ * Title case for display: capitalize first letter of each word.
+ * Use for node labels so "LAW OF TIME" shows as "Law Of Time".
+ */
+export function toTitleCase(str: string): string {
+  if (!str || !str.trim()) return str
+  return str
+    .trim()
+    .split(/[\s_]+/)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ')
 }

@@ -22,7 +22,9 @@ import {
   Shield,
   Award,
   Network,
-  Battery
+  Battery,
+  Briefcase,
+  Users
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getMasterRoute } from '../config/routes'
@@ -114,13 +116,51 @@ export const systems: System[] = [
     bgColor: 'bg-pink-500/10 border-pink-500/30',
     status: 'active',
     plane: 'systems',
-    tier: SystemTier.SURVIVAL,
+    tier: SystemTier.CORE_TIER_0,
     tags: [
       'Capacity State Management',
       'Recovery Actions',
       'Effort-Based Decay',
       'Burnout Prevention',
       'Weekly Recovery System'
+    ],
+  },
+  {
+    id: 'career',
+    name: 'Career',
+    mantra: 'If career shakes but character is stable, you adapt.',
+    description: 'Income generation, professional development, and strategic optionality. Engines, Trust, Reputation, Optionality.',
+    icon: Briefcase,
+    route: getMasterRoute(MasterDomain.CAREER),
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10 border-amber-500/30',
+    status: 'active',
+    plane: 'systems',
+    tier: SystemTier.CORE_TIER_0,
+    tags: [
+      'Engines & Income',
+      'Trust & Reputation',
+      'Optionality',
+      'Career Systems'
+    ],
+  },
+  {
+    id: 'relationships',
+    name: 'Relationships',
+    mantra: 'If relationship shakes but character is stable, you respond calmly.',
+    description: 'Trust, reputation, and relational capital. Governs access to opportunities, partnerships, and resources.',
+    icon: Users,
+    route: getMasterRoute(MasterDomain.RELATIONSHIPS),
+    color: 'text-teal-400',
+    bgColor: 'bg-teal-500/10 border-teal-500/30',
+    status: 'active',
+    plane: 'systems',
+    tier: SystemTier.CORE_TIER_0,
+    tags: [
+      'Trust',
+      'Reputation',
+      'Relational Capital',
+      'Partnerships'
     ],
   },
   {

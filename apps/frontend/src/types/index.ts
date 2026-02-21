@@ -186,9 +186,12 @@ export enum MasterDomain {
   SOFTWARE = 'software',
   HEALTH = 'health',
   MEANING = 'meaning',
+  CAREER = 'career',
+  RELATIONSHIPS = 'relationships',
 }
 
 export enum SystemTier {
+  CORE_TIER_0 = 'CORE_TIER_0',
   SURVIVAL = 'SURVIVAL',
   STABILITY = 'STABILITY',
   GROWTH = 'GROWTH',
@@ -209,6 +212,22 @@ export interface TierMetadata {
 }
 
 export const TIER_METADATA: Record<SystemTier, TierMetadata> = {
+  [SystemTier.CORE_TIER_0]: {
+    tier: SystemTier.CORE_TIER_0,
+    name: 'Core Systems',
+    question: 'Is my foundation solid?',
+    description: 'Structural pillars: Health, Career, Relationships. Character is the foundation. These systems support everything above them.',
+    characteristics: [
+      'Character is foundation',
+      'Not status, not title, not being chosen',
+      'Health: if it collapses, performance drops',
+      'Career: if it shakes but character is stable, you adapt',
+      'Relationships: if they shake but character is stable, you respond calmly',
+    ],
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/30',
+  },
   [SystemTier.SURVIVAL]: {
     tier: SystemTier.SURVIVAL,
     name: 'Survival',

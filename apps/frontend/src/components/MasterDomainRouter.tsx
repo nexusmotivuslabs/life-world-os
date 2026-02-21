@@ -10,6 +10,8 @@ import MasterEnergy from '../pages/MasterEnergy'
 import MasterTravel from '../pages/MasterTravel'
 import MasterHealth from '../pages/MasterHealth'
 import MasterSoftware from '../pages/MasterSoftware'
+import MasterCareer from '../pages/MasterCareer'
+import MasterRelationships from '../pages/MasterRelationships'
 import { MasterDomain } from '../types'
 import { FeatureErrorBoundary } from './ErrorBoundary'
 
@@ -30,6 +32,10 @@ export default function MasterDomainRouter() {
         return 'Health / Capacity System'
       case MasterDomain.MEANING:
         return 'Meaning System'
+      case MasterDomain.CAREER:
+        return 'Career System'
+      case MasterDomain.RELATIONSHIPS:
+        return 'Relationships System'
       default:
         return 'Master System'
     }
@@ -69,6 +75,18 @@ export default function MasterDomainRouter() {
     case MasterDomain.MEANING:
       // Meaning System is in Knowledge Plane, not Systems Plane
       return <Navigate to="/knowledge/meaning" replace />
+    case MasterDomain.CAREER:
+      return (
+        <FeatureErrorBoundary featureName={getFeatureName()}>
+          <MasterCareer />
+        </FeatureErrorBoundary>
+      )
+    case MasterDomain.RELATIONSHIPS:
+      return (
+        <FeatureErrorBoundary featureName={getFeatureName()}>
+          <MasterRelationships />
+        </FeatureErrorBoundary>
+      )
     default:
       return (
         <div className="min-h-screen bg-gray-900 text-white p-8 flex items-center justify-center">
