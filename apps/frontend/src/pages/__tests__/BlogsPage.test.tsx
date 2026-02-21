@@ -1,7 +1,8 @@
 /**
  * BlogsPage Unit Tests
  *
- * Verifies blog page renders correctly: loading, empty state, post list.
+ * Verifies blog page renders correctly: loading, empty state, post list,
+ * category filtering, and search.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
@@ -11,11 +12,10 @@ import { MemoryRouter } from 'react-router-dom'
 import BlogsPage from '../BlogsPage'
 
 const getAllBlogPosts = vi.fn()
-const getBlogCategories = vi.fn()
 
 vi.mock('../../services/blogApi', () => ({
   getAllBlogPosts: (...args: unknown[]) => getAllBlogPosts(...args),
-  getBlogCategories: (...args: unknown[]) => getBlogCategories(...args),
+  getBlogCategories: vi.fn().mockResolvedValue([]),
 }))
 
 const mockPosts = [
@@ -39,11 +39,6 @@ const mockPosts = [
   },
 ]
 
-const mockCategories = [
-  { name: 'Systems', path: '/blog/systems', posts: [] },
-  { name: 'Tech', path: '/blog/tech', posts: [] },
-]
-
 function renderBlogsPage() {
   return render(
     <MemoryRouter>
@@ -56,7 +51,6 @@ describe('BlogsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getAllBlogPosts).mockResolvedValue(mockPosts)
-    vi.mocked(getBlogCategories).mockResolvedValue(mockCategories)
     localStorage.setItem('token', 'test-token')
   })
 
@@ -64,24 +58,23 @@ describe('BlogsPage', () => {
     localStorage.removeItem('token')
   })
 
-  it('shows loading state initially', () => {
+  it('shows loading skeleton initially', () => {
     vi.mocked(getAllBlogPosts).mockImplementation(() => new Promise(() => {}))
-    vi.mocked(getBlogCategories).mockImplementation(() => new Promise(() => {}))
 
     renderBlogsPage()
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    // Loading skeleton renders divs, not text — just check posts aren't visible yet
+    expect(screen.queryByText('GitOps vs Git Flow')).not.toBeInTheDocument()
   })
 
-  it('renders blog header with Latest and Back link', async () => {
+  it('renders blog header and Back link', async () => {
     renderBlogsPage()
 
     await waitFor(() => {
       expect(getAllBlogPosts).toHaveBeenCalled()
     })
 
-    expect(screen.getByText('Latest')).toBeInTheDocument()
-    expect(screen.getByText(/Life World OS Blog/)).toBeInTheDocument()
+    expect(screen.getByText(/Life World OS Blog/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /back/i })).toBeInTheDocument()
   })
 
@@ -94,21 +87,6 @@ describe('BlogsPage', () => {
 
     expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
     expect(screen.getByText('React Performance')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Systems \(1\)/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Tech \(1\)/ })).toBeInTheDocument()
-  })
-
-  it('shows "No blog posts yet" when posts are empty', async () => {
-    vi.mocked(getAllBlogPosts).mockResolvedValue([])
-    vi.mocked(getBlogCategories).mockResolvedValue([])
-
-    renderBlogsPage()
-
-    await waitFor(() => {
-      expect(getAllBlogPosts).toHaveBeenCalled()
-    })
-
-    expect(screen.getByText(/no blog posts yet/i)).toBeInTheDocument()
   })
 
   it('renders category filter buttons', async () => {
@@ -118,9 +96,22 @@ describe('BlogsPage', () => {
       expect(getAllBlogPosts).toHaveBeenCalled()
     })
 
-    expect(screen.getByRole('button', { name: /all \(2\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /systems \(1\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /tech \(1\)/i })).toBeInTheDocument()
+    // Category dot buttons render the category name (case-insensitive)
+    expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /systems/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
+  })
+
+  it('shows "No blog posts yet" when posts are empty', async () => {
+    vi.mocked(getAllBlogPosts).mockResolvedValue([])
+
+    renderBlogsPage()
+
+    await waitFor(() => {
+      expect(getAllBlogPosts).toHaveBeenCalled()
+    })
+
+    expect(screen.getByText(/no blog posts yet/i)).toBeInTheDocument()
   })
 
   it('filters posts by category when category button is clicked', async () => {
@@ -134,8 +125,25 @@ describe('BlogsPage', () => {
     expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
     expect(screen.getByText('React Performance')).toBeInTheDocument()
 
-    const systemsButton = screen.getByRole('button', { name: /Systems \(1\)/ })
+    const systemsButton = screen.getByRole('button', { name: /systems/i })
     await user.click(systemsButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
+      expect(screen.queryByText('React Performance')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters posts by search query', async () => {
+    const user = userEvent.setup()
+    renderBlogsPage()
+
+    await waitFor(() => {
+      expect(getAllBlogPosts).toHaveBeenCalled()
+    })
+
+    const searchInput = screen.getByRole('textbox', { name: /search/i })
+    await user.type(searchInput, 'GitOps')
 
     await waitFor(() => {
       expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
@@ -148,7 +156,7 @@ describe('BlogsPage', () => {
     renderBlogsPage()
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
+      expect(screen.queryByText('GitOps vs Git Flow')).not.toBeInTheDocument()
     }, { timeout: 500 })
 
     expect(getAllBlogPosts).not.toHaveBeenCalled()

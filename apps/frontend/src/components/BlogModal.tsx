@@ -1,31 +1,93 @@
 /**
  * Blog Modal Component
  *
- * Engadget-style article view: bold headline, byline, clean body typography.
- * Reference: https://www.engadget.com/tag/uk/
+ * Dark-themed, content-first article reader. Includes:
+ *  - Category-colored reading progress bar
+ *  - Auto-generated collapsible Table of Contents (3+ headings)
+ *  - Prev / Next navigation via plain text links
+ *  - Tags as quiet comma-separated metadata
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
-import { getBlogPost, BlogPost } from '../services/blogApi'
+import { X, ChevronRight, ChevronDown } from 'lucide-react'
+import { getBlogPost, type BlogPost } from '../services/blogApi'
 import ReactMarkdown from 'react-markdown'
+
+const CATEGORY_COLORS: Record<string, string> = {
+  capacity: '#10b981',
+  engines: '#3b82f6',
+  oxygen: '#06b6d4',
+  meaning: '#8b5cf6',
+  optionality: '#f59e0b',
+}
+
+function getCategoryColor(category: string): string {
+  return CATEGORY_COLORS[category?.toLowerCase()] ?? '#6b7280'
+}
+
+interface TocEntry {
+  level: 2 | 3
+  text: string
+  id: string
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+}
+
+function extractToc(markdown: string): TocEntry[] {
+  const lines = markdown.split('\n')
+  const entries: TocEntry[] = []
+  for (const line of lines) {
+    const h2 = line.match(/^##\s+(.+)/)
+    const h3 = line.match(/^###\s+(.+)/)
+    if (h3) {
+      const text = h3[1].trim()
+      entries.push({ level: 3, text, id: slugify(text) })
+    } else if (h2) {
+      const text = h2[1].trim()
+      entries.push({ level: 2, text, id: slugify(text) })
+    }
+  }
+  return entries
+}
 
 interface BlogModalProps {
   slug: string | null
   isOpen: boolean
   onClose: () => void
+  posts?: Omit<BlogPost, 'content'>[]
+  currentIndex?: number
+  onNavigate?: (index: number) => void
 }
 
-export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
+export default function BlogModal({
+  slug,
+  isOpen,
+  onClose,
+  posts = [],
+  currentIndex = 0,
+  onNavigate,
+}: BlogModalProps) {
   const [post, setPost] = useState<BlogPost | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [tocOpen, setTocOpen] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Load post when slug changes
   useEffect(() => {
     if (isOpen && slug) {
       setLoading(true)
       setError(null)
+      setProgress(0)
+      setTocOpen(false)
       getBlogPost(slug)
         .then((postData) => {
           if (postData) setPost(postData)
@@ -45,13 +107,39 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
     }
   }, [isOpen, slug])
 
+  // Reset scroll position when post changes
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose()
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0
+      setProgress(0)
     }
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
+  }, [slug])
+
+  // Keyboard: Escape to close, arrow keys to navigate
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!isOpen) return
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowRight') onNavigate(currentIndex + 1)
+      if (e.key === 'ArrowLeft') onNavigate(currentIndex - 1)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [isOpen, onClose, onNavigate, currentIndex])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const scrollable = el.scrollHeight - el.clientHeight
+    setProgress(scrollable > 0 ? (el.scrollTop / scrollable) * 100 : 0)
+  }, [])
+
+  const toc = post ? extractToc(post.content) : []
+  const showToc = toc.length >= 3
+  const accentColor = post ? getCategoryColor(post.category) : '#6b7280'
+
+  const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
+  const nextPost = currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
 
   if (!isOpen) return null
 
@@ -59,204 +147,334 @@ export default function BlogModal({ slug, isOpen, onClose }: BlogModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/70 z-50"
             aria-hidden="true"
           />
 
-          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto pointer-events-none sm:p-6">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-hidden sm:p-6">
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 24 }}
+              exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-3xl min-h-[60vh] pointer-events-auto my-8 rounded-none shadow-2xl border-2 border-neutral-300"
-              style={{ backgroundColor: '#ffffff' }}
+              className="w-full max-w-3xl flex flex-col my-8 rounded-lg shadow-2xl border border-gray-700 bg-gray-900 overflow-hidden"
+              style={{ maxHeight: 'calc(100vh - 4rem)' }}
               role="dialog"
               aria-modal="true"
               aria-labelledby="blog-modal-title"
-              tabIndex={-1}
             >
-              {/* Header - Engadget style */}
-              <div className="sticky top-0 border-b border-neutral-200 px-6 py-4 z-10 flex items-start justify-between gap-4" style={{ backgroundColor: '#ffffff' }}>
+              {/* Reading progress bar */}
+              <div className="h-0.5 w-full bg-gray-800 shrink-0">
+                <motion.div
+                  className="h-full"
+                  style={{ backgroundColor: accentColor, width: `${progress}%` }}
+                  transition={{ duration: 0.05 }}
+                />
+              </div>
+
+              {/* Sticky header */}
+              <div className="shrink-0 border-b border-gray-800 px-6 py-4 flex items-start justify-between gap-4 bg-gray-900">
                 <div className="flex-1 min-w-0">
                   {loading && (
-                    <div className="animate-pulse">
-                      <div className="h-8 bg-neutral-200 rounded w-4/5 mb-3" />
-                      <div className="h-4 bg-neutral-100 rounded w-1/3" />
+                    <div className="animate-pulse space-y-2">
+                      <div className="h-7 bg-gray-800 rounded w-4/5" />
+                      <div className="h-3 bg-gray-800 rounded w-1/3" />
                     </div>
                   )}
                   {error && (
                     <div>
-                      <h2 id="blog-modal-title" className="text-xl font-bold text-neutral-900 mb-2">
+                      <h2 id="blog-modal-title" className="text-xl font-bold text-white mb-1">
                         Error loading post
                       </h2>
-                      <p className="text-red-600 text-sm">{error}</p>
+                      <p className="text-red-400 text-sm">{error}</p>
                     </div>
                   )}
                   {post && !loading && (
                     <>
-                      <p className="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
-                        Article · {post.category}
-                        {post.subcategory ? ` · ${post.subcategory}` : ''}
+                      {/* Category breadcrumb */}
+                      <p className="text-xs mb-2 flex items-center gap-1.5">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: accentColor }}
+                        />
+                        <span className="font-medium capitalize" style={{ color: accentColor }}>
+                          {post.category}
+                        </span>
+                        {post.subcategory && (
+                          <>
+                            <span className="text-gray-700">·</span>
+                            <span className="text-gray-500">{post.subcategory}</span>
+                          </>
+                        )}
                       </p>
                       <h2
                         id="blog-modal-title"
-                        className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight"
+                        className="text-xl sm:text-2xl font-bold text-white leading-snug"
                       >
                         {post.title}
                       </h2>
-                      <p className="text-sm text-neutral-500 mt-2">
+                      {/* Byline: date only — tags moved to end of article */}
+                      <p className="text-xs text-gray-400 mt-2">
                         {post.date &&
                           new Date(post.date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                           })}
-                        {post.tags && post.tags.length > 0 && (
-                          <span className="ml-2">
-                            · {post.tags.slice(0, 3).join(', ')}
-                          </span>
-                        )}
                       </p>
                     </>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded transition-colors shrink-0"
+                  className="p-2 text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors shrink-0"
                   aria-label="Close"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Content - Engadget-style article body */}
-              <div className="px-6 py-6 sm:py-8">
-                {loading && (
-                  <div className="space-y-4 animate-pulse">
-                    <div className="h-4 bg-neutral-100 rounded w-full" />
-                    <div className="h-4 bg-neutral-100 rounded w-4/5" />
-                    <div className="h-4 bg-neutral-100 rounded w-5/6" />
-                    <div className="h-32 bg-neutral-100 rounded w-full mt-6" />
-                  </div>
-                )}
-                {error && !loading && (
-                  <div className="text-center py-12">
-                    <p className="text-red-600 mb-4">{error}</p>
-                    <button
-                      onClick={onClose}
-                      className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
-                )}
-                {post && !loading && (
-                  <article className="prose prose-neutral max-w-none">
-                    <div className="mb-6 pb-4 border-b border-neutral-200 text-sm text-neutral-500">
-                      {Math.ceil(post.content.split(/\s+/).length / 200)} min read
-                      {' · '}
-                      {post.content.split(/\s+/).length.toLocaleString()} words
+              {/* Scrollable content */}
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto"
+              >
+                <div className="px-6 py-6 sm:py-8">
+                  {loading && (
+                    <div className="space-y-4 animate-pulse">
+                      <div className="h-4 bg-gray-800 rounded w-full" />
+                      <div className="h-4 bg-gray-800 rounded w-4/5" />
+                      <div className="h-4 bg-gray-800 rounded w-5/6" />
+                      <div className="h-32 bg-gray-800 rounded w-full mt-6" />
                     </div>
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ children }) => (
-                          <h1 className="text-2xl font-bold text-neutral-900 mt-8 mb-4 first:mt-0">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="text-xl font-bold text-neutral-900 mt-6 mb-3">
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="text-lg font-bold text-neutral-900 mt-4 mb-2">
-                            {children}
-                          </h3>
-                        ),
-                        p: ({ children }) => (
-                          <p className="text-neutral-700 mb-4 leading-relaxed text-[17px]">
-                            {children}
-                          </p>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc list-outside pl-6 text-neutral-700 mb-4 space-y-2 text-[17px]">
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal list-outside pl-6 text-neutral-700 mb-4 space-y-2 text-[17px]">
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-                        code: ({ children, className }) => {
-                          const isInline = !className
-                          return isInline ? (
-                            <code className="bg-neutral-100 text-neutral-800 px-1.5 py-0.5 rounded text-sm font-mono">
-                              {children}
-                            </code>
-                          ) : (
-                            <code className={className}>{children}</code>
-                          )
-                        },
-                        pre: ({ children }) => (
-                          <pre className="bg-neutral-100 border border-neutral-200 rounded p-4 overflow-x-auto mb-4 text-sm">
-                            {children}
-                          </pre>
-                        ),
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-4 border-neutral-400 pl-4 italic text-neutral-600 my-4">
-                            {children}
-                          </blockquote>
-                        ),
-                        a: ({ href, children }) => (
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 underline"
+                  )}
+
+                  {error && !loading && (
+                    <div className="text-center py-12">
+                      <p className="text-red-400 mb-4">{error}</p>
+                      <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-gray-800 text-gray-300 text-sm font-medium hover:bg-gray-700 rounded transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  )}
+
+                  {post && !loading && (
+                    <article>
+                      {/* Reading meta */}
+                      <div className="mb-5 pb-4 border-b border-gray-800 flex items-center gap-3 text-xs text-gray-600">
+                        <span>{Math.ceil(post.content.split(/\s+/).length / 200)} min read</span>
+                        <span>·</span>
+                        <span>{post.content.split(/\s+/).length.toLocaleString()} words</span>
+                      </div>
+
+                      {/* Collapsible Table of Contents */}
+                      {showToc && (
+                        <div className="mb-6 border border-gray-800 rounded-md overflow-hidden">
+                          <button
+                            onClick={() => setTocOpen((v) => !v)}
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition-colors"
                           >
-                            {children}
-                          </a>
-                        ),
-                        table: ({ children }) => (
-                          <div className="overflow-x-auto my-4 border border-neutral-200">
-                            <table className="min-w-full">{children}</table>
+                            <span className="font-medium uppercase tracking-wider">Contents</span>
+                            {tocOpen ? (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {tocOpen && (
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: 'auto' }}
+                                exit={{ height: 0 }}
+                                transition={{ duration: 0.18 }}
+                                className="overflow-hidden"
+                              >
+                                <ul className="px-4 pb-3 pt-1 space-y-1.5 border-t border-gray-800">
+                                  {toc.map((entry) => (
+                                    <li
+                                      key={entry.id}
+                                      className={entry.level === 3 ? 'pl-3' : ''}
+                                    >
+                                      <a
+                                        href={`#${entry.id}`}
+                                        onClick={() => {
+                                          const el = scrollRef.current?.querySelector(`#${entry.id}`)
+                                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                        }}
+                                        className="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+                                      >
+                                        {entry.text}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      {/* Article body */}
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ children }) => (
+                            <h1
+                              id={slugify(String(children))}
+                              className="text-2xl font-bold text-white mt-8 mb-4 first:mt-0"
+                            >
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2
+                              id={slugify(String(children))}
+                              className="text-xl font-bold text-white mt-7 mb-3"
+                            >
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3
+                              id={slugify(String(children))}
+                              className="text-base font-semibold text-gray-100 mt-5 mb-2"
+                            >
+                              {children}
+                            </h3>
+                          ),
+                          p: ({ children }) => (
+                            <p className="text-gray-300 mb-4 leading-relaxed text-[16px]">
+                              {children}
+                            </p>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc list-outside pl-6 text-gray-300 mb-4 space-y-1.5 text-[16px]">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal list-outside pl-6 text-gray-300 mb-4 space-y-1.5 text-[16px]">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="leading-relaxed">{children}</li>
+                          ),
+                          code: ({ children, className }) => {
+                            const isInline = !className
+                            return isInline ? (
+                              <code className="bg-gray-800 text-gray-200 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-700">
+                                {children}
+                              </code>
+                            ) : (
+                              <code className={className}>{children}</code>
+                            )
+                          },
+                          pre: ({ children }) => (
+                            <pre className="bg-gray-800 border border-gray-700 rounded-md p-4 overflow-x-auto mb-4 text-sm text-gray-300">
+                              {children}
+                            </pre>
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-2 border-gray-600 pl-4 italic text-gray-400 my-4">
+                              {children}
+                            </blockquote>
+                          ),
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                            >
+                              {children}
+                            </a>
+                          ),
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto my-4 border border-gray-700 rounded-md">
+                              <table className="min-w-full">{children}</table>
+                            </div>
+                          ),
+                          th: ({ children }) => (
+                            <th className="border-b border-gray-700 bg-gray-800 px-4 py-2 text-left text-gray-200 font-semibold text-sm">
+                              {children}
+                            </th>
+                          ),
+                          td: ({ children }) => (
+                            <td className="border-b border-gray-800 px-4 py-2 text-gray-400 text-sm">
+                              {children}
+                            </td>
+                          ),
+                          hr: () => <hr className="border-gray-800 my-6" />,
+                        }}
+                      >
+                        {post.content}
+                      </ReactMarkdown>
+
+                      {/* Tags — end of article, useful for discovery */}
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="mt-8 pt-5 border-t border-gray-800">
+                          <p className="text-xs text-gray-600 uppercase tracking-wider mb-2.5">
+                            Filed under
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {post.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-xs text-gray-400 bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-full"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
                           </div>
-                        ),
-                        th: ({ children }) => (
-                          <th className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-left text-neutral-900 font-semibold">
-                            {children}
-                          </th>
-                        ),
-                        td: ({ children }) => (
-                          <td className="border-b border-neutral-100 px-4 py-2 text-neutral-700">
-                            {children}
-                          </td>
-                        ),
-                      }}
-                    >
-                      {post.content}
-                    </ReactMarkdown>
-                  </article>
+                        </div>
+                      )}
+                    </article>
+                  )}
+                </div>
+
+                {/* Prev / Next navigation */}
+                {post && !loading && (prevPost || nextPost) && (
+                  <div className="px-6 pb-8 pt-2 border-t border-gray-800 flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      {prevPost && (
+                        <button
+                          onClick={() => onNavigate(currentIndex - 1)}
+                          className="group text-left"
+                        >
+                          <p className="text-xs text-gray-600 mb-0.5">← Previous</p>
+                          <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors leading-snug line-clamp-2">
+                            {prevPost.title}
+                          </p>
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex-1 text-right">
+                      {nextPost && (
+                        <button
+                          onClick={() => onNavigate(currentIndex + 1)}
+                          className="group text-right"
+                        >
+                          <p className="text-xs text-gray-600 mb-0.5">Next →</p>
+                          <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors leading-snug line-clamp-2">
+                            {nextPost.title}
+                          </p>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {/* Footer - Engadget style */}
-              {post && !loading && (
-                <div className="px-6 py-4 border-t border-neutral-200 bg-neutral-50 text-center">
-                  <p className="text-xs text-neutral-500">
-                    Life World OS · Technical articles and insights
-                  </p>
-                </div>
-              )}
             </motion.div>
           </div>
         </>
