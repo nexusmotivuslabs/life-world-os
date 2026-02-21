@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, Minimize2, Sparkles, ExternalLink, Wifi, WifiOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { chatApi } from '../services/api';
 
 interface ChatMessage {
@@ -26,8 +26,15 @@ const ARTIFACT_NAMES = [
   'Meaning, narrative, and identity alignment', 'Meaning', 'Narrative', 'Identity alignment'
 ];
 
+const PUBLIC_ROUTES = ['/', '/login', '/register'];
+
 function GuideBot() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
+  const shouldHide = !token || isPublicRoute;
+
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [isBotMinimized, setIsBotMinimized] = useState(true);
@@ -178,6 +185,8 @@ function GuideBot() {
       handleSend();
     }
   };
+
+  if (shouldHide) return null;
 
   if (isBotMinimized) {
     return (

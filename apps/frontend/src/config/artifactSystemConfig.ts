@@ -109,6 +109,39 @@ export const DYNAMIC_ARTIFACT_SYSTEMS: Record<string, ArtifactSystemId> = {
 export const DEFAULT_ARTIFACT_SYSTEM: ArtifactSystemId = 'reality'
 
 /**
+ * Power Law domains that apply per system (aligned with backend systemUniversalConceptConfig).
+ * Used to filter 48 Laws of Power by system context.
+ */
+export const SYSTEM_POWER_LAW_DOMAINS: Partial<Record<ArtifactSystemId, string[]>> = {
+  finance: ['MONEY'],
+  energy: ['ENERGY'],
+  software: ['CAREER', 'BUSINESS'],
+  optionality: ['NEGOTIATION', 'CAREER'],
+  trust: ['RELATIONSHIPS', 'LEADERSHIP'],
+  reputation: ['RELATIONSHIPS', 'LEADERSHIP'],
+  health: [],
+  travel: [],
+  loadout: [],
+  meaning: [],
+  reality: [],
+}
+
+/**
+ * Get which system IDs have a given Power Law domain.
+ * Used to map reality nodes (with domain metadata) to artifact systems.
+ */
+export function getSystemsForPowerLawDomain(domain: string): ArtifactSystemId[] {
+  const domainUpper = domain.toUpperCase()
+  const systems: ArtifactSystemId[] = []
+  for (const [systemId, domains] of Object.entries(SYSTEM_POWER_LAW_DOMAINS)) {
+    if (domains?.includes(domainUpper)) {
+      systems.push(systemId as ArtifactSystemId)
+    }
+  }
+  return systems
+}
+
+/**
  * Resolve which system(s) an artifact belongs to.
  * Algorithm:
  * 1. Check ARTIFACT_SYSTEM_MAP by exact id
@@ -136,12 +169,15 @@ export function getArtifactSystems(artifactId: string): ArtifactSystemId[] {
  * When systemId is null/undefined, returns all artifacts (no filter).
  * Artifacts with optional systemId (e.g. reality node artifacts) use that for filtering.
  */
-export function filterArtifactsBySystem<T extends { id: string; systemId?: ArtifactSystemId }>(
+export function filterArtifactsBySystem<T extends { id: string; systemId?: ArtifactSystemId; systemIds?: ArtifactSystemId[] }>(
   artifacts: T[],
   systemId: ArtifactSystemId | null | undefined
 ): T[] {
   if (!systemId) return artifacts
   return artifacts.filter((a) => {
+    if (a.systemIds?.includes(systemId)) {
+      return true
+    }
     // Prefer explicit systemId when present (e.g. from reality node metadata)
     if (a.systemId) {
       return a.systemId === systemId

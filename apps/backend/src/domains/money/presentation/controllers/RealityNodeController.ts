@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
 import { getOrSet, cacheKeys } from '../../../../lib/cache.js'
+import { resolveNodeForSystem } from '../../../../lib/resolveSystemLens.js'
 import { RealityNodeType, RealityNodeCategory } from '@prisma/client'
 
 const router = Router()
@@ -127,71 +128,99 @@ router.get('/roots', async (req: Request, res: Response) => {
 
 /**
  * GET /api/reality-nodes/:id
- * Get a specific node by ID with full hierarchy context
- * Supports HTTP cache headers (ETag, Last-Modified) for efficient caching
+ * Get a specific node by ID with full hierarchy context.
+ * Optional ?systemId= returns system lens content when present (reference nodes resolve from source).
+ * Supports HTTP cache headers (ETag, Last-Modified) when systemId is not used.
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params
+    const systemId = (req.query.systemId as string)?.trim() || undefined
 
-    const node = await getOrSet(cacheKeys.realityNode(id), async () => {
-      const n = await prisma.realityNode.findUnique({
-        where: { id },
-        include: {
-          parent: {
-            include: {
-              parent: {
-                include: {
-                  parent: true, // 3 levels up
+    let node = await (systemId
+      ? prisma.realityNode.findUnique({
+          where: { id },
+          include: {
+            parent: {
+              include: {
+                parent: {
+                  include: { parent: true },
                 },
               },
             },
-          },
-          children: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              nodeType: true,
-              category: true,
-              immutable: true,
-              orderIndex: true,
+            children: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                nodeType: true,
+                category: true,
+                immutable: true,
+                orderIndex: true,
+              },
+              orderBy: { orderIndex: 'asc' },
             },
-            orderBy: { orderIndex: 'asc' },
           },
-        },
-      })
-      return n
-    })
+        })
+      : getOrSet(cacheKeys.realityNode(id), async () => {
+          return prisma.realityNode.findUnique({
+            where: { id },
+            include: {
+              parent: {
+                include: {
+                  parent: {
+                    include: { parent: true },
+                  },
+                },
+              },
+              children: {
+                select: {
+                  id: true,
+                  title: true,
+                  description: true,
+                  nodeType: true,
+                  category: true,
+                  immutable: true,
+                  orderIndex: true,
+                },
+                orderBy: { orderIndex: 'asc' },
+              },
+            },
+          })
+        }))
 
     if (!node) {
       return res.status(404).json({ error: 'Node not found' })
     }
 
-    // Add cache headers (cached node may have date as string)
-    const lm = node.updatedAt || node.createdAt
-    const lastModified = lm instanceof Date ? lm : new Date(lm as string)
-    const etag = `"${node.id}-${lastModified.getTime()}"`
-    res.setHeader('Last-Modified', lastModified.toUTCString())
-    res.setHeader('ETag', etag)
-    res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
-
-    // Check if client has cached version (304 Not Modified)
-    const ifNoneMatch = req.headers['if-none-match']
-    const ifModifiedSince = req.headers['if-modified-since']
-    
-    if (ifNoneMatch === etag) {
-      return res.status(304).end() // Not Modified
-    }
-    
-    if (ifModifiedSince) {
-      const clientDate = new Date(ifModifiedSince)
-      if (lastModified <= clientDate) {
-        return res.status(304).end() // Not Modified
-      }
+    let sourceNode: typeof node | null = null
+    const meta = node.metadata as Record<string, unknown> | null | undefined
+    if (systemId && meta?.isReference && typeof meta.sourceRealityNodeId === 'string') {
+      sourceNode = await prisma.realityNode.findUnique({
+        where: { id: meta.sourceRealityNodeId },
+      })
     }
 
-    res.json({ node })
+    const resolved: Record<string, unknown> = systemId
+      ? resolveNodeForSystem(node as any, systemId, sourceNode ?? undefined)
+      : (node as unknown as Record<string, unknown>)
+
+    if (!systemId) {
+      const lm = node.updatedAt || node.createdAt
+      const lastModified = lm instanceof Date ? lm : new Date(lm as string)
+      const etag = `"${node.id}-${lastModified.getTime()}"`
+      res.setHeader('Last-Modified', lastModified.toUTCString())
+      res.setHeader('ETag', etag)
+      res.setHeader('Cache-Control', 'public, max-age=300')
+      const ifNoneMatch = req.headers['if-none-match']
+      const ifModifiedSince = req.headers['if-modified-since']
+      if (ifNoneMatch === etag) return res.status(304).end()
+      if (ifModifiedSince && lastModified <= new Date(ifModifiedSince)) return res.status(304).end()
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=60')
+    }
+
+    res.json({ node: resolved } as { node: typeof node })
   } catch (error: any) {
     console.error('Error fetching node:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch node' })
@@ -336,8 +365,8 @@ router.get('/:id/children', async (req: Request, res: Response) => {
 router.get('/:id/hierarchy', async (req: Request, res: Response) => {
   try {
     const { id } = req.params
+    const systemId = (req.query.systemId as string)?.trim() || undefined
 
-    // Get the node
     const node = await prisma.realityNode.findUnique({
       where: { id },
       include: {
@@ -360,7 +389,26 @@ router.get('/:id/hierarchy', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Node not found' })
     }
 
-    // Get ancestors
+    let sourceNode: typeof node | null = null
+    const meta = node.metadata as Record<string, unknown> | null | undefined
+    if (systemId && meta?.isReference && typeof meta.sourceRealityNodeId === 'string') {
+      sourceNode = await prisma.realityNode.findUnique({
+        where: { id: meta.sourceRealityNodeId },
+      })
+    }
+    const resolvedNode = systemId
+      ? resolveNodeForSystem(node as any, systemId, sourceNode ?? undefined)
+      : {
+          id: node.id,
+          title: node.title,
+          description: node.description,
+          nodeType: node.nodeType,
+          category: node.category,
+          immutable: node.immutable,
+          orderIndex: node.orderIndex,
+          metadata: node.metadata,
+        }
+
     const ancestors: any[] = []
     let currentNode: any = node
     while (currentNode.parentId) {
@@ -383,32 +431,18 @@ router.get('/:id/hierarchy', async (req: Request, res: Response) => {
       currentNode = parent
     }
 
-    // Calculate cache headers based on most recent update
     const lastModified = node.updatedAt || node.createdAt
-    const etag = `"hierarchy-${id}-${lastModified.getTime()}"`
-    
-    res.setHeader('Last-Modified', lastModified.toUTCString())
+    const lm = lastModified instanceof Date ? lastModified : new Date(lastModified as string)
+    const etag = `"hierarchy-${id}-${lm.getTime()}"`
+    res.setHeader('Last-Modified', lm.toUTCString())
     res.setHeader('ETag', etag)
-    res.setHeader('Cache-Control', 'public, max-age=300') // 5 minutes
-
-    // Check if client has cached version
+    res.setHeader('Cache-Control', systemId ? 'public, max-age=60' : 'public, max-age=300')
     const ifNoneMatch = req.headers['if-none-match']
-    if (ifNoneMatch === etag) {
-      return res.status(304).end() // Not Modified
-    }
+    if (ifNoneMatch === etag) return res.status(304).end()
 
     res.json({
       ancestors,
-      node: {
-        id: node.id,
-        title: node.title,
-        description: node.description,
-        nodeType: node.nodeType,
-        category: node.category,
-        immutable: node.immutable,
-        orderIndex: node.orderIndex,
-        metadata: node.metadata,
-      },
+      node: resolvedNode as any,
       children: node.children,
       depth: ancestors.length,
     })

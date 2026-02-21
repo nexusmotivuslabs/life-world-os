@@ -11,6 +11,14 @@ export enum LoadoutSlotType {
   SUPPORT_UPGRADE = 'SUPPORT_UPGRADE',
 }
 
+/** Single rank tier in the loadout item ranking system (unlock progression). */
+export interface LoadoutItemRankTier {
+  id: string
+  name: string
+  order: number
+  howToUnlock: string
+}
+
 export interface LoadoutItem {
   id: string
   name: string
@@ -20,6 +28,8 @@ export interface LoadoutItem {
   benefits: LoadoutBenefits
   icon?: string
   isDefault: boolean
+  /** Optional per-item rank unlock criteria; falls back to default tiers if absent. */
+  ranking?: LoadoutItemRankTier[]
   createdAt: string
   updatedAt: string
 }

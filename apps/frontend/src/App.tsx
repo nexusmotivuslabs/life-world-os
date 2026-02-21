@@ -22,6 +22,7 @@ import InsightPlane from './pages/InsightPlane'
 import ConfigurationPlane from './pages/ConfigurationPlane'
 import LoadoutPage from './pages/LoadoutPage'
 import BlogsPage from './pages/BlogsPage'
+import ContextActionsPage from './pages/ContextActionsPage'
 import GuideBot from './components/GuideBot'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
@@ -280,6 +281,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <LoadoutPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/actions" element={
+            <ProtectedRoute>
+              <Layout>
+                <ContextActionsPage />
               </Layout>
             </ProtectedRoute>
           } />

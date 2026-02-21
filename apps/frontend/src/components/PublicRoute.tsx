@@ -19,35 +19,55 @@ export default function PublicRoute({ children }: PublicRouteProps) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   useEffect(() => {
+    let cancelled = false
+
     const checkAuth = async () => {
       // If no token, user is not authenticated - allow access
       if (!token) {
-        setIsChecking(false)
+        if (!cancelled) setIsChecking(false)
+        return
+      }
+
+      // If we already have dashboard (e.g. from previous load), stop checking quickly
+      if (token && dashboard && !isDemo) {
+        if (!cancelled) setIsChecking(false)
         return
       }
 
       // If we have a token, validate it by fetching dashboard
       if (token && !dashboard && !isDemo) {
         try {
-          await fetchDashboard()
+          // Don't hang forever if backend is down: race with a timeout
+          const timeoutMs = 8000
+          await Promise.race([
+            fetchDashboard(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Auth check timeout')), timeoutMs)
+            ),
+          ])
+          if (cancelled) return
           const currentState = useGameStore.getState()
-          // If fetch succeeded and not in demo mode, user is authenticated
           if (!currentState.isDemo && currentState.dashboard) {
             setIsChecking(false)
             return
           }
         } catch (error) {
-          // Token is invalid - allow access to public route
-          localStorage.removeItem('token')
-          setIsChecking(false)
+          // Token invalid or timeout - allow access to public route
+          if (!cancelled) {
+            localStorage.removeItem('token')
+            setIsChecking(false)
+          }
           return
         }
       }
-      
-      setIsChecking(false)
+
+      if (!cancelled) setIsChecking(false)
     }
 
     checkAuth()
+    return () => {
+      cancelled = true
+    }
   }, [token, dashboard, isDemo, fetchDashboard])
 
   // Show loading state while checking

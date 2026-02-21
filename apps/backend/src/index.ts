@@ -28,6 +28,7 @@ import realityNodeRoutes from './domains/money/presentation/controllers/RealityN
 import sleepRoutes from './domains/energy/presentation/controllers/SleepController.js'
 import energyRoutes from './domains/energy/presentation/controllers/EnergyController.js'
 import travelRoutes from './domains/travel/presentation/controllers/LocationController.js'
+import contextActionsRoutes from './domains/actions/presentation/contextActionsController.js'
 import systemHealthRoutes from './routes/health.js'
 import loadoutRoutes from './routes/loadouts.js'
 import blogRoutes from './routes/blog.js'
@@ -104,6 +105,7 @@ app.use('/api/expenses', expenseRoutes)
 app.use('/api/sleep', sleepRoutes)
 app.use('/api/energy', energyRoutes)
 app.use('/api/travel', travelRoutes)
+app.use('/api/context-actions', contextActionsRoutes)
 app.use('/api/loadouts', loadoutRoutes)
 app.use('/api/blog', blogRoutes)
 app.use('/api/chat', chatRoutes)
