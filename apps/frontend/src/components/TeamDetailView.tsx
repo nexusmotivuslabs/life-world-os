@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Package, Users, BookOpen, Info, Shield, Calculator, BarChart3, TrendingUp, ChevronRight, ChevronDown, ChevronUp, Lock, ExternalLink, AlertTriangle, Smartphone } from 'lucide-react'
+import { X, Package, Users, BookOpen, Calculator, BarChart3, TrendingUp, ChevronRight, ChevronDown, ChevronUp, Lock, ExternalLink, AlertTriangle, Smartphone } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Team, Product, Guide, Agent } from '../services/financeApi'
 import { teamsApi, productsApi, guidesApi, agentsApi } from '../services/financeApi'
@@ -9,33 +9,38 @@ import BudgetBuilderTracker from './BudgetBuilderTracker'
 import CashFlowAnalyzer from './CashFlowAnalyzer'
 import AgentDetailCard from './AgentDetailCard'
 import DomainTag, { DomainTagList, BibleLawDomain } from './DomainTag'
+import ProductMiniAppModal from './ProductMiniAppModal'
+import VisaMoveChecklist from './travel/VisaMoveChecklist'
 import { getMasterProductRoute } from '../config/routes'
 import { MasterDomain } from '../types'
 
 interface TeamDetailViewProps {
   team: Team
   onClose: () => void
+  /** Current system domain for product links (e.g. "finance", "health", "travel"). Enables per-system filtering. */
+  systemId?: string
 }
 
-type TeamDetailTab = 'overview' | 'products' | 'agents' | 'guides'
+type TeamDetailTab = 'guide' | 'products' | 'agents'
 
 /**
  * TeamDetailView Component
- * 
+ *
  * Amazon-style console view for team details with tabs:
- * - Overview: Team information and stats
+ * - Guide: Team information, purpose, key terms, and guide documentation
  * - Products: Team products (calculators, trackers, analyzers)
  * - Agents: Team members
- * - Guides: Team workflows and guides
  */
-export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
+export default function TeamDetailView({ team, onClose, systemId: systemIdProp }: TeamDetailViewProps) {
+  const domainForProductRoute = systemIdProp === 'money' ? MasterDomain.FINANCE : (systemIdProp as MasterDomain) || MasterDomain.FINANCE
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<TeamDetailTab>('overview')
+  const [activeTab, setActiveTab] = useState<TeamDetailTab>('guide')
   const [products, setProducts] = useState<Product[]>([])
   const [guides, setGuides] = useState<Guide[]>([])
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
+  const [productForMiniApp, setProductForMiniApp] = useState<Product | null>(null)
 
   useEffect(() => {
     loadTeamData()
@@ -109,10 +114,9 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
   }
 
   const tabs = [
-    { id: 'overview' as TeamDetailTab, label: 'Overview', icon: Info },
+    { id: 'guide' as TeamDetailTab, label: 'Guide', icon: BookOpen, count: guides.length },
     { id: 'products' as TeamDetailTab, label: 'Products', icon: Package, count: products.length },
     { id: 'agents' as TeamDetailTab, label: 'Agents', icon: Users, count: agents.length },
-    { id: 'guides' as TeamDetailTab, label: 'Guides', icon: BookOpen, count: guides.length },
   ]
 
   const getProductIcon = (type: string) => {
@@ -156,6 +160,15 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
     if (product.name === 'Cash Flow Analyzer') {
       return <CashFlowAnalyzer key={product.id} />
     }
+    if (product.name === 'Visa & Move Checklist') {
+      return (
+        <div key={product.id} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="p-4">
+            <VisaMoveChecklist />
+          </div>
+        </div>
+      )
+    }
 
     // Generic product card for other products
     const IconComponent = getProductIcon(product.type)
@@ -187,47 +200,22 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
               )}
             </div>
             <p className="text-gray-400 mb-4">{product.description}</p>
-            
-            {/* Security Information */}
-            {product.security && (
-              <div className="mb-4 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-semibold text-gray-300">Security & Compliance</span>
-                </div>
-                <div className="space-y-1 text-xs text-gray-400">
-                  {product.security.complianceStandards && product.security.complianceStandards.length > 0 && (
-                    <div>
-                      <span className="text-gray-500">Compliance: </span>
-                      {product.security.complianceStandards.join(', ')}
-                    </div>
-                  )}
-                  {product.security.encryptionAtRest && product.security.encryptionInTransit && (
-                    <div className="flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-green-400" />
-                      <span>Encrypted at rest & in transit</span>
-                    </div>
-                  )}
-                  {product.security.authenticationMethod && (
-                    <div>
-                      <span className="text-gray-500">Auth: </span>
-                      {product.security.authenticationMethod}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* Product Access - Navigate to single product view */}
-            <div className="mb-4">
+            {/* Product Access - Open in App (mini app modal) or View Details */}
+            <div className="mb-4 space-y-2">
               <button
-                onClick={() => {
-                  // Navigate to single product view
-                  navigate(getMasterProductRoute(MasterDomain.MONEY, product.id))
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+                onClick={() => setProductForMiniApp(product)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-sm font-medium text-white transition-all"
               >
-                <span>Open Product</span>
+                <Smartphone className="w-4 h-4" />
+                <span>Open in App</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => navigate(getMasterProductRoute(domainForProductRoute, product.id))}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+              >
+                <span>View Details</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
               {product.requiresAuth && (
@@ -315,8 +303,8 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
               <div className="text-center py-12 text-gray-400">Loading...</div>
             ) : (
               <>
-                {/* Overview Tab */}
-                {activeTab === 'overview' && (
+                {/* Guide Tab: team info + guide documentation */}
+                {activeTab === 'guide' && (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-semibold mb-4">Team Information</h3>
@@ -413,30 +401,6 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                                             </span>
                                           </div>
 
-                                          {/* Security Information */}
-                                          {product.security && (
-                                            <div className="bg-gray-600/50 rounded-lg p-3">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <Shield className="w-4 h-4 text-blue-400" />
-                                                <span className="text-sm font-semibold text-gray-300">Security</span>
-                                              </div>
-                                              <div className="space-y-1 text-xs text-gray-400">
-                                                {product.security.complianceStandards && product.security.complianceStandards.length > 0 && (
-                                                  <div>
-                                                    <span className="text-gray-500">Compliance: </span>
-                                                    {product.security.complianceStandards.join(', ')}
-                                                  </div>
-                                                )}
-                                                {product.security.encryptionAtRest && product.security.encryptionInTransit && (
-                                                  <div className="flex items-center gap-1">
-                                                    <Lock className="w-3 h-3 text-green-400" />
-                                                    <span>Encrypted at rest & in transit</span>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          )}
-
                                           {/* Features Preview */}
                                           {product.features && Array.isArray(product.features) && product.features.length > 0 && (
                                             <div>
@@ -449,29 +413,25 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
 
                                           {/* Product Actions */}
                                           <div className="space-y-2">
-                                            {/* Open in App Button (if accessUrl available) */}
-                                            {product.accessUrl && (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  navigate(product.accessUrl!)
-                                                }}
-                                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
-                                              >
-                                                <Smartphone className="w-4 h-4" />
-                                                <span>Open in App</span>
-                                                <ChevronRight className="w-4 h-4" />
-                                              </button>
-                                            )}
-                                            {/* Open Product Detail Button */}
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation()
-                                                navigate(getMasterProductRoute(MasterDomain.MONEY, product.id))
+                                                setProductForMiniApp(product)
+                                              }}
+                                              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+                                            >
+                                              <Smartphone className="w-4 h-4" />
+                                              <span>Open in App</span>
+                                              <ChevronRight className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                navigate(getMasterProductRoute(domainForProductRoute, product.id))
                                               }}
                                               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
                                             >
-                                              <span>{product.accessUrl ? 'View Details' : 'Open Product'}</span>
+                                              <span>View Details</span>
                                               <ChevronRight className="w-4 h-4" />
                                             </button>
                                           </div>
@@ -487,7 +447,7 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                           )}
                         </div>
 
-                        {/* Guides */}
+                        {/* Guides summary */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-gray-400 text-sm">Guides</span>
@@ -498,20 +458,16 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                               {guides.map((guide) => (
                                 <div
                                   key={guide.id}
-                                  className="bg-gray-700/50 rounded-lg p-3 border border-gray-600 cursor-pointer hover:border-blue-500 transition-colors group"
-                                  onClick={() => setActiveTab('guides')}
+                                  className="bg-gray-700/50 rounded-lg p-3 border border-gray-600"
                                 >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3 flex-1">
-                                      <BookOpen className="w-5 h-5 text-gray-400" />
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm">{guide.title}</h4>
-                                        <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
-                                          {guide.description}
-                                        </p>
-                                      </div>
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <BookOpen className="w-5 h-5 text-gray-400" />
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-medium text-sm">{guide.title}</h4>
+                                      <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+                                        {guide.description}
+                                      </p>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
                                   </div>
                                 </div>
                               ))}
@@ -560,6 +516,67 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                         </div>
                       </div>
                     </div>
+
+                    {/* Guide documentation (merged from Guides tab) */}
+                    {guides.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Guide documentation</h3>
+                        <div className="space-y-4">
+                          {guides.map((guide) => (
+                            <div
+                              key={guide.id}
+                              className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-500 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold mb-1">{guide.title}</h4>
+                                  <p className="text-sm text-gray-400 mb-2">{guide.description}</p>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                                    <span>Difficulty: {guide.difficulty}/5</span>
+                                    {guide.estimatedTime != null && (
+                                      <span>{guide.estimatedTime} min</span>
+                                    )}
+                                    <span className="px-2 py-0.5 bg-gray-700 rounded">
+                                      {guide.category}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              {guide.documentation && (
+                                <div className="mt-4 pt-4 border-t border-gray-700 space-y-4">
+                                  {guide.documentation.teamPurpose && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-1">Purpose of this team</h5>
+                                      <p className="text-sm text-gray-300">{guide.documentation.teamPurpose}</p>
+                                    </div>
+                                  )}
+                                  {guide.documentation.keyTerms && guide.documentation.keyTerms.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-2">Why key terms matter</h5>
+                                      <div className="space-y-2">
+                                        {guide.documentation.keyTerms.map((kt, i) => (
+                                          <div key={i} className="bg-gray-700/50 rounded-lg p-3">
+                                            <span className="font-medium text-gray-200">{kt.term}</span>
+                                            <p className="text-xs text-gray-400 mt-0.5">{kt.definition}</p>
+                                            <p className="text-xs text-gray-500 mt-1 italic">{kt.whyNecessary}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {guide.documentation.howProductsAndAgentsLeadToOutcome && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-1">How products and agents lead to the outcome</h5>
+                                      <p className="text-sm text-gray-300">{guide.documentation.howProductsAndAgentsLeadToOutcome}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -596,47 +613,18 @@ export default function TeamDetailView({ team, onClose }: TeamDetailViewProps) {
                   </div>
                 )}
 
-                {/* Guides Tab */}
-                {activeTab === 'guides' && (
-                  <div>
-                    {guides.length === 0 ? (
-                      <div className="text-center py-12 text-gray-400">
-                        <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p>No guides available for this team</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {guides.map((guide) => (
-                          <div
-                            key={guide.id}
-                            className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-semibold mb-1">{guide.title}</h4>
-                                <p className="text-sm text-gray-400 mb-2">{guide.description}</p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span>Difficulty: {guide.difficulty}/5</span>
-                                  {guide.estimatedTime && (
-                                    <span>{guide.estimatedTime} min</span>
-                                  )}
-                                  <span className="px-2 py-0.5 bg-gray-700 rounded">
-                                    {guide.category}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </>
             )}
           </div>
         </motion.div>
       </div>
+      {productForMiniApp && (
+        <ProductMiniAppModal
+          product={productForMiniApp}
+          open={!!productForMiniApp}
+          onClose={() => setProductForMiniApp(null)}
+        />
+      )}
     </AnimatePresence>
   )
 }

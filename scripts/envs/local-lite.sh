@@ -128,10 +128,15 @@ else
 fi
 cd ../..
 
-# Step 4: Migrations
-log_service "Step 4: Database Migrations"
+# Step 4: Schema Sync (migrations with db push fallback — local mirrors production schema)
+log_service "Step 4: Database Schema Sync"
 cd apps/backend
-npm run migrate >/dev/null 2>&1 && log_success "Migrations completed" || log_warning "Migrations may need attention"
+if npm run migrate >/dev/null 2>&1; then
+    log_success "Migrations completed"
+else
+    log_warning "Migrations failed; falling back to db push to ensure schema is in sync"
+    npx prisma db push >/dev/null 2>&1 && log_success "Schema synced via db push" || log_warning "Schema sync may need manual attention"
+fi
 cd ../..
 
 # Step 5: Backend

@@ -20,14 +20,16 @@ export default defineConfig({
         '**/*.spec.*',
         'src/test/**',
         'src/main.tsx',
+        'src/App.tsx',
         'src/vite-env.d.ts',
+        '**/index.ts',
       ],
-      // Thresholds relaxed - 85% is the goal; add tests over time for uncovered modules
+      // Target: 85% for reliability. Raise thresholds as coverage increases.
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 4,
+        functions: 8,
+        branches: 35,
+        statements: 4,
       },
     },
   },

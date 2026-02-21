@@ -64,6 +64,7 @@ enum ActivityType {
   SEASON_COMPLETION
   MILESTONE
   CUSTOM
+  REST
 }
 
 enum TrainingModuleType {

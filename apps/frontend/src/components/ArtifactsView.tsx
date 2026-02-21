@@ -62,12 +62,19 @@ import HierarchyTreeView from './knowledge/HierarchyTreeView'
 import KeyDetailsList from './KeyDetailsList'
 import ArtifactCategoryTag from './ArtifactCategoryTag'
 import { getCategoryDisplayName } from '../utils/realityNodeDisplay'
-import {
+import type { ArtifactSystemId } from '../config/artifactSystemConfig'
+import * as artifactSystemConfig from '../config/artifactSystemConfig'
+
+const {
   filterArtifactsBySystem,
   ARTIFACT_SYSTEM_IDS,
   ARTIFACT_SYSTEM_LABELS,
-  type ArtifactSystemId,
-} from '../config/artifactSystemConfig'
+  getSystemsForPowerLawDomain,
+  SYSTEM_POWER_LAW_DOMAINS,
+} = artifactSystemConfig
+
+const SYSTEM_POWER_LAW_DOMAINS_SAFE =
+  (SYSTEM_POWER_LAW_DOMAINS ?? {}) as Partial<Record<ArtifactSystemId, string[]>>
 
 interface SystemFeature {
   title: string
@@ -91,6 +98,7 @@ interface Artifact {
   icon: React.ComponentType<{ className?: string }>
   route?: string
   systemId?: ArtifactSystemId // For system-based filtering (e.g. reality nodes)
+  systemIds?: ArtifactSystemId[] // When artifact applies to multiple systems (e.g. power laws)
   details?: string[] // Generic details about what this artifact is
   examples?: string[] // Real-world practical examples for readers to take action
   tags?: string[] // Additional metadata tags for filtering
@@ -299,7 +307,7 @@ const artifacts: Artifact[] = [
     description: 'Strategic principles applied across domains: Money, Career, Business, Relationships, Leadership.',
     category: ArtifactCategory.LAW,
     icon: BookOpen,
-    tags: ['power', 'strategy', 'principles'],
+    tags: ['power', 'strategy', 'principles', 'optionality'],
     route: '/knowledge/laws',
     details: [
       '48 strategic principles.',
@@ -947,11 +955,23 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
    * - Each system's entities can be exposed as artifacts here
    */
   const allArtifacts = useMemo(() => {
-    // Start with base artifacts (generic definitions)
     const baseArtifacts = [...artifacts]
 
+    // Adapt "48 Laws of Power" for current system: only some domains apply per system
+    const powerLawDomainsForSystem = effectiveSystemId ? SYSTEM_POWER_LAW_DOMAINS_SAFE[effectiveSystemId] : []
+    const baseWithSystemLaws = baseArtifacts.map((artifact) => {
+      if (artifact.id !== 'laws-power' || !effectiveSystemId || powerLawDomainsForSystem.length === 0) return artifact
+      const systemLabel = ARTIFACT_SYSTEM_LABELS[effectiveSystemId]
+      const domainList = powerLawDomainsForSystem.join(', ')
+      const extraDetail = `For ${systemLabel}, only these domains apply: ${domainList}. The list below shows only laws from these domains.`
+      return {
+        ...artifact,
+        details: [...(artifact.details ?? []), extraDetail],
+      }
+    })
+
     // Map user instances to artifacts when user has instances
-    const artifactsWithInstances = baseArtifacts.map(artifact => {
+    const artifactsWithInstances = baseWithSystemLaws.map(artifact => {
       // Only add instance data if user is authenticated and has the instance
       if (!isAuthenticated || !userResources || !dashboard) {
         return artifact
@@ -1134,6 +1154,12 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       if (node.metadata?.systemId) {
         tags.push(node.metadata.systemId.toLowerCase())
       }
+      if (Array.isArray(node.metadata?.systemIds)) {
+        node.metadata.systemIds.forEach((s: string) => {
+          const lower = String(s).toLowerCase()
+          if (lower && !tags.includes(lower)) tags.push(lower)
+        })
+      }
       if (isKnowledge) {
         tags.push('knowledge')
       }
@@ -1197,6 +1223,19 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
       const description = node.metadata?.summary || node.description || (isUniversalConcept ? `Universal concept for ${node.metadata?.systemId || 'system'}.` : `A ${isLaw ? 'law' : isFramework ? 'framework' : isKnowledge ? 'knowledge' : 'principle'} from the reality hierarchy.`)
       const nodeSystemId = node.metadata?.systemId
       const artifactSystemId = nodeSystemId && ARTIFACT_SYSTEM_IDS.includes(nodeSystemId as ArtifactSystemId) ? (nodeSystemId as ArtifactSystemId) : undefined
+      // Power-law filter: derive systemIds from domain so only applicable laws show per system
+      let systemIdsArray: ArtifactSystemId[] | undefined
+      if (isUniversalConcept) {
+        systemIdsArray = [...ARTIFACT_SYSTEM_IDS]
+      } else if (node.metadata?.powerLawId && node.metadata?.domain) {
+        const domainSystems = getSystemsForPowerLawDomain(String(node.metadata.domain))
+        systemIdsArray = domainSystems.length ? domainSystems : undefined
+      } else if (Array.isArray(node.metadata?.systemIds)) {
+        systemIdsArray = (node.metadata.systemIds as string[]).filter(
+          (s): s is ArtifactSystemId => ARTIFACT_SYSTEM_IDS.includes(s as ArtifactSystemId)
+        )
+        if (systemIdsArray.length === 0) systemIdsArray = undefined
+      }
       return {
         id: `reality-node-${node.id}`,
         name: node.title,
@@ -1204,7 +1243,8 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
         category: artifactCategory,
         icon,
         route: `/knowledge/hierarchy?node=${node.id}`,
-        systemId: artifactSystemId,
+        systemId: isUniversalConcept ? undefined : artifactSystemId,
+        ...(systemIdsArray?.length ? { systemIds: systemIdsArray } : {}),
         tags,
         details: details.length > 0 ? details : undefined,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
@@ -1212,7 +1252,7 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
     })
 
     return [...artifactsWithInstances, ...weaponArtifacts, ...engineTypeArtifacts, ...realityNodeArtifacts]
-  }, [loadoutItems, realityNodes, isAuthenticated, userResources, dashboard, userEngines])
+  }, [loadoutItems, realityNodes, isAuthenticated, userResources, dashboard, userEngines, effectiveSystemId])
 
   const systemFilteredArtifacts = useMemo(
     () => filterArtifactsBySystem(allArtifacts, effectiveSystemId),
@@ -2233,4 +2273,3 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
     </div>
   )
 }
-

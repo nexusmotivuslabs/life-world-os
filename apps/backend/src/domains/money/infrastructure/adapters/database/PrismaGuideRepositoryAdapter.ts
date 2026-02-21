@@ -32,6 +32,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
       estimatedTime: guideData.estimatedTime,
       prerequisites: guideData.prerequisites,
       isTeamGuide: guideData.isTeamGuide,
+      documentation: guideData.documentation as any,
     })
   }
 
@@ -54,6 +55,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         estimatedTime: guideData.estimatedTime,
         prerequisites: guideData.prerequisites,
         isTeamGuide: guideData.isTeamGuide,
+        documentation: guideData.documentation as any,
       })
     )
   }
@@ -77,6 +79,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         estimatedTime: guideData.estimatedTime,
         prerequisites: guideData.prerequisites,
         isTeamGuide: guideData.isTeamGuide,
+        documentation: guideData.documentation as any,
       })
     )
   }
@@ -100,6 +103,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         estimatedTime: guideData.estimatedTime,
         prerequisites: guideData.prerequisites,
         isTeamGuide: guideData.isTeamGuide,
+        documentation: guideData.documentation as any,
       })
     )
   }
@@ -122,6 +126,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         estimatedTime: guideData.estimatedTime,
         prerequisites: guideData.prerequisites,
         isTeamGuide: guideData.isTeamGuide,
+        documentation: guideData.documentation as any,
       })
     )
   }
@@ -140,6 +145,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         difficulty: guide.difficulty,
         estimatedTime: guide.estimatedTime ?? undefined,
         prerequisites: guide.prerequisites ? (guide.prerequisites as any) : undefined,
+        documentation: guide.documentation ? (guide.documentation as any) : undefined,
         isTeamGuide: guide.isTeamGuide,
       },
       update: {
@@ -150,6 +156,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
         difficulty: guide.difficulty,
         estimatedTime: guide.estimatedTime ?? undefined,
         prerequisites: guide.prerequisites ? (guide.prerequisites as any) : undefined,
+        documentation: guide.documentation ? (guide.documentation as any) : undefined,
         isTeamGuide: guide.isTeamGuide,
       },
     })
@@ -166,6 +173,7 @@ export class PrismaGuideRepositoryAdapter implements GuideRepositoryPort {
       estimatedTime: guideData.estimatedTime,
       prerequisites: guideData.prerequisites,
       isTeamGuide: guideData.isTeamGuide,
+      documentation: guideData.documentation as any,
     })
   }
 }

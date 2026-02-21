@@ -19,40 +19,52 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   useEffect(() => {
+    let cancelled = false
+
     const checkAuth = async () => {
-      // No token means not authenticated
       if (!token) {
-        setIsChecking(false)
+        if (!cancelled) setIsChecking(false)
         return
       }
 
-      // If we have a token but no dashboard, try to fetch it
-      // This validates the token is still valid
+      // Already have dashboard – stop checking quickly
+      if (token && dashboard && !isDemo) {
+        if (!cancelled) setIsChecking(false)
+        return
+      }
+
       if (token && !dashboard) {
         try {
-          await fetchDashboard()
-          // If fetchDashboard succeeds but sets isDemo, that means token was invalid
-          // and it fell back to demo mode - we should redirect
+          const timeoutMs = 8000
+          await Promise.race([
+            fetchDashboard(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Auth check timeout')), timeoutMs)
+            ),
+          ])
+          if (cancelled) return
           const currentState = useGameStore.getState()
           if (currentState.isDemo) {
-            // Token was invalid, remove it
             localStorage.removeItem('token')
-            setIsChecking(false)
+            if (!cancelled) setIsChecking(false)
             return
           }
         } catch (error) {
-          // If fetch fails, token might be invalid
           console.error('Failed to fetch dashboard:', error)
           localStorage.removeItem('token')
-          setIsChecking(false)
+          if (!cancelled) setIsChecking(false)
           return
         }
       }
-      setIsChecking(false)
+
+      if (!cancelled) setIsChecking(false)
     }
 
     checkAuth()
-  }, [token, dashboard, fetchDashboard])
+    return () => {
+      cancelled = true
+    }
+  }, [token, dashboard, isDemo, fetchDashboard])
 
   // Show loading state while checking
   if (isChecking) {

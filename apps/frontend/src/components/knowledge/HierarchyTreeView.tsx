@@ -9,8 +9,17 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react'
 import { realityNodeApi, RealityNode } from '../../services/financeApi'
-import { getCategoryDisplayName, getCategoryDescription, getNodeTypeDisplayName } from '../../utils/realityNodeDisplay'
-import { enumToDisplayName } from '../../utils/enumDisplayNames'
+import {
+  getCategoryDisplayName,
+  getCategoryDescription,
+  getCategoryBadgeClasses,
+  getNodeTypeDisplayName,
+  getNodeTypeBadgeClasses,
+  getSystemBadgeClasses,
+  getSystemDisplayName,
+  SYSTEM_DISPLAY_NAMES,
+} from '../../utils/realityNodeDisplay'
+import { enumToDisplayName, toTitleCase } from '../../utils/enumDisplayNames'
 import { motion, AnimatePresence } from 'framer-motion'
 import { hierarchyCache } from '../../lib/hierarchyCache'
 
@@ -27,6 +36,7 @@ interface TreeNode {
 interface HierarchyTreeViewProps {
   rootNodeId?: string // Optional: start from a specific node instead of REALITY root
   overrideParentId?: string // Optional: override parent for child entities (makes them appear under a different parent)
+  systemId?: string // Optional: when set, node/hierarchy requests use system lens (e.g. "optionality" for system-specific content)
   onArtifactClick?: (artifactId: string) => void // Optional: callback when artifact is clicked (for embedded use)
   refreshTrigger?: number // Optional: increment this to trigger a refresh
 }
@@ -35,7 +45,7 @@ interface HierarchyTreeViewProps {
 const getActualRootId = (rootNodeId: string) =>
   rootNodeId === 'reality' ? 'reality-root' : rootNodeId
 
-export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId, onArtifactClick, refreshTrigger }: HierarchyTreeViewProps = {}) {
+export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId, systemId, onArtifactClick, refreshTrigger }: HierarchyTreeViewProps = {}) {
   const navigate = useNavigate()
   const actualRootId = getActualRootId(rootNodeId)
   const [treeData, setTreeData] = useState<TreeNode[]>([])
@@ -59,6 +69,8 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   }, [expandedNodes])
 
   // Refresh tree data: stable deps (no expandedNodes) so main effect doesn't re-run on every expand/collapse
+  const cacheKey = systemId ? `${actualRootId}@${systemId}` : actualRootId
+
   const refreshTreeData = useCallback(async () => {
     if (isRefreshingRef.current) return
     try {
@@ -67,7 +79,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       const preservedExpandedNodes = new Set(expandedNodesRef.current)
       realityNodeApi.clearCache()
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
-      await hierarchyCache.set(actualRootId, rootTree)
+      await hierarchyCache.set(cacheKey, rootTree)
       setTreeData([rootTree])
       setLastRefreshTime(new Date())
       setExpandedNodes(preservedExpandedNodes)
@@ -77,11 +89,11 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       isRefreshingRef.current = false
       setIsRefreshing(false)
     }
-  }, [actualRootId, overrideParentId])
+  }, [actualRootId, overrideParentId, systemId])
 
   refreshTreeDataRef.current = refreshTreeData
 
-  // Load tree once on mount and when root/parent change only (no dependency on refreshTreeData or expandedNodes)
+  // Load tree once on mount and when root/parent/systemId change
   useEffect(() => {
     loadTreeData()
     const interval = setInterval(() => {
@@ -91,7 +103,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     return () => {
       if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current)
     }
-  }, [rootNodeId, overrideParentId])
+  }, [rootNodeId, overrideParentId, systemId])
 
   // Refresh when parent explicitly triggers via refreshTrigger
   useEffect(() => {
@@ -111,18 +123,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     }
   }, [treeData])
 
-  // Convert node title to human-readable display name
+  // Convert node title to human-readable display name (Title Case e.g. "Law Of Time")
   const getDisplayName = (title: string): string => {
-    // Special case: REALITY displays as "ROOT"
-    if (title === 'REALITY') {
-      return 'ROOT'
+    if (title === 'REALITY') return 'ROOT'
+    if (!title || !title.trim()) return title
+    const trimmed = title.trim()
+    if (trimmed === trimmed.toUpperCase() || trimmed.includes('_')) {
+      return toTitleCase(trimmed.replace(/_/g, ' '))
     }
-    // If it's already in a readable format, return as-is
-    if (title.includes(' ') && title[0] === title[0].toUpperCase() && title !== title.toUpperCase()) {
-      return title
+    if (trimmed[0] === trimmed[0].toUpperCase() && trimmed !== trimmed.toUpperCase()) {
+      return trimmed
     }
-    // Otherwise, convert from UPPER_SNAKE_CASE to Title Case
-    return enumToDisplayName(title)
+    return toTitleCase(trimmed)
   }
 
   // Convert RealityNode to TreeNode format
@@ -156,10 +168,10 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     return typeMap[nodeType] || 'artifact'
   }
 
-  // Recursively load children for a node
+  // Recursively load children for a node (systemId triggers system lens resolution for references)
   const loadNodeWithChildren = async (nodeId: string, effectiveParentId?: string): Promise<TreeNode> => {
     const [nodeResponse, childrenResponse] = await Promise.all([
-      realityNodeApi.getNode(nodeId),
+      realityNodeApi.getNode(nodeId, systemId),
       realityNodeApi.getChildren(nodeId)
     ])
 
@@ -185,18 +197,16 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     try {
       setError(null)
       setHasDataIssues(false)
-      
-      // Determine the actual root node ID to use
+
       const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
-      
-      // Clear cache if requested
+      const cacheKey = systemId ? `${actualRootId}@${systemId}` : actualRootId
+
       if (clearCacheFirst) {
         realityNodeApi.clearCache()
-        hierarchyCache.invalidate(actualRootId)
+        hierarchyCache.invalidate(cacheKey)
       }
-      
-      // STALE-WHILE-REVALIDATE: Try to load from cache first
-      const cached = await hierarchyCache.get(actualRootId)
+
+      const cached = await hierarchyCache.get(cacheKey)
       if (cached && !clearCacheFirst) {
         // Show cached data immediately (instant load)
         setTreeData([cached.rootNode])
@@ -204,21 +214,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         setLoading(false) // Don't show loading spinner for cached data
         
         // Then refresh in background (revalidate)
-        refreshTreeDataInBackground(actualRootId)
+        refreshTreeDataInBackground(cacheKey, actualRootId)
         return
       }
-      
-      // No cache or cache cleared, load fresh
+
       setLoading(true)
-      console.log(`Loading hierarchy tree from root: ${actualRootId}`)
-      
-      // Load root and all its children recursively from database
+      console.log(`Loading hierarchy tree from root: ${actualRootId}${systemId ? ` (system: ${systemId})` : ''}`)
+
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
 
       console.log(`Loaded tree data:`, rootTree)
-      
-      // Cache the result for future use
-      await hierarchyCache.set(actualRootId, rootTree)
+
+      await hierarchyCache.set(cacheKey, rootTree)
       
       // Set the loaded tree
       setTreeData([rootTree])
@@ -242,7 +249,8 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       
       // Try to use stale cache if available (offline support)
       const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
-      const staleCache = await hierarchyCache.get(actualRootId)
+      const cacheKey = systemId ? `${actualRootId}@${systemId}` : actualRootId
+      const staleCache = await hierarchyCache.get(cacheKey)
       if (staleCache) {
         console.log('Using stale cache due to network error')
         setTreeData([staleCache.rootNode])
@@ -260,25 +268,19 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   }
 
   // Background refresh (doesn't block UI) - stale-while-revalidate pattern
-  const refreshTreeDataInBackground = async (actualRootId: string) => {
+  const refreshTreeDataInBackground = async (cacheKey: string, actualRootId: string) => {
     try {
-      // Clear API cache to ensure fresh data
       realityNodeApi.clearCache()
-      
-      // Load fresh data
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
       
-      // Update cache
-      await hierarchyCache.set(actualRootId, rootTree)
-      
-      // Only update UI if tree structure actually changed (by checksum)
+      await hierarchyCache.set(cacheKey, rootTree)
+
       setTreeData(prev => {
         if (prev.length === 0) {
           return [rootTree]
         }
-        
-        // Check if structure changed by comparing checksums
-        const cached = hierarchyCache.getFromMemory(actualRootId)
+
+        const cached = hierarchyCache.getFromMemory(cacheKey)
         if (cached) {
           const oldChecksum = cached.metadata.checksum
           const newChecksum = hierarchyCache.calculateChecksum(rootTree)
@@ -359,37 +361,56 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
   const getCategoryBadge = (category?: string) => {
     if (!category) return null
-    
-    const colors: Record<string, string> = {
-      FOUNDATIONAL: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      FUNDAMENTAL: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      POWER: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-      BIBLICAL: 'bg-green-500/20 text-green-400 border-green-500/30',
-      STRATEGIC: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      SYSTEMIC: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      CROSS_SYSTEM: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
-      SYSTEM_TIER: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-      SYSTEM: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-      HUMAN: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-      COLLECTIVE: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-      ARTIFICIAL: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-      ORGANISATIONAL: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
-      HYBRID: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-      PHYSICAL: 'bg-stone-500/20 text-stone-400 border-stone-500/30',
-      ECONOMIC: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      DIGITAL: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-      SOCIAL: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-      BIOLOGICAL: 'bg-lime-500/20 text-lime-400 border-lime-500/30',
-    }
-    
     return (
-      <span 
-        className={`px-1.5 py-0.5 text-xs rounded border ${colors[category] || colors.FOUNDATIONAL}`}
+      <span
+        className={`px-1.5 py-0.5 text-xs rounded border ${getCategoryBadgeClasses(category)}`}
         title={getCategoryDescription(category)}
       >
         {getCategoryDisplayName(category)}
       </span>
     )
+  }
+
+  const getNodeTypeBadge = (nodeType?: string) => {
+    if (!nodeType) return null
+    const typeDisplayNames: Record<string, string> = {
+      law: 'Law',
+      principle: 'Principle',
+      framework: 'Framework',
+      reality: 'Reality',
+      constraint: 'Universal Foundation',
+      category: 'Category',
+      domain: 'Domain',
+      'power-law': 'Power Law',
+      'bible-law': 'Bible Law',
+      artifact: 'Artifact',
+    }
+    const displayName = typeDisplayNames[nodeType] ?? getNodeTypeDisplayName(nodeType.toUpperCase().replace(/-/g, '_')) ?? nodeType
+    return (
+      <span className={`px-1.5 py-0.5 text-xs rounded border ${getNodeTypeBadgeClasses(nodeType)}`}>
+        {displayName}
+      </span>
+    )
+  }
+
+  const getSystemBadge = (systemId?: string) => {
+    if (!systemId) return null
+    return (
+      <span className={`px-1.5 py-0.5 text-xs rounded border ${getSystemBadgeClasses(systemId)}`}>
+        {getSystemDisplayName(systemId)}
+      </span>
+    )
+  }
+
+  const parseTitleAndSystem = (label: string): { title: string; systemId: string | null } => {
+    const match = label.match(/\s+\(([^)]+)\)$/)
+    if (!match) return { title: label, systemId: systemId ?? null }
+    const suffix = match[1]
+    const systemEntry = Object.entries(SYSTEM_DISPLAY_NAMES).find(([, name]) => name === suffix)
+    if (!systemEntry) return { title: label, systemId: systemId ?? null }
+    const [id] = systemEntry
+    const title = label.slice(0, -match[0].length).trim()
+    return { title, systemId: id }
   }
 
   // Check if a node has no data (no description/summary, no children, no meaningful metadata)
@@ -425,7 +446,9 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     const indent = Math.min(level * 20, 160)
     const showLock = node.immutable || hasNoData(node)
     const lockTitle = node.immutable ? 'Immutable' : 'No data available'
-    const displayName = getDisplayName(node.label)
+    const { title: parsedTitle, systemId: parsedSystemId } = parseTitleAndSystem(node.label)
+    const displayName = getDisplayName(parsedTitle)
+    const effectiveSystemId = parsedSystemId ?? systemId ?? undefined
 
     // Check if a node has a structured knowledge template or universal concept worth displaying
     const hasKnowledgeTemplate = (n: TreeNode) =>
@@ -460,7 +483,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       <div key={node.id} className="select-none">
         <div
           onClick={handleRowClick}
-          className={`flex items-center gap-1 sm:gap-2 py-1.5 px-1 sm:px-2 rounded transition-colors group cursor-pointer ${
+          className={`flex items-center gap-0 py-1.5 px-1 sm:px-2 rounded transition-colors group cursor-pointer ${
             isSelected 
               ? 'bg-blue-500/20 border border-blue-500/50' 
               : 'hover:bg-gray-700/50'
@@ -488,10 +511,10 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           ) : (
             <div className="w-4 h-4 flex-shrink-0" />
           )}
-          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-0 flex-1 min-w-0">
             <div className="flex-shrink-0">{getNodeIcon(node.type)}</div>
             <span
-              className={`truncate flex-1 ${
+              className={`truncate flex-1 min-w-0 ${
                 isSelected
                   ? 'text-blue-300'
                   : node.type === 'reality'
@@ -502,20 +525,21 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                   ? 'text-blue-300'
                   : 'text-gray-300'
               }`}
-              title={node.label} // Show original label on hover
+              title={node.label}
             >
               {displayName}
               {hasChildren && (
                 <span className="text-gray-500 ml-1 hidden sm:inline">(I)</span>
               )}
             </span>
-            <span className="text-xs text-gray-500 ml-1 sm:ml-2 flex-shrink-0 hidden sm:inline">
-              min 1 max 3
-            </span>
             {showLock && (
               <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" title={lockTitle} />
             )}
-            <div className="hidden sm:block">{getCategoryBadge(node.category)}</div>
+            <div className="flex max-sm:hidden items-center gap-0 flex-shrink-0 flex-wrap justify-end">
+              {getNodeTypeBadge(node.type)}
+              {node.category && getCategoryBadge(node.category)}
+              {effectiveSystemId && getSystemBadge(effectiveSystemId)}
+            </div>
             {(node.data?.description || node.data?.summary) && (
               <span className="text-xs text-gray-500 ml-1 sm:ml-2 italic truncate hidden md:inline">
                 - {node.data?.description || node.data?.summary}
@@ -592,14 +616,14 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4"
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-0">
             <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="text-yellow-400 font-semibold mb-1">Data Connection Issue</h4>
               <p className="text-yellow-200/80 text-sm mb-2">
                 {error || "We're experiencing issues connecting to the data service. Some information may be unavailable or incomplete."}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <button
                   onClick={async () => {
                     setHasDataIssues(false)
@@ -607,7 +631,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                     // Clear cache and force fresh load
                     await loadTreeData(true)
                   }}
-                  className="px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 rounded border border-yellow-500/30 text-sm transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 rounded border border-yellow-500/30 text-sm transition-colors flex items-center gap-0"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry Connection
@@ -617,7 +641,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                     href="/api/health"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded border border-blue-500/30 text-sm transition-colors flex items-center gap-2"
+                    className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded border border-blue-500/30 text-sm transition-colors flex items-center gap-0"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Check Backend Health
@@ -631,7 +655,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-0">
             <Layers className="w-6 h-6 text-purple-400" />
             <h2 className="text-2xl font-bold">Reality</h2>
             {lastRefreshTime && (
@@ -640,17 +664,17 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <button
               onClick={expandAll}
-              className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 text-sm flex items-center gap-2 transition-colors"
+              className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 text-sm flex items-center gap-0 transition-colors"
             >
               <Maximize2 className="w-4 h-4" />
               Expand All
             </button>
             <button
               onClick={collapseAll}
-              className="px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 text-sm flex items-center gap-2 transition-colors"
+              className="px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 text-sm flex items-center gap-0 transition-colors"
             >
               <Minimize2 className="w-4 h-4" />
               Collapse All
@@ -695,7 +719,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           onClick={() => setIsLegendCollapsed(!isLegendCollapsed)}
           className="w-full flex items-center justify-between bg-gray-900/50 rounded-lg p-3 border border-gray-700 hover:border-gray-600 transition-colors mb-3"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <Layers className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium text-gray-300">Legend</span>
           </div>
@@ -709,43 +733,43 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         {!isLegendCollapsed && (
           <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
             <h4 className="text-sm font-semibold text-gray-300 mb-3">Node Types</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-400 mb-4">
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-0 text-xs text-gray-400 mb-4">
+              <div className="flex items-center gap-0">
                 <Layers className="w-4 h-4 text-purple-500" />
                 <span>{getNodeTypeDisplayName('REALITY')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <Target className="w-4 h-4 text-indigo-400" />
                 <span>{getNodeTypeDisplayName('UNIVERSAL_FOUNDATION')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <BookOpen className="w-4 h-4 text-blue-400" />
                 <span>{getNodeTypeDisplayName('CATEGORY')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <FileText className="w-4 h-4 text-yellow-400" />
                 <span>{getNodeTypeDisplayName('LAW')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <FileText className="w-4 h-4 text-blue-400" />
                 <span>{getNodeTypeDisplayName('PRINCIPLE')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <Target className="w-4 h-4 text-cyan-400" />
                 <span>{getNodeTypeDisplayName('FRAMEWORK')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <Layers className="w-4 h-4 text-green-400" />
                 <span>{getNodeTypeDisplayName('AGENT')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <Layers className="w-4 h-4 text-orange-400" />
                 <span>{getNodeTypeDisplayName('ENVIRONMENT')}</span>
               </div>
             </div>
             
             <h4 className="text-sm font-semibold text-gray-300 mb-3">Categories</h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-0">
               {['FOUNDATIONAL', 'FUNDAMENTAL', 'POWER', 'BIBLICAL', 'STRATEGIC', 'SYSTEMIC', 'HUMAN', 'COLLECTIVE', 'ARTIFICIAL', 'ORGANISATIONAL', 'HYBRID', 'PHYSICAL', 'ECONOMIC', 'DIGITAL', 'SOCIAL', 'BIOLOGICAL'].map((cat) => (
                 <span key={cat} className="text-xs">
                   {getCategoryBadge(cat)}
@@ -755,11 +779,11 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             
             <div className="mt-4 pt-4 border-t border-gray-700">
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="flex items-center gap-0 text-xs text-gray-400">
                   <Lock className="w-3 h-3 text-purple-400" />
                   <span>Immutable nodes cannot be modified</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="flex items-center gap-0 text-xs text-gray-400">
                   <Lock className="w-3 h-3 text-purple-400" />
                   <span>Lock icon also indicates nodes with no data currently</span>
                 </div>
@@ -788,33 +812,42 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             >
               {/* Header */}
               <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-4 sm:p-6 flex items-start justify-between">
-                <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
+                <div className="flex items-start gap-0 flex-1 min-w-0">
                   <div className="p-2 sm:p-3 bg-blue-500/20 rounded-lg flex-shrink-0">
                     {getNodeIcon(selectedNode.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <h2 className="text-xl sm:text-2xl font-bold text-white break-words">{getDisplayName(selectedNode.label)}</h2>
-                      {(selectedNode.immutable || hasNoData(selectedNode)) && (
-                        <Lock 
-                          className="w-5 h-5 text-purple-400" 
-                          title={selectedNode.immutable ? 'Immutable' : 'No data available'} 
-                        />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm text-gray-400">
-                        {getNodeTypeDisplayName(selectedNode.type)}
-                      </span>
-                      {selectedNode.category && getCategoryBadge(selectedNode.category)}
-                    </div>
+                    {(() => {
+                      const { title, systemId: parsedSystemId } = parseTitleAndSystem(selectedNode.label)
+                      const effectiveSystemId = parsedSystemId ?? systemId ?? undefined
+                      return (
+                        <>
+                          <div className="flex items-center gap-0 mb-2 flex-wrap">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white break-words">
+                              {getDisplayName(title)}
+                            </h2>
+                            {(selectedNode.immutable || hasNoData(selectedNode)) && (
+                              <Lock 
+                                className="w-5 h-5 text-purple-400" 
+                                title={selectedNode.immutable ? 'Immutable' : 'No data available'} 
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-0 flex-wrap">
+                            {getNodeTypeBadge(selectedNode.type)}
+                            {selectedNode.category && getCategoryBadge(selectedNode.category)}
+                            {effectiveSystemId && getSystemBadge(effectiveSystemId)}
+                          </div>
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0">
                   {(selectedNode.type === 'law' || selectedNode.type === 'principle' || selectedNode.type === 'framework' || selectedNode.data?._templateType === 'knowledge' || selectedNode.data?.isUniversalConcept === true) && (
                     <button
                       onClick={() => navigateToArtifact(selectedNode)}
-                      className="p-2 hover:bg-green-500/20 rounded-lg transition-colors text-gray-400 hover:text-green-400 flex items-center gap-1"
+                      className="p-2 hover:bg-green-500/20 rounded-lg transition-colors text-gray-400 hover:text-green-400 flex items-center gap-0"
                       title="View artifact"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -847,7 +880,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Derived From</h3>
                         <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-0">
                             {selectedNode.data.derivedFrom.map((constraint: string, idx: number) => (
                               <span 
                                 key={idx}
@@ -894,7 +927,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Aligned With</h3>
                         <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-0">
                             {selectedNode.data.alignedWith.map((law: string, idx: number) => (
                               <span 
                                 key={idx}
@@ -941,7 +974,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Based On</h3>
                         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-0">
                             {selectedNode.data.basedOn.map((principle: string, idx: number) => (
                               <span 
                                 key={idx}
@@ -1059,7 +1092,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                 {/* Children Count */}
                 {selectedNode.children && selectedNode.children.length > 0 && (
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0">
                       <Layers className="w-5 h-5 text-blue-400" />
                       <span className="text-white font-medium">
                         Contains {selectedNode.children.length} child node{selectedNode.children.length !== 1 ? 's' : ''}

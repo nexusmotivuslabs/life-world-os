@@ -6,12 +6,13 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { X, Shield, Lock, ChevronRight, Calculator, BarChart3, TrendingUp, BookOpen, Package, Smartphone } from 'lucide-react'
+import { X, ChevronRight, Calculator, BarChart3, TrendingUp, BookOpen, Package, Smartphone } from 'lucide-react'
 import { productsApi, Product } from '../services/financeApi'
 import { useToastStore } from '../store/useToastStore'
 import EmergencyFundTracker from './EmergencyFundTracker'
 import BudgetBuilderTracker from './BudgetBuilderTracker'
 import CashFlowAnalyzer from './CashFlowAnalyzer'
+import ProductMiniAppModal from './ProductMiniAppModal'
 import { useNavigation } from '../hooks/useNavigation'
 import { MasterDomain } from '../types'
 
@@ -21,10 +22,11 @@ interface ProductDetailViewProps {
 
 export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
   const { productId } = useParams<{ productId: string }>()
-  const { navigateToMaster, navigateTo } = useNavigation()
+  const { navigateToMaster } = useNavigation()
   const { addToast } = useToastStore()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
+  const [miniAppModalOpen, setMiniAppModalOpen] = useState(false)
 
   useEffect(() => {
     if (productId) {
@@ -114,36 +116,6 @@ export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
           
           <p className="text-gray-300 mb-6">{product.description}</p>
 
-          {/* Security Information */}
-          {product.security && (
-            <div className="mb-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-lg font-semibold text-gray-300">Security & Compliance</span>
-              </div>
-              <div className="space-y-2 text-sm text-gray-400">
-                {product.security.complianceStandards && product.security.complianceStandards.length > 0 && (
-                  <div>
-                    <span className="text-gray-500">Compliance: </span>
-                    {product.security.complianceStandards.join(', ')}
-                  </div>
-                )}
-                {product.security.encryptionAtRest && product.security.encryptionInTransit && (
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-green-400" />
-                    <span>Encrypted at rest & in transit</span>
-                  </div>
-                )}
-                {product.security.authenticationMethod && (
-                  <div>
-                    <span className="text-gray-500">Authentication: </span>
-                    {product.security.authenticationMethod}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Features */}
           {product.features && Array.isArray(product.features) && product.features.length > 0 && (
             <div className="mb-6">
@@ -161,20 +133,18 @@ export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
             </div>
           )}
 
-          {/* Product Access */}
-          {product.accessUrl && (
-            <div className="bg-blue-500/10 border border-blue-500 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-3">This product is available in the app</p>
-              <button
-                onClick={() => navigateTo(product.accessUrl!)}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-medium transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Smartphone className="w-5 h-5" />
-                <span>Open in App</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          {/* Product Access - opens iPhone-sized mini app in modal */}
+          <div className="bg-blue-500/10 border border-blue-500 rounded-lg p-4">
+            <p className="text-sm text-gray-400 mb-3">This product is available in the app</p>
+            <button
+              onClick={() => setMiniAppModalOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-medium transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Smartphone className="w-5 h-5" />
+              <span>Open in App</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -222,6 +192,12 @@ export default function ProductDetailView({ onClose }: ProductDetailViewProps) {
 
         {/* Product Content */}
         {renderProductContent()}
+
+        <ProductMiniAppModal
+          product={product}
+          open={miniAppModalOpen}
+          onClose={() => setMiniAppModalOpen(false)}
+        />
       </div>
     </div>
   )

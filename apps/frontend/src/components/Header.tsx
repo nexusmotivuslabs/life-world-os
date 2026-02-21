@@ -6,7 +6,7 @@
  */
 
 import { Link, useNavigate } from 'react-router-dom'
-import { Settings, LogOut, LogIn, UserPlus, FileText } from 'lucide-react'
+import { Settings, LogOut, FileText, Target } from 'lucide-react'
 import { useGameStore } from '../store/useGameStore'
 import { routes } from '../config/routes'
 import { useEffect } from 'react'
@@ -62,6 +62,15 @@ export default function Header() {
               <>
                 <button
                   type="button"
+                  onClick={() => navigate(routes.actions.path)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-200 hover:text-white hover:bg-white/10 rounded transition-colors"
+                  aria-label="Context to Actions"
+                >
+                  <Target className="w-4 h-4" />
+                  Actions
+                </button>
+                <button
+                  type="button"
                   onClick={() => navigate(routes.blogs.path)}
                   className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-200 hover:text-white hover:bg-white/10 rounded transition-colors"
                   aria-label="Go to Blog"
@@ -94,24 +103,7 @@ export default function Header() {
                   Logout
                 </button>
               </>
-            ) : (
-              <>
-                <Link
-                  to={routes.login.path}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm font-medium"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </Link>
-                <Link
-                  to={routes.register.path}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-sm font-medium"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Sign Up
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

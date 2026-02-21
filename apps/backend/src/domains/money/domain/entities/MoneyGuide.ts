@@ -26,6 +26,12 @@ export interface GuideStep {
   }
 }
 
+export interface GuideDocumentation {
+  teamPurpose?: string
+  keyTerms?: { term: string; definition: string; whyNecessary: string }[]
+  howProductsAndAgentsLeadToOutcome?: string
+}
+
 export class MoneyGuide {
   private constructor(
     public readonly id: string,
@@ -38,7 +44,8 @@ export class MoneyGuide {
     public readonly difficulty: number, // 1-5 scale
     public readonly estimatedTime: number | null, // minutes
     public readonly prerequisites: string[] | null,
-    public readonly isTeamGuide: boolean
+    public readonly isTeamGuide: boolean,
+    public readonly documentation: GuideDocumentation | null = null
   ) {
     // Validate difficulty
     if (difficulty < 1 || difficulty > 5) {
@@ -60,7 +67,8 @@ export class MoneyGuide {
     prerequisites: string[] | null = null,
     agentId: string | null = null,
     teamId: string | null = null,
-    isTeamGuide: boolean = false
+    isTeamGuide: boolean = false,
+    documentation: GuideDocumentation | null = null
   ): MoneyGuide {
     // Validate that either agentId or teamId is set, but not both
     if (agentId && teamId) {
@@ -81,7 +89,8 @@ export class MoneyGuide {
       difficulty,
       estimatedTime,
       prerequisites,
-      isTeamGuide
+      isTeamGuide,
+      documentation
     )
   }
 
@@ -100,6 +109,7 @@ export class MoneyGuide {
     estimatedTime: number | null
     prerequisites: unknown // JSON from database
     isTeamGuide: boolean
+    documentation?: unknown // JSON from database
   }): MoneyGuide {
     // Parse steps from JSON
     const steps = Array.isArray(data.steps)
@@ -113,6 +123,12 @@ export class MoneyGuide {
           : JSON.parse(data.prerequisites as string) as string[])
       : null
 
+    // Parse documentation from JSON
+    const documentation =
+      data.documentation != null && typeof data.documentation === 'object'
+        ? (data.documentation as GuideDocumentation)
+        : null
+
     return new MoneyGuide(
       data.id,
       data.agentId,
@@ -124,7 +140,8 @@ export class MoneyGuide {
       data.difficulty,
       data.estimatedTime,
       prerequisites,
-      data.isTeamGuide
+      data.isTeamGuide,
+      documentation
     )
   }
 

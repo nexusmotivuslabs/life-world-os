@@ -2,7 +2,7 @@
  * MasterSystemLayout
  *
  * Parent component that all systems (Finance, Health, Energy, Travel, Optionality, Trust, Reputation) inherit from.
- * Provides a consistent four-feature structure: Overview, Domain Teams, Expert Agents, Universal Concepts.
+ * Provides a consistent four-feature structure: Guide, Domain Teams, Expert Agents, Universal Concepts.
  * Each system injects its own content via render props.
  */
 
@@ -16,7 +16,7 @@ import DomainTag from './DomainTag'
 import HierarchyTreeView from './knowledge/HierarchyTreeView'
 import type { Team, Agent } from '../services/financeApi'
 
-export type MasterSystemView = 'overview' | 'teams' | 'agents' | 'concepts'
+export type MasterSystemView = 'guide' | 'teams' | 'agents' | 'concepts'
 
 export interface MasterSystemLayoutProps {
   title: string
@@ -29,7 +29,9 @@ export interface MasterSystemLayoutProps {
   agents: Agent[]
   loading?: boolean
   rootNodeId?: string
-  /** Custom content for Overview tab */
+  /** When set, Universal Concepts tree uses system lens for references (e.g. "optionality", "money") */
+  systemId?: string
+  /** Custom content for Guide tab (system overview and guidance) */
   renderOverview: (props: { setView: (view: MasterSystemView) => void }) => React.ReactNode
   /** Optional custom content for Universal Concepts (default: HierarchyTreeView) */
   renderConcepts?: () => React.ReactNode
@@ -68,6 +70,7 @@ export default function MasterSystemLayout({
   agents,
   loading = false,
   rootNodeId = 'constraints-of-reality',
+  systemId,
   renderOverview,
   renderConcepts,
   renderTeamsEmpty = defaultTeamsEmpty,
@@ -75,7 +78,7 @@ export default function MasterSystemLayout({
   onTeamSelect,
   selectedTeam = null,
 }: MasterSystemLayoutProps) {
-  const [view, setView] = useState<MasterSystemView>('overview')
+  const [view, setView] = useState<MasterSystemView>('guide')
 
   if (loading && teams.length === 0 && agents.length === 0) {
     return (
@@ -117,12 +120,12 @@ export default function MasterSystemLayout({
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-8 border-b border-gray-700">
         <button
-          onClick={() => setView('overview')}
+          onClick={() => setView('guide')}
           className={`px-4 py-2 font-medium transition-colors ${
-            view === 'overview' ? `${color} border-b-2 ${color.replace('text-', 'border-')}` : 'text-gray-400 hover:text-white'
+            view === 'guide' ? `${color} border-b-2 ${color.replace('text-', 'border-')}` : 'text-gray-400 hover:text-white'
           }`}
         >
-          Overview
+          Guide
         </button>
         <button
           onClick={() => setView('teams')}
@@ -150,8 +153,8 @@ export default function MasterSystemLayout({
         </button>
       </div>
 
-      {/* Overview View */}
-      {view === 'overview' && renderOverview({ setView: handleSetView })}
+      {/* Guide View */}
+      {view === 'guide' && renderOverview({ setView: handleSetView })}
 
       {/* Teams View */}
       {view === 'teams' && (
@@ -215,13 +218,13 @@ export default function MasterSystemLayout({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {renderConcepts ? renderConcepts() : <HierarchyTreeView rootNodeId={rootNodeId} />}
+          {renderConcepts ? renderConcepts() : <HierarchyTreeView rootNodeId={rootNodeId} systemId={systemId} />}
         </motion.div>
       )}
 
       {/* Team Detail Modal */}
       {selectedTeam && onTeamSelect && (
-        <TeamDetailView team={selectedTeam} onClose={() => onTeamSelect(null)} />
+        <TeamDetailView team={selectedTeam} onClose={() => onTeamSelect(null)} systemId={systemId} />
       )}
     </div>
   )

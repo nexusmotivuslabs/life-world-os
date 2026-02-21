@@ -234,5 +234,143 @@ export const travelApi = {
       }
     )
   },
+
+  /**
+   * Visa & Move Checklist: options for dropdowns (countries, visa types, education, safety/fit).
+   * AI and frontend can use this endpoint to know available dimensions.
+   */
+  async getVisaMoveOptions(): Promise<VisaMoveOptionsResponse> {
+    return apiRequest<VisaMoveOptionsResponse>('/api/travel/visa-move/options', 'GET')
+  },
+
+  /**
+   * Visa & Move Checklist: get suggested next steps for the given profile.
+   * Returns suggested prerequisites, documents, residency steps, safety/fit items, key dates.
+   */
+  async getVisaMoveGuidance(params: VisaMoveGuidanceParams): Promise<VisaMoveGuidanceResponse> {
+    return apiRequest<VisaMoveGuidanceResponse>('/api/travel/visa-move/guidance', 'POST', params)
+  },
+
+  /**
+   * The 3 viable optionality paths. No hype. For feedback like "these are the only real ones".
+   */
+  async getVisaMovePaths(): Promise<VisaMovePathsResponse> {
+    return apiRequest<VisaMovePathsResponse>('/api/travel/visa-move/paths', 'GET')
+  },
+
+  /**
+   * Design Under Constraint: mental model and checklist (pensions, property, ISAs, tax residency, reframe).
+   */
+  async getDesignUnderConstraint(): Promise<DesignUnderConstraintResponse> {
+    return apiRequest<DesignUnderConstraintResponse>('/api/travel/visa-move/design-under-constraint', 'GET')
+  },
+
+  /**
+   * Get the user's move context (current location & financial plumbing).
+   */
+  async getVisaMoveContext(): Promise<{ context: UserMoveContextPayload | null }> {
+    return apiRequest<{ context: UserMoveContextPayload | null }>('/api/travel/visa-move/context', 'GET')
+  },
+
+  /**
+   * Save the user's move context so guidance respects long-term compounding.
+   */
+  async putVisaMoveContext(payload: UserMoveContextPayload): Promise<{ context: UserMoveContextPayload }> {
+    return apiRequest<{ context: UserMoveContextPayload }>('/api/travel/visa-move/context', 'PUT', { payload })
+  },
+}
+
+export interface VisaMoveOptionItem {
+  value: string
+  label: string
+}
+
+export interface VisaMoveOptionsResponse {
+  countries: VisaMoveOptionItem[]
+  visaTypes: VisaMoveOptionItem[]
+  educationLevels: VisaMoveOptionItem[]
+  safetyFitDimensions: VisaMoveOptionItem[]
+}
+
+export interface VisaMoveGuidanceParams {
+  targetCountry: string
+  visaType: string
+  educationLevel?: string
+  safetyFitDimension?: string
+}
+
+export interface VisaMoveGuidanceResponse {
+  suggestedPrerequisites: string[]
+  suggestedDocuments: string[]
+  suggestedResidencySteps: string[]
+  suggestedSafetyFit: string[]
+  suggestedKeyDates: string[]
+  note?: string
+}
+
+export interface OptionalityPathItem {
+  id: string
+  title: string
+  subtitle: string
+  bullets: string[]
+  pros: string[]
+  cons: string[]
+  summary: string
+}
+
+export interface VisaMovePathsResponse {
+  intro: string
+  paths: OptionalityPathItem[]
+}
+
+/** Payload for move context: current location & financial plumbing (Design Under Constraint). */
+export interface UserMoveContextPayload {
+  currentCountry?: string
+  currentCountryCode?: string
+  pensions?: {
+    hasPension?: boolean
+    country?: string
+    keepContributing?: boolean
+    notes?: string
+  }
+  property?: {
+    scenario?: 'keep_rent' | 'sell_before' | 'keep_empty' | 'none'
+    country?: string
+    canRent?: boolean
+    rentCoversMortgage?: boolean
+    notes?: string
+  }
+  isas?: {
+    hasIsa?: boolean
+    hasInvestments?: boolean
+    country?: string
+    notes?: string
+  }
+  taxResidency?: {
+    country?: string
+    residencyChangeDate?: string
+    notes?: string
+  }
+  family?: {
+    hasDependants?: boolean
+    stabilityPriority?: boolean
+  }
+  liquidity?: {
+    runwayMonths?: number
+    runwayCurrency?: string
+  }
+  notes?: string
+}
+
+export interface DesignUnderConstraintResponse {
+  firstPrinciple: { headline: string; body: string; systems: string[] }
+  threeLayers: { headline: string; layers: string[] }
+  pensionsUk: Record<string, unknown>
+  property: Record<string, unknown>
+  isas: Record<string, unknown>
+  taxResidency: Record<string, unknown>
+  family: Record<string, unknown>
+  cleanChecklist: { title: string; intro: string; sections: Array<{ id: string; title: string; questions: string[] }>; closing: string }
+  reframe: { insteadOf: string; ask: string; note: string }
 }
 

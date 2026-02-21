@@ -23,6 +23,25 @@ import { GetLocationDetailsUseCase } from '../../application/useCases/GetLocatio
 import { LocationMatchingService } from '../../domain/services/LocationMatchingService.js'
 import { LocationRecommendationService } from '../../domain/services/LocationRecommendationService.js'
 import { OpenAILMAdapter } from '../../../money/infrastructure/adapters/llm/OpenAILMAdapter.js'
+import {
+  VISA_MOVE_COUNTRIES,
+  VISA_TYPES,
+  EDUCATION_LEVELS,
+  SAFETY_FIT_DIMENSIONS,
+  getVisaMoveGuidance,
+} from '../data/visaMoveOptions.js'
+import { OPTIONALITY_PATHS, OPTIONALITY_PATHS_INTRO } from '../data/optionalityPaths.js'
+import {
+  FIRST_PRINCIPLE,
+  THREE_LAYERS,
+  PENSIONS_UK,
+  PROPERTY_SECTION,
+  ISAS_SECTION,
+  TAX_RESIDENCY_SECTION,
+  FAMILY_SECTION,
+  CLEAN_CHECKLIST,
+  REFRAME,
+} from '../data/designUnderConstraint.js'
 
 const router = Router()
 
@@ -449,6 +468,144 @@ router.post('/locations/search', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     console.error('Error searching locations:', error)
     res.status(500).json({ error: error.message || 'Failed to search locations' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Visa & Move Checklist – options for dropdowns and AI-consumable guidance
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/travel/visa-move/options
+ * Returns options for target country, visa type, education, safety/fit.
+ * Used by frontend dropdowns and by AI to know what dimensions exist.
+ */
+router.get('/visa-move/options', async (req: AuthRequest, res: Response) => {
+  try {
+    res.json({
+      countries: VISA_MOVE_COUNTRIES,
+      visaTypes: VISA_TYPES,
+      educationLevels: EDUCATION_LEVELS,
+      safetyFitDimensions: SAFETY_FIT_DIMENSIONS,
+    })
+  } catch (error: any) {
+    console.error('Error getting visa-move options:', error)
+    res.status(500).json({ error: error.message || 'Failed to get options' })
+  }
+})
+
+/**
+ * POST /api/travel/visa-move/guidance
+ * Body: { targetCountry, visaType, educationLevel?, safetyFitDimension? }
+ * Returns suggested prerequisites, documents, residency steps, safety/fit items, key dates.
+ * AI or frontend can use this to drive next steps.
+ */
+router.post('/visa-move/guidance', async (req: AuthRequest, res: Response) => {
+  try {
+    const { targetCountry, visaType, educationLevel, safetyFitDimension } = req.body || {}
+    if (!targetCountry || !visaType) {
+      return res.status(400).json({
+        error: 'targetCountry and visaType are required',
+      })
+    }
+    const guidance = getVisaMoveGuidance({
+      targetCountry: String(targetCountry),
+      visaType: String(visaType),
+      educationLevel: educationLevel ? String(educationLevel) : undefined,
+      safetyFitDimension: safetyFitDimension ? String(safetyFitDimension) : undefined,
+    })
+    res.json(guidance)
+  } catch (error: any) {
+    console.error('Error getting visa-move guidance:', error)
+    res.status(500).json({ error: error.message || 'Failed to get guidance' })
+  }
+})
+
+/**
+ * GET /api/travel/visa-move/paths
+ * Returns the 3 viable optionality paths (employer-sponsored, remote+residency, ownership).
+ * No hype. AI and frontend can use this to give feedback like "these are the only real ones".
+ */
+router.get('/visa-move/paths', async (req: AuthRequest, res: Response) => {
+  try {
+    res.json({
+      intro: OPTIONALITY_PATHS_INTRO,
+      paths: OPTIONALITY_PATHS,
+    })
+  } catch (error: any) {
+    console.error('Error getting optionality paths:', error)
+    res.status(500).json({ error: error.message || 'Failed to get paths' })
+  }
+})
+
+/**
+ * GET /api/travel/visa-move/design-under-constraint
+ * Returns the Design Under Constraint mental model and checklist (first principle,
+ * three layers, pensions, property, ISAs, tax residency, family, reframe).
+ */
+router.get('/visa-move/design-under-constraint', async (req: AuthRequest, res: Response) => {
+  try {
+    res.json({
+      firstPrinciple: FIRST_PRINCIPLE,
+      threeLayers: THREE_LAYERS,
+      pensionsUk: PENSIONS_UK,
+      property: PROPERTY_SECTION,
+      isas: ISAS_SECTION,
+      taxResidency: TAX_RESIDENCY_SECTION,
+      family: FAMILY_SECTION,
+      cleanChecklist: CLEAN_CHECKLIST,
+      reframe: REFRAME,
+    })
+  } catch (error: any) {
+    console.error('Error getting design-under-constraint:', error)
+    res.status(500).json({ error: error.message || 'Failed to get content' })
+  }
+})
+
+/**
+ * GET /api/travel/visa-move/context
+ * Returns the authenticated user's move context (current location & financial plumbing).
+ */
+router.get('/visa-move/context', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+    const ctx = await prisma.userMoveContext.findUnique({
+      where: { userId },
+    })
+    res.json({ context: ctx ? (ctx.payload as object) : null })
+  } catch (error: any) {
+    console.error('Error getting move context:', error)
+    res.status(500).json({ error: error.message || 'Failed to get context' })
+  }
+})
+
+/**
+ * PUT /api/travel/visa-move/context
+ * Body: { payload: object } — currentCountry, pensions, property, isas, taxResidency, family, liquidity.
+ * Upserts the user's move context so guidance can respect long-term compounding.
+ */
+router.put('/visa-move/context', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+    const { payload } = req.body || {}
+    if (!payload || typeof payload !== 'object') {
+      return res.status(400).json({ error: 'payload object is required' })
+    }
+    const ctx = await prisma.userMoveContext.upsert({
+      where: { userId },
+      create: { userId, payload },
+      update: { payload },
+    })
+    res.json({ context: ctx.payload as object })
+  } catch (error: any) {
+    console.error('Error saving move context:', error)
+    res.status(500).json({ error: error.message || 'Failed to save context' })
   }
 })
 

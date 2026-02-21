@@ -64,6 +64,7 @@ router.get('/', async (req: Request, res: Response) => {
         estimatedTime: guide.estimatedTime,
         totalSteps: guide.getTotalSteps(),
         isTeamGuide: guide.isTeamGuide,
+        documentation: guide.documentation ?? undefined,
       })),
     })
   } catch (error: any) {
@@ -102,6 +103,7 @@ router.get('/:guideId', async (req: Request, res: Response) => {
       estimatedTime: guide.estimatedTime,
       prerequisites: guide.prerequisites,
       isTeamGuide: guide.isTeamGuide,
+      documentation: guide.documentation ?? undefined,
     })
   } catch (error: any) {
     console.error('Error getting guide:', error)
