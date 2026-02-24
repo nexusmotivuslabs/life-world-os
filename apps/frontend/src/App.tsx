@@ -22,15 +22,12 @@ import InsightPlane from './pages/InsightPlane'
 import ConfigurationPlane from './pages/ConfigurationPlane'
 import LoadoutPage from './pages/LoadoutPage'
 import BlogsPage from './pages/BlogsPage'
+import RealityIntelligencePage from './pages/RealityIntelligencePage'
 import ContextActionsPage from './pages/ContextActionsPage'
 import GuideBot from './components/GuideBot'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
-import { useCacheWarming } from './hooks/useCacheWarming'
-
 function App() {
-  // Warm cache on app startup
-  useCacheWarming()
   return (
     <ErrorBoundary level="app">
       <BrowserRouter>
@@ -294,6 +291,13 @@ function App() {
           <Route path="/blogs" element={
             <ProtectedRoute>
               <BlogsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/reality-intelligence" element={
+            <ProtectedRoute>
+              <Layout>
+                <RealityIntelligencePage />
+              </Layout>
             </ProtectedRoute>
           } />
           {/* Root redirects to home */}

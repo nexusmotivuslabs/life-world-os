@@ -42,8 +42,11 @@ interface HierarchyTreeViewProps {
 }
 
 // Resolve API root id (reality -> reality-root) for initial state and effects
-const getActualRootId = (rootNodeId: string) =>
-  rootNodeId === 'reality' ? 'reality-root' : rootNodeId
+const getActualRootId = (rootNodeId: string) => {
+  if (rootNodeId === 'reality') return 'reality-root'
+  if (rootNodeId === 'constraints') return 'constraints-of-reality'
+  return rootNodeId
+}
 
 export default function HierarchyTreeView({ rootNodeId = 'reality', overrideParentId, systemId, onArtifactClick, refreshTrigger }: HierarchyTreeViewProps = {}) {
   const navigate = useNavigate()
@@ -241,16 +244,20 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                             err?.name === 'TypeError'
       
       const isBackendError = err?.status >= 500 || err?.status === 404
-      const errorMessage = isNetworkError 
-        ? 'Cannot connect to backend server. Please ensure the backend is running on port 5001.'
-        : isBackendError
-        ? 'Backend server error. Please check server logs.'
+      const apiBase = typeof import.meta?.env?.VITE_API_URL !== 'undefined' ? import.meta.env.VITE_API_URL : '(check .env VITE_API_URL)'
+      const backendHint = ` Ensure the main backend is running and the database is seeded (e.g. npm run seed). API base: ${apiBase || 'not set'}.`
+      const errorMessage = isNetworkError
+        ? `Cannot connect to the backend.${backendHint}`
+        : err?.status === 404
+        ? `Reality-nodes API not found or node missing (404).${backendHint}`
+        : err?.status >= 500
+        ? 'Backend server error. Check server logs and ensure the database is seeded.'
         : err?.message || 'Unable to load hierarchy data.'
       
       // Try to use stale cache if available (offline support)
-      const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
-      const cacheKey = systemId ? `${actualRootId}@${systemId}` : actualRootId
-      const staleCache = await hierarchyCache.get(cacheKey)
+      const actualRootIdFallback = getActualRootId(rootNodeId)
+      const cacheKeyFallback = systemId ? `${actualRootIdFallback}@${systemId}` : actualRootIdFallback
+      const staleCache = await hierarchyCache.get(cacheKeyFallback)
       if (staleCache) {
         console.log('Using stale cache due to network error')
         setTreeData([staleCache.rootNode])
@@ -636,7 +643,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                   <RefreshCw className="w-4 h-4" />
                   Retry Connection
                 </button>
-                {error?.includes('port 5001') && (
+                {(error?.includes('Cannot connect') || error?.includes('API base')) && (
                   <a
                     href="/api/health"
                     target="_blank"
