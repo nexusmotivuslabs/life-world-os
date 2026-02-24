@@ -55,7 +55,7 @@ describe('errorHandler', () => {
   describe('handleFetchError', () => {
     it('throws ApiError when response is null (network error)', async () => {
       await expect(handleFetchError(null, '/api/test', 'GET')).rejects.toMatchObject({
-        message: expect.stringContaining('Unable to reach the API'),
+        message: expect.stringContaining('Unable to connect'),
         endpoint: '/api/test',
         method: 'GET',
       })

@@ -1,0 +1,217 @@
+{
+  "description": "National Constraint Intelligence — UK. 3–6 high-signal structural metrics per constraint of life. Prefer ONS, NHS, Home Office, Bank of England, Ofgem, Ofcom, UKHSA. Avoid opinion surveys (unless long-running and methodologically stable) and one-off or experimental datasets.",
+  "constraint_categories": [
+    {
+      "id": "physical",
+      "name": "Physical",
+      "layer": 1,
+      "metrics": [
+        {
+          "exact_metric_name": "Brent Crude Oil Price (Europe, USD per barrel)",
+          "publishing_body": "U.S. Energy Information Administration (via FRED)",
+          "dataset_or_series_id": "FRED: DCOILBRENTEU",
+          "update_frequency": "Daily (we use annual average for structural signal)",
+          "signal_type": "leading",
+          "why_it_matters": "UK is a net energy importer; oil price drives input costs, inflation, and physical constraint on industry and households."
+        },
+        {
+          "exact_metric_name": "UK Total Primary Energy Consumption (terajoules)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: UK Energy Statistics (DUKES) — Table 1.1 Total energy consumption",
+          "update_frequency": "Annual",
+          "signal_type": "lagging",
+          "why_it_matters": "Structural measure of energy demand and efficiency; slow-moving, comparable across time and region."
+        },
+        {
+          "exact_metric_name": "Domestic electricity and gas prices (pence per kWh)",
+          "publishing_body": "Office of Gas and Electricity Markets (Ofgem)",
+          "dataset_or_series_id": "Ofgem: Domestic energy market indicators / Price cap data",
+          "update_frequency": "Quarterly (price cap); annual averages for structural comparison",
+          "signal_type": "stress",
+          "why_it_matters": "Direct physical constraint on households and small business; regionally comparable, credible regulator."
+        },
+        {
+          "exact_metric_name": "UK Natural Gas Production (million tonnes of oil equivalent)",
+          "publishing_body": "Department for Energy Security and Net Zero (DESNZ) / ONS",
+          "dataset_or_series_id": "ONS: Digest of UK Energy Statistics (DUKES) — indigenous production",
+          "update_frequency": "Annual",
+          "signal_type": "capacity",
+          "why_it_matters": "Domestic supply capacity; declining North Sea production is a long-run structural constraint."
+        }
+      ]
+    },
+    {
+      "id": "biological",
+      "name": "Biological",
+      "layer": 2,
+      "metrics": [
+        {
+          "exact_metric_name": "Total fertility rate (births per woman)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: Births in England and Wales / World Bank SP.DYN.TFRT.IN for GB",
+          "update_frequency": "Annual",
+          "signal_type": "leading",
+          "why_it_matters": "Determines future labour supply and dependency ratios; moves slowly, methodologically stable."
+        },
+        {
+          "exact_metric_name": "Age dependency ratio (% of working-age population)",
+          "publishing_body": "World Bank (sourced from ONS and UN demographic estimates)",
+          "dataset_or_series_id": "World Bank: SP.POP.DPND — GB",
+          "update_frequency": "Annual",
+          "signal_type": "capacity",
+          "why_it_matters": "Structural constraint on pensions, healthcare and tax base; long historical depth, internationally comparable."
+        },
+        {
+          "exact_metric_name": "Life expectancy at birth (years)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: National life tables (e.g. period expectation of life at birth)",
+          "update_frequency": "Annual",
+          "signal_type": "lagging",
+          "why_it_matters": "Health and biological constraint on workforce and care demand; ONS is the canonical UK source."
+        },
+        {
+          "exact_metric_name": "Deaths registered in England and Wales (annual)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: Deaths registered in England and Wales — annual summary",
+          "update_frequency": "Annual",
+          "signal_type": "stress",
+          "why_it_matters": "Crude mortality level and trend indicate biological stress and demographic drag; stable methodology."
+        }
+      ]
+    },
+    {
+      "id": "economic",
+      "name": "Economic",
+      "layer": 3,
+      "metrics": [
+        {
+          "exact_metric_name": "UK Central government debt (% of GDP)",
+          "publishing_body": "World Bank (sourced from ONS / OBR)",
+          "dataset_or_series_id": "World Bank: GC.DOD.TOTL.GD.ZS — GB",
+          "update_frequency": "Annual",
+          "signal_type": "stress",
+          "why_it_matters": "Fiscal headroom and sustainability; structural constraint on future spending and rates."
+        },
+        {
+          "exact_metric_name": "Bank of England official bank rate (policy rate, %)",
+          "publishing_body": "Bank of England",
+          "dataset_or_series_id": "BoE: IUDBEDR (official bank rate) — Statistical Interactive Database",
+          "update_frequency": "Monthly (decision dates)",
+          "signal_type": "leading",
+          "why_it_matters": "Monetary constraint on credit and inflation; credible, high-frequency, no key required."
+        },
+        {
+          "exact_metric_name": "Public sector net debt excluding public sector banks (% of GDP)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: Public sector finances — PSND ex (PSNB) as % GDP",
+          "update_frequency": "Monthly (with revisions); use annual for structural",
+          "signal_type": "stress",
+          "why_it_matters": "Broader than central government debt; UK-specific, ONS is the national statistician."
+        },
+        {
+          "exact_metric_name": "CPI Annual rate (Consumer Prices Index, %)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: CPIH or CPI — D7BT (annual rate)",
+          "update_frequency": "Monthly",
+          "signal_type": "lagging",
+          "why_it_matters": "Inflation is a core economic constraint on real incomes and monetary policy."
+        }
+      ]
+    },
+    {
+      "id": "informational",
+      "name": "Informational",
+      "layer": 4,
+      "metrics": [
+        {
+          "exact_metric_name": "Fixed broadband subscriptions (per 100 people)",
+          "publishing_body": "World Bank / ITU (UK data aligned with Ofcom)",
+          "dataset_or_series_id": "World Bank: IT.NET.BBND.P2 — GB",
+          "update_frequency": "Annual",
+          "signal_type": "capacity",
+          "why_it_matters": "Infrastructure penetration as informational constraint; low = structural drag on productivity."
+        },
+        {
+          "exact_metric_name": "Research and development expenditure (% of GDP)",
+          "publishing_body": "Office for National Statistics (ONS) / World Bank",
+          "dataset_or_series_id": "World Bank: GB.XPD.RSDV.GD.ZS — GB",
+          "update_frequency": "Annual",
+          "signal_type": "leading",
+          "why_it_matters": "Investment in knowledge and innovation; structural indicator of informational capacity."
+        },
+        {
+          "exact_metric_name": "UK internet use (proportion of adults using internet)",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: Internet access — households and individuals",
+          "update_frequency": "Annual",
+          "signal_type": "capacity",
+          "why_it_matters": "Digital inclusion; ONS survey is long-running and methodologically stable."
+        },
+        {
+          "exact_metric_name": "Full fibre broadband availability (% of premises)",
+          "publishing_body": "Office of Communications (Ofcom)",
+          "dataset_or_series_id": "Ofcom: Connected Nations report — full fibre coverage",
+          "update_frequency": "Annual",
+          "signal_type": "capacity",
+          "why_it_matters": "Infrastructure constraint on speed and reliability; regulator data, regionally comparable."
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "name": "Social",
+      "layer": 5,
+      "metrics": [
+        {
+          "exact_metric_name": "Crime in England and Wales — offences per 1,000 population",
+          "publishing_body": "Office for National Statistics (ONS)",
+          "dataset_or_series_id": "ONS: Crime in England and Wales — police recorded crime, offences per 1,000",
+          "update_frequency": "Annual",
+          "signal_type": "stress",
+          "why_it_matters": "Social stress and institutional trust; ONS is the canonical source, methodologically stable."
+        },
+        {
+          "exact_metric_name": "Unemployment rate (% of total labour force)",
+          "publishing_body": "World Bank (ILO / ONS LFS)",
+          "dataset_or_series_id": "World Bank: SL.UEM.TOTL.ZS — GB",
+          "update_frequency": "Annual",
+          "signal_type": "lagging",
+          "why_it_matters": "Labour market stress and social cohesion; long historical depth, internationally comparable."
+        },
+        {
+          "exact_metric_name": "Number of people on out-of-work benefits (e.g. Universal Credit, legacy benefits)",
+          "publishing_body": "Department for Work and Pensions (DWP) / ONS",
+          "dataset_or_series_id": "DWP: Stat-Xplore or ONS benefit claimant count",
+          "update_frequency": "Monthly; use annual for structural",
+          "signal_type": "stress",
+          "why_it_matters": "Structural dependency and labour market exclusion; UK-specific, credible."
+        },
+        {
+          "exact_metric_name": "Homicide rate (per million population)",
+          "publishing_body": "Office for National Statistics (ONS) / Home Office",
+          "dataset_or_series_id": "ONS: Homicide in England and Wales — rate per million",
+          "update_frequency": "Annual",
+          "signal_type": "fragility",
+          "why_it_matters": "Extreme social fragility indicator; low frequency but high signal, stable definition."
+        }
+      ]
+    }
+  ],
+  "api_keys_required": {
+    "FRED_API_KEY": {
+      "required_for": ["physical — Brent Crude (DCOILBRENTEU)"],
+      "where": "https://fred.stlouisfed.org/docs/api/api_key.html",
+      "note": "Free registration."
+    },
+    "ONS_API_KEY": {
+      "required_for": ["Optional for ONS time series API (faster rate limits). Many ONS datasets are available without key via public URLs."],
+      "where": "https://developer.ons.gov.uk/",
+      "note": "Optional; use for higher throughput or specific time-series API."
+    }
+  },
+  "no_api_key_required": [
+    "World Bank API (all indicators used for GB)",
+    "Bank of England Statistical Interactive Dataset (IUDBEDR)",
+    "Ofgem / Ofcom / ONS — many releases via public spreadsheets or CSV; automated APIs may require keys as noted above."
+  ]
+}

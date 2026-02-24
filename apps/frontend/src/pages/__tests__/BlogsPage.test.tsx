@@ -74,7 +74,7 @@ describe('BlogsPage', () => {
       expect(getAllBlogPosts).toHaveBeenCalled()
     })
 
-    expect(screen.getByText(/Life World OS Blog/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Life World OS Blog/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByRole('link', { name: /back/i })).toBeInTheDocument()
   })
 
@@ -96,10 +96,10 @@ describe('BlogsPage', () => {
       expect(getAllBlogPosts).toHaveBeenCalled()
     })
 
-    // Category dot buttons render the category name (case-insensitive)
+    // Category dot buttons render the category name; post row buttons also contain category text
     expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /systems/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /systems/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByRole('button', { name: /tech/i }).length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows "No blog posts yet" when posts are empty', async () => {
@@ -125,8 +125,10 @@ describe('BlogsPage', () => {
     expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
     expect(screen.getByText('React Performance')).toBeInTheDocument()
 
-    const systemsButton = screen.getByRole('button', { name: /systems/i })
-    await user.click(systemsButton)
+    // Category filter button shows "Systems" and count (e.g. "Systems 1"); post row buttons also contain "Systems"
+    const systemsButtons = screen.getAllByRole('button', { name: /systems/i })
+    const categoryFilter = systemsButtons.find((b) => b.textContent?.match(/Systems\s+1$/))
+    await user.click(categoryFilter ?? systemsButtons[0])
 
     await waitFor(() => {
       expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()

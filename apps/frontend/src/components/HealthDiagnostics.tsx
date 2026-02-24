@@ -42,12 +42,10 @@ export default function HealthDiagnostics({ systemId, onFix }: HealthDiagnostics
     switch (component.type) {
       case 'backend':
         return {
-          issue: 'Backend API is not responding',
+          issue: 'Service is not responding',
           steps: [
-            'Check if backend server is running',
-            'Verify backend URL is correct in environment variables',
-            'Check network connectivity',
-            'Review backend logs for errors',
+            'Check your network connection',
+            'Try again in a moment',
             ...(component.metadata?.bestPractices || []),
           ],
           canAutoFix: false,
@@ -55,12 +53,10 @@ export default function HealthDiagnostics({ systemId, onFix }: HealthDiagnostics
         }
       case 'database':
         return {
-          issue: 'Database connection failed',
+          issue: 'Data is temporarily unavailable',
           steps: [
-            'Verify database is running',
-            'Check database connection string in backend config',
-            'Ensure database credentials are correct',
-            'Check database logs for connection errors',
+            'Try again in a moment',
+            'Check your connection',
             ...(component.metadata?.bestPractices || []),
           ],
           canAutoFix: false,
@@ -169,7 +165,7 @@ export default function HealthDiagnostics({ systemId, onFix }: HealthDiagnostics
             )}
             {backendIssues.length > 0 && (
               <span className="text-red-400">
-                {backendIssues.length} backend issue{backendIssues.length !== 1 ? 's' : ''}
+                {backendIssues.length} service issue{backendIssues.length !== 1 ? 's' : ''}
               </span>
             )}
             {uiIssues.length > 0 && (

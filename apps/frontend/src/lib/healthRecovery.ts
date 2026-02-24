@@ -37,33 +37,37 @@ export function diagnoseHealthIssues(): HealthRecommendation[] {
 
     switch (component.type) {
       case 'backend':
-        recommendation.steps = [
-          '1. Check if backend server is running: `cd apps/backend && npm run dev`',
-          '2. Verify VITE_API_URL environment variable matches backend URL',
-          '3. Check backend logs for errors',
-          '4. Ensure backend port (default 3001) is not in use by another process',
-        ]
+        recommendation.steps = import.meta.env.DEV
+          ? [
+              '1. Check if backend server is running',
+              '2. Verify API URL in environment',
+              '3. Check network connectivity',
+              '4. Try again in a moment',
+            ]
+          : ['Check your connection and try again.', 'If the problem continues, contact support.']
         recommendation.severity = 'critical'
         break
 
       case 'database':
-        recommendation.steps = [
-          '1. Verify database is running (PostgreSQL)',
-          '2. Check database connection in backend .env file',
-          '3. Run database migrations: `cd apps/backend && npx prisma migrate dev`',
-          '4. Test database connection: `cd apps/backend && npx prisma db pull`',
-        ]
+        recommendation.steps = import.meta.env.DEV
+          ? [
+              '1. Verify database is running',
+              '2. Check database connection',
+              '3. Try again in a moment',
+            ]
+          : ['Try again in a moment.', 'If the problem continues, contact support.']
         recommendation.severity = 'critical'
         break
 
       case 'api-provider':
         if (component.id === 'google-places-api') {
-          recommendation.steps = [
-            '1. Set GOOGLE_PLACES_API_KEY in backend .env file',
-            '2. Verify API key has Places API enabled in Google Cloud Console',
-            '3. Check API key billing and quotas',
-            '4. Note: Google Places API is optional - app works without it',
-          ]
+          recommendation.steps = import.meta.env.DEV
+            ? [
+                '1. Verify API key is set',
+                '2. Check API key permissions',
+                '3. Note: Google Places is optional',
+              ]
+            : ['This feature is optional. Other features remain available.']
           recommendation.severity = 'warning'
           recommendation.canAutoRecover = false
         }
@@ -112,8 +116,8 @@ export async function attemptRecovery(componentId: string): Promise<{
         return {
           success: backendResult.status === 'healthy',
           message: backendResult.status === 'healthy'
-            ? 'Backend is now healthy'
-            : `Backend still ${backendResult.status}: ${backendResult.error}`,
+            ? 'Service is available'
+            : 'Service is still unavailable. Please try again later.',
         }
 
       case 'database':

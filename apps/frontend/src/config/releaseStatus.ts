@@ -218,6 +218,16 @@ export const releaseStatuses: Record<string, ReleaseInfo> = {
       lastUpdated: '2025-01-25',
     },
   },
+  reality: {
+    id: 'reality',
+    name: 'Reality Intelligence',
+    attributes: {
+      status: ReleaseStatus.LIVE,
+      version: '1.0.0',
+      notes: 'UK macro constraint intelligence engine. Runs standalone at localhost:5173/reality-intelligence.',
+      lastUpdated: '2026-02-21',
+    },
+  },
 }
 
 /**

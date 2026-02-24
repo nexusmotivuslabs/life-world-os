@@ -25,6 +25,7 @@ export default function MasterSoftware() {
       agents={agents}
       loading={false}
       rootNodeId="systems-node-leverage_tier-software-universal-concept"
+      systemId="software"
       renderOverview={({ setView }) => (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

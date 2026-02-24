@@ -4,7 +4,7 @@
 #   docker-compose --profile db --profile backend -f docker-compose.dev.yml up -d  # DB + Backend
 #   docker-compose --profile full -f docker-compose.dev.yml up -d     # Everything
 
-services:
+services: 
   # Database Service
   postgres-dev:
     profiles: ["db", "full"]
@@ -144,6 +144,48 @@ services:
     # External port is configurable via DEV_HUB_PORT env var (default: 8080)
     # Internal port is always 8080
 
+  # ── Reality Intelligence Engine ──────────────────────────────────────────
+  # Run with: docker-compose --profile rie -f docker-compose.dev.yml up -d
+  # Access at: http://localhost:5173/reality-intelligence
+
+  rie-backend:
+    profiles: ["rie"]
+    build:
+      context: ./apps/rie-backend
+      dockerfile: Dockerfile.dev
+    image: life-world-os-rie-backend:dev
+    container_name: life-world-os-rie-backend
+    environment:
+      - FRED_API_KEY=${FRED_API_KEY:-}
+      - DATABASE_PATH=/app/data/rie.db
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./apps/rie-backend:/app         # Hot reload
+      - rie_sqlite_data:/app/data       # Persist SQLite DB
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
+  rie-frontend:
+    profiles: ["rie"]
+    build:
+      context: ./apps/rie-frontend
+      dockerfile: Dockerfile.dev
+    image: life-world-os-rie-frontend:dev
+    container_name: life-world-os-rie-frontend
+    environment:
+      - VITE_RIE_API_URL=http://localhost:8100
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/rie-frontend/src:/app/src  # Hot reload
+    depends_on:
+      - rie-backend
+    networks:
+      - life-world-os-dev-network
+    restart: unless-stopped
+
 networks:
   life-world-os-dev-network:
     driver: bridge
@@ -152,3 +194,4 @@ volumes:
   postgres_dev_data:
     # Cloud-ready: Replace with EBS, Persistent Disk, etc.
   redis_dev_data:
+  rie_sqlite_data:

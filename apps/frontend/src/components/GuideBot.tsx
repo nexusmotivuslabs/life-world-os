@@ -49,7 +49,7 @@ function GuideBot() {
     const checkBackend = async () => {
       try {
         // Use the same API_URL as api.ts
-        const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:5001';
+        const API_URL = (import.meta.env?.VITE_API_URL as string | undefined) ?? '';
         const response = await fetch(`${API_URL}/api/health`, {
           method: 'GET',
           signal: AbortSignal.timeout(3000), // 3 second timeout

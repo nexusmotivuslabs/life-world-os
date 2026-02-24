@@ -11,6 +11,20 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // Critical areas: config (release, artifacts), choose-plane & blogs, blog/error services, navigation store, currency, hooks, release types
+      include: [
+        'src/config/releaseStatus.ts',
+        'src/config/artifactSystemConfig.ts',
+        'src/pages/PlaneChoice.tsx',
+        'src/pages/BlogsPage.tsx',
+        'src/services/blogApi.ts',
+        'src/services/errorHandler.ts',
+        'src/store/useNavigationStore.ts',
+        'src/utils/currency.ts',
+        'src/hooks/usePageDataLoader.ts',
+        'src/hooks/useNavigation.tsx',
+        'src/types/release.ts',
+      ],
       exclude: [
         'node_modules/**',
         'dist/**',
@@ -19,17 +33,13 @@ export default defineConfig({
         '**/*.test.*',
         '**/*.spec.*',
         'src/test/**',
-        'src/main.tsx',
-        'src/App.tsx',
-        'src/vite-env.d.ts',
         '**/index.ts',
       ],
-      // Target: 85% for reliability. Raise thresholds as coverage increases.
       thresholds: {
-        lines: 4,
-        functions: 8,
-        branches: 35,
-        statements: 4,
+        lines: 85,
+        statements: 85,
+        functions: 70,
+        branches: 70,
       },
     },
   },

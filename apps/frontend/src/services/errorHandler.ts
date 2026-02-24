@@ -143,9 +143,8 @@ export async function handleFetchError(
 ): Promise<never> {
   // Network error (no response)
   if (!response) {
-    const errorMessage = 'Unable to reach the API. Make sure the backend is running and VITE_API_URL is correct.'
     const error = createApiError(
-      errorMessage,
+      'Unable to connect. Please try again later.',
       endpoint,
       method,
       undefined,
@@ -153,15 +152,9 @@ export async function handleFetchError(
       undefined,
       originalError
     )
-
-    console.error('❌ API Request Failed:', {
-      endpoint,
-      method,
-      error: originalError?.message || 'Network request failed',
-      type: 'network',
-      timestamp: new Date().toISOString(),
-    })
-
+    if (import.meta.env.DEV) {
+      console.error('API Request Failed (network):', { endpoint, method, error: originalError?.message })
+    }
     throw error
   }
 
@@ -194,17 +187,9 @@ export async function handleFetchError(
       })
     }
 
-    console.error('❌ API Request Failed:', {
-      endpoint,
-      method,
-      status: response.status,
-      statusText: response.statusText,
-      error: errorMessage,
-      responseBody,
-      type: 'http',
-      timestamp: new Date().toISOString(),
-    })
-
+    if (import.meta.env.DEV) {
+      console.error('API Request Failed:', { endpoint, method, status: response.status, error: errorMessage })
+    }
     throw error
   } catch (e) {
     // If we already threw an error, re-throw it
@@ -223,16 +208,9 @@ export async function handleFetchError(
       originalError
     )
 
-    console.error('❌ API Request Failed (fallback):', {
-      endpoint,
-      method,
-      status: response.status,
-      statusText: response.statusText,
-      error: e,
-      type: 'http',
-      timestamp: new Date().toISOString(),
-    })
-
+    if (import.meta.env.DEV) {
+      console.error('API Request Failed (fallback):', { endpoint, method, status: response.status, error: e })
+    }
     throw error
   }
 }

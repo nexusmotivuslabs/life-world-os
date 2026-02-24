@@ -81,6 +81,7 @@ export default function MasterEnergy() {
       agents={agents}
       loading={totalLoading}
       rootNodeId="systems-node-stability_tier-energy-universal-concept"
+      systemId="energy"
       renderOverview={({ setView }) => (
         <div className="space-y-8">
           {energyStatus && (

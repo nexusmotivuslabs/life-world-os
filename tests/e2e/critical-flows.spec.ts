@@ -208,6 +208,38 @@ test.describe('Plane Labels Design', () => {
     const operateBadge = page.getByText('Operate').first();
     await expect(operateBadge).toHaveClass(/rounded-full/);
   });
+
+  test('Reality Intelligence is in Available Now and accessible from choose-plane', async ({ page }) => {
+    await page.goto('/choose-plane');
+
+    // Available Now section is the correct plane for live features
+    await expect(page.getByRole('heading', { name: 'Available Now' })).toBeVisible();
+
+    // Reality Intelligence card is present in that section
+    const realityHeading = page.getByRole('heading', { name: 'Reality Intelligence', exact: true });
+    await expect(realityHeading).toBeVisible();
+
+    // Card has the Analyse badge (same plane as other available planes)
+    await expect(realityHeading.locator('..').getByText('Analyse')).toBeVisible();
+
+    // Card describes the RIE (constraints of life) so users know what they are opening
+    await expect(page.getByText(/constraints of life/i)).toBeVisible();
+    await expect(page.getByText(/Physical • Biological • Economic • Informational • Social/i)).toBeVisible();
+  });
+
+  test('Reality Intelligence navigates in-app like other planes', async ({ page }) => {
+    await page.goto('/choose-plane');
+
+    const realityCard = page.getByRole('heading', { name: 'Reality Intelligence', exact: true }).locator('../..');
+    await expect(realityCard).toBeVisible();
+
+    await realityCard.click();
+
+    // Same-tab navigation to /reality-intelligence (like Loadouts, Blog)
+    await expect(page).toHaveURL(/\/reality-intelligence/);
+    // RIE content is embedded (iframe or dashboard)
+    await expect(page.locator('iframe[title*="Reality Intelligence"]')).toBeVisible({ timeout: 5000 });
+  });
 });
 
 test.describe('Backend Health', () => {

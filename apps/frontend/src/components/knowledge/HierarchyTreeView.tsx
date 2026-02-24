@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react'
+import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, ExternalLink } from 'lucide-react'
 import { realityNodeApi, RealityNode } from '../../services/financeApi'
 import {
   getCategoryDisplayName,
@@ -53,8 +53,6 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   const actualRootId = getActualRootId(rootNodeId)
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [hasDataIssues, setHasDataIssues] = useState(false)
   // Initial expanded: use actual root id so root node (e.g. reality-root) is expanded
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => new Set([actualRootId]))
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(true)
@@ -87,7 +85,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       setLastRefreshTime(new Date())
       setExpandedNodes(preservedExpandedNodes)
     } catch (err) {
-      console.error('Failed to refresh tree data:', err)
+      if (import.meta.env.DEV) console.error('Failed to refresh tree data:', err)
     } finally {
       isRefreshingRef.current = false
       setIsRefreshing(false)
@@ -198,11 +196,8 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
   const loadTreeData = async (clearCacheFirst = false) => {
     try {
-      setError(null)
-      setHasDataIssues(false)
-
-      const actualRootId = rootNodeId === 'reality' ? 'reality-root' : rootNodeId
-      const cacheKey = systemId ? `${actualRootId}@${systemId}` : actualRootId
+      const resolvedRootId = getActualRootId(rootNodeId)
+      const cacheKey = systemId ? `${resolvedRootId}@${systemId}` : resolvedRootId
 
       if (clearCacheFirst) {
         realityNodeApi.clearCache()
@@ -211,22 +206,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
       const cached = await hierarchyCache.get(cacheKey)
       if (cached && !clearCacheFirst) {
-        // Show cached data immediately (instant load)
+        // Cache exists: show it and revalidate in background
         setTreeData([cached.rootNode])
         setLastRefreshTime(new Date(cached.metadata.timestamp))
-        setLoading(false) // Don't show loading spinner for cached data
-        
-        // Then refresh in background (revalidate)
-        refreshTreeDataInBackground(cacheKey, actualRootId)
+        setLoading(false)
+        refreshTreeDataInBackground(cacheKey, resolvedRootId)
         return
       }
 
+      // No cache (or cleared): fetch from backend
       setLoading(true)
-      console.log(`Loading hierarchy tree from root: ${actualRootId}${systemId ? ` (system: ${systemId})` : ''}`)
 
-      const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
-
-      console.log(`Loaded tree data:`, rootTree)
+      const rootTree = await loadNodeWithChildren(resolvedRootId, overrideParentId)
 
       await hierarchyCache.set(cacheKey, rootTree)
       
@@ -234,39 +225,15 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       setTreeData([rootTree])
       setLastRefreshTime(new Date())
     } catch (err: any) {
-      console.error('Failed to load tree from backend:', err)
-      
-      // Determine error type
-      const isNetworkError = err?.message?.includes('fetch') || 
-                            err?.message?.includes('network') ||
-                            err?.message?.includes('Failed to fetch') ||
-                            err?.code === 'ECONNREFUSED' ||
-                            err?.name === 'TypeError'
-      
-      const isBackendError = err?.status >= 500 || err?.status === 404
-      const apiBase = typeof import.meta?.env?.VITE_API_URL !== 'undefined' ? import.meta.env.VITE_API_URL : '(check .env VITE_API_URL)'
-      const backendHint = ` Ensure the main backend is running and the database is seeded (e.g. npm run seed). API base: ${apiBase || 'not set'}.`
-      const errorMessage = isNetworkError
-        ? `Cannot connect to the backend.${backendHint}`
-        : err?.status === 404
-        ? `Reality-nodes API not found or node missing (404).${backendHint}`
-        : err?.status >= 500
-        ? 'Backend server error. Check server logs and ensure the database is seeded.'
-        : err?.message || 'Unable to load hierarchy data.'
-      
-      // Try to use stale cache if available (offline support)
-      const actualRootIdFallback = getActualRootId(rootNodeId)
-      const cacheKeyFallback = systemId ? `${actualRootIdFallback}@${systemId}` : actualRootIdFallback
+      if (import.meta.env.DEV) console.error('Failed to load tree:', err)
+      // No cache or request failed: try showing any stale cache; otherwise empty
+      const resolvedRootIdFallback = getActualRootId(rootNodeId)
+      const cacheKeyFallback = systemId ? `${resolvedRootIdFallback}@${systemId}` : resolvedRootIdFallback
       const staleCache = await hierarchyCache.get(cacheKeyFallback)
       if (staleCache) {
-        console.log('Using stale cache due to network error')
         setTreeData([staleCache.rootNode])
         setLastRefreshTime(new Date(staleCache.metadata.timestamp))
-        setError(`Using cached data (${new Date(staleCache.metadata.timestamp).toLocaleString()}). ${errorMessage}`)
-        setHasDataIssues(true) // Still show warning even with cached data
       } else {
-        setError(errorMessage + ' No cached data available.')
-        setHasDataIssues(true)
         setTreeData([])
       }
     } finally {
@@ -303,8 +270,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         return prev
       })
     } catch (err) {
-      console.error('Background refresh failed:', err)
-      // Don't show error, just log it - user still has cached data
+      if (import.meta.env.DEV) console.error('Background refresh failed:', err)
     }
   }
 
@@ -616,50 +582,6 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-      {/* Data Issues Warning */}
-      {hasDataIssues && !loading && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4"
-        >
-          <div className="flex items-start gap-0">
-            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="text-yellow-400 font-semibold mb-1">Data Connection Issue</h4>
-              <p className="text-yellow-200/80 text-sm mb-2">
-                {error || "We're experiencing issues connecting to the data service. Some information may be unavailable or incomplete."}
-              </p>
-              <div className="flex items-center gap-0">
-                <button
-                  onClick={async () => {
-                    setHasDataIssues(false)
-                    setError(null)
-                    // Clear cache and force fresh load
-                    await loadTreeData(true)
-                  }}
-                  className="px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 rounded border border-yellow-500/30 text-sm transition-colors flex items-center gap-0"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Retry Connection
-                </button>
-                {(error?.includes('Cannot connect') || error?.includes('API base')) && (
-                  <a
-                    href="/api/health"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded border border-blue-500/30 text-sm transition-colors flex items-center gap-0"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Check Backend Health
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-0">
@@ -699,22 +621,9 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           <div className="text-center py-8 text-gray-400">
             <p>Loading hierarchy tree...</p>
           </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-400 mb-2">{error}</p>
-            <button
-              onClick={loadTreeData}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors mt-2"
-            >
-              Retry
-            </button>
-          </div>
         ) : treeData.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400 mb-2">No hierarchy data available.</p>
-            <p className="text-gray-500 text-sm">
-              The database may not be seeded yet. Run the seed script to populate the Reality hierarchy.
-            </p>
+            <p className="text-gray-400">No hierarchy data available.</p>
           </div>
         ) : (
           treeData.map((node) => renderTreeNode(node, 0))
@@ -845,6 +754,11 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                             {selectedNode.category && getCategoryBadge(selectedNode.category)}
                             {effectiveSystemId && getSystemBadge(effectiveSystemId)}
                           </div>
+                          {effectiveSystemId && (
+                            <p className="text-sm text-gray-400 mt-2">
+                              In the context of: {getSystemDisplayName(effectiveSystemId)} system
+                            </p>
+                          )}
                         </>
                       )
                     })()}

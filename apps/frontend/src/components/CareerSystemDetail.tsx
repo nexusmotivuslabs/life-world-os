@@ -124,6 +124,7 @@ export default function CareerSystemDetail({ systemId }: CareerSystemDetailProps
           agents={agents}
           loading={loading}
           rootNodeId="constraints-of-reality"
+          systemId={systemId}
           selectedTeam={selectedTeam}
           onTeamSelect={setSelectedTeam}
           renderOverview={() => (

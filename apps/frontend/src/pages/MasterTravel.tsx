@@ -119,6 +119,7 @@ export default function MasterTravel() {
       agents={agents}
       loading={false}
       rootNodeId="systems-node-expression_tier-travel-universal-concept"
+      systemId="travel"
       renderOverview={() => (
         <div className="space-y-8">
           <div className="flex gap-4 mb-6">

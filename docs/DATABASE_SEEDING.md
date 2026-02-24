@@ -1,8 +1,24 @@
 # Database Seeding Guide
 
-## Important: Seeding is NOT Automatic
+## Running the app with full data
 
-**Seeding does NOT run automatically when containers start.** This is intentional because:
+To run the app so **all data is available** (hierarchy, laws, artifacts, test users):
+
+- **Local Lite** (one command, auto-seed):  
+  `./scripts/envs/local-lite.sh`  
+  Backend: http://localhost:5001 · Frontend: http://localhost:5002 (or 5173). Seed runs after the backend is up.
+
+- **Docker full**:  
+  `npm run dev:full` then `npm run seed:dev`  
+  Backend: http://localhost:3001.
+
+See **[RUNBOOKS.md](./RUNBOOKS.md#start-application-with-full-data)** for step-by-step and ports.
+
+---
+
+## Important: Seeding is NOT Automatic (Docker)
+
+**Seeding does NOT run automatically when Docker containers start.** This is intentional because:
 
 1. Seeding is time-consuming (can take 1-2 minutes)
 2. Seeding is idempotent (safe to run multiple times)
@@ -154,10 +170,10 @@ This error appears when:
 - Required seed data is missing
 
 **Solution:**
-1. Ensure database container is running: `docker ps | grep postgres`
-2. Run seed script: `npm run seed:dev`
-3. Check backend logs: `docker logs life-world-os-backend-dev`
-4. Verify health endpoint: `curl http://localhost:3001/api/health`
+1. Ensure database (and backend) is running. For **Local Lite**: backend is on port 5001; for **Docker**: `docker ps | grep postgres` and backend container.
+2. Run seed: **Local Lite** — `cd apps/backend && npm run seed`. **Docker** — `npm run seed:dev`.
+3. Check backend logs. **Local Lite**: `tail -f /tmp/life-world-backend.log`. **Docker**: `docker logs life-world-os-backend-dev`.
+4. Verify health: **Local Lite** — `curl http://localhost:5001/api/health`. **Docker** — `curl http://localhost:3001/api/health`.
 
 ## Quick Reference
 
@@ -184,7 +200,8 @@ docker exec life-world-os-backend-dev npx prisma studio  # Opens Prisma Studio
 
 ## Related Documentation
 
-- [Database Setup Guide](../DOCKER_ENVIRONMENT_SETUP.md)
+- [Runbooks: Start application with full data](./RUNBOOKS.md#start-application-with-full-data)
 - [Deployment Guide](./DEPLOYMENT.md)
-- [Troubleshooting Guide](../TROUBLESHOOTING.md)
+- [Database Setup Guide](../DOCKER_ENVIRONMENT_SETUP.md) (if present)
+- [Troubleshooting Guide](../TROUBLESHOOTING.md) (if present)
 

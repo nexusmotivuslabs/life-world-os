@@ -144,7 +144,7 @@ export function initializeSystemHealth(): void {
       systemId: 'dashboard', // Shared component
       runbookUrl: '/system-health/dashboard/components',
       expectedErrors: ['ECONNREFUSED', 'Timeout', '500 Internal Server Error'],
-      bestPractices: ['Ensure backend is running on port 3001', 'Check network connectivity'],
+      bestPractices: ['Check network connectivity', 'Try again in a moment'],
     },
   })
 
@@ -158,7 +158,7 @@ export function initializeSystemHealth(): void {
       systemId: 'dashboard', // Shared component
       runbookUrl: '/system-health/dashboard/components',
       expectedErrors: ['Connection refused', 'Database timeout', 'Migration errors'],
-      bestPractices: ['Ensure PostgreSQL is running', 'Check DATABASE_URL environment variable'],
+      bestPractices: ['Try again in a moment', 'Check network connectivity'],
     },
   })
 

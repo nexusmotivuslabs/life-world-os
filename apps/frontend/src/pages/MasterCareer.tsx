@@ -53,6 +53,7 @@ export default function MasterCareer() {
       loading={loading}
       systemId={MasterDomain.CAREER}
       rootNodeId="systems-node-cross_system_states-trust-universal-concept"
+      systemId="career"
       selectedTeam={selectedTeam}
       onTeamSelect={setSelectedTeam}
       renderOverview={({ setView }) => (

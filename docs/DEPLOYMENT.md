@@ -1,7 +1,28 @@
 # Deployment Guide
 
-**Last Updated**: 2025-01-15  
+**Last Updated**: 2025-02-24  
 **Maintained By**: Atlas (DevOps Engineer)
+
+---
+
+## Pre-deployment checklist
+
+Before deploying (staging or production):
+
+1. **Tests and coverage**
+   - From repo root: `npm run test` (runs backend + frontend unit tests)
+   - Coverage: `npm run test:coverage` — enforces **85%** lines/statements on critical areas (config, core services, choose-plane, blogs, navigation, utils)
+   - E2E (optional): `npm run test:e2e` (requires app and backend running)
+
+2. **Environment**
+   - Main app: `.env.staging` / `.env.prod` with `DATABASE_URL`, `JWT_SECRET`, `STAGING_API_URL` / `PROD_API_URL`, etc. See `config/environments/` and compose files.
+   - RIE (Reality Intelligence): if you run the RIE backend, set `FRED_API_KEY` in `apps/rie-backend/.env`. See `apps/rie-backend/API_KEYS.md`.
+
+3. **Build**
+   - `npm run build` (backend + frontend). For staging/prod images, use the Dockerfiles in `apps/backend` and `apps/frontend` (e.g. `Dockerfile.staging`, `Dockerfile.prod`).
+
+4. **Health**
+   - Backend: `GET /health` (or `/api/health`). Frontend: static or nginx health route if configured.
 
 ---
 
@@ -19,22 +40,26 @@ Life World OS supports multiple deployment strategies from local development to 
 
 **Infrastructure**: Local machine only
 
-**Quick Start**:
+**Quick Start (with full data – recommended)**:
 ```bash
-# Verify prerequisites
+# One command: DB, backend, frontend, and seed (Local Lite)
+./scripts/envs/local-lite.sh
+```
+- Frontend: http://localhost:5002 (or 5173)
+- Backend: http://localhost:5001
+- Database: localhost:5433  
+- Seed runs automatically so hierarchy, laws, and artifacts are available. Log in (e.g. test@example.com / password123). See [RUNBOOKS.md](./RUNBOOKS.md#start-application-with-full-data).
+
+**Alternative (database + dev servers)**:
+```bash
 npm run verify
-
-# Setup environment
 cp config/environments/dev.env.example .env.dev
-
-# Install dependencies
 npm install
-
-# Start development (database only - recommended)
 npm run dev:db && npm run dev
+# Then in another terminal: cd apps/backend && npm run seed
 ```
 
-**Access**: 
+**Access (alternative)**: 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 - Database: localhost:5433

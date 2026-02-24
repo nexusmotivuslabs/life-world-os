@@ -1,6 +1,6 @@
 # Runbooks
 
-**Last Updated**: 2025-01-15  
+**Last Updated**: 2025-02-21  
 **Maintained By**: Atlas (DevOps Engineer) + Sentinel (QA Engineer)
 
 ---
@@ -11,19 +11,69 @@ Runbooks provide step-by-step procedures for common operational tasks, troublesh
 
 ---
 
+## Start application with full data
+
+Use one of these flows so the app has hierarchy, laws, artifacts, and all seeded data available.
+
+### Option A: Local Lite (recommended for development)
+
+Runs PostgreSQL (Docker), main backend, main frontend, and optionally RIE. Backend on **port 5001**, frontend on **5002** (or 5173). Seed runs automatically after the backend is up so data is available.
+
+```bash
+# From repo root
+./scripts/envs/local-lite.sh
+```
+
+- **Frontend**: http://localhost:5002 (or http://localhost:5173 if 5002 is in use)
+- **Backend**: http://localhost:5001
+- **Health**: http://localhost:5001/api/health
+- **Database**: localhost:5433
+
+To skip automatic seeding (e.g. you already seeded): `SKIP_SEED=1 ./scripts/envs/local-lite.sh`
+
+If you run without auto-seed, in a **second terminal** seed the database:
+
+```bash
+cd apps/backend && npm run seed
+```
+
+Then refresh the frontend; log in with a test user (e.g. `test@example.com` / `password123`) to see Knowledge, Systems, and Artifacts data.
+
+### Option B: Docker full stack
+
+Runs database, Redis, backend, and frontend in Docker. Backend on **port 3001**. Seed is **not** automatic; run it once after containers are up.
+
+```bash
+# From repo root
+npm run dev:full
+# Wait for containers to be healthy, then in the same or another terminal:
+npm run seed:dev
+```
+
+- **Frontend**: http://localhost:5173 (or per docker-compose.dev.yml)
+- **Backend**: http://localhost:3001
+- **Health**: http://localhost:3001/api/health
+
+See [DATABASE_SEEDING.md](./DATABASE_SEEDING.md) for what gets seeded and troubleshooting.
+
+---
+
 ## Health & Troubleshooting
 
 ### Check System Health
 
 ```bash
-# Development
-curl http://localhost:3001/health
+# Local Lite (backend on 5001)
+curl http://localhost:5001/api/health
+
+# Docker dev (backend on 3001)
+curl http://localhost:3001/api/health
 
 # Staging
-curl http://localhost:3002/health
+curl http://localhost:3002/api/health
 
 # Production
-curl http://localhost:3000/health
+curl http://localhost:3000/api/health
 ```
 
 ### Health Check Response
@@ -164,6 +214,8 @@ docker exec <backend-container> npx prisma migrate deploy
    docker-compose restart backend
    ```
 
+For **Local Lite** (backend process, not Docker): restart with `./scripts/envs/local-lite.sh` (Ctrl+C first to stop).
+
 ### Database Errors
 
 1. **Check Database Status**
@@ -297,12 +349,19 @@ docker exec <backend-container> npx prisma migrate status
 
 ### Reset Database
 
+**Docker:**
 ```bash
 # ⚠️ WARNING: This deletes all data
-docker-compose down -v
-docker-compose up -d postgres-dev
-docker exec <backend-container> npx prisma migrate deploy
-docker exec <backend-container> npm run seed
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml --profile full up -d
+npm run seed:dev
+```
+
+**Local Lite** (PostgreSQL in Docker, backend on host):
+```bash
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose --profile db -f docker-compose.dev.yml up -d postgres-dev
+cd apps/backend && npm run migrate && npm run seed
 ```
 
 ---

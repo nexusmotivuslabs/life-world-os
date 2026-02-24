@@ -121,6 +121,7 @@ export default function MasterMeaning() {
       agents={agents}
       loading={totalLoading}
       rootNodeId="systems-node-expression_tier-meaning-universal-concept"
+      systemId="meaning"
       renderOverview={({ setView: setParentView }) => (
         <div className="space-y-8">
           {/* Sub-navigation for Meaning-specific views */}

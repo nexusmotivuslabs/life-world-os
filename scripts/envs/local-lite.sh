@@ -34,7 +34,7 @@ echo -e "${BLUE}╚════════════════════�
 
 # Step 0: Cleanup
 log_service "Step 0: Cleanup & Teardown"
-for PORT in 5001 5173 5002; do
+for PORT in 5001 5173 5002 8100; do
     PIDS=$(lsof -ti:$PORT 2>/dev/null || echo "")
     [ -n "$PIDS" ] && echo "$PIDS" | xargs kill -9 2>/dev/null || true
     sleep 1
@@ -163,6 +163,15 @@ if [ "$BACKEND_READY" = false ]; then
     ps -p $BACKEND_PID >/dev/null 2>&1 && log_warning "Backend process running; check: tail -f /tmp/life-world-backend.log" || log_error "Backend failed - see /tmp/life-world-backend.log"
 fi
 
+# Step 5.5: Seed database (full data: hierarchy, laws, artifacts, test users)
+if [ -z "$SKIP_SEED" ] && [ "$BACKEND_READY" = true ]; then
+    log_service "Step 5.5: Seed database (full data)"
+    log_info "Seeding database in background (hierarchy, laws, artifacts ~1–2 min)..."
+    (cd apps/backend && npm run seed >> /tmp/life-world-seed.log 2>&1) &
+    SEED_PID=$!
+    log_success "Seed started in background (logs: /tmp/life-world-seed.log). Refresh frontend in 1–2 min and log in (e.g. test@example.com / password123) to see data."
+fi
+
 # Step 6: Frontend
 log_service "Step 6: Frontend Service"
 log_info "Starting frontend..."
@@ -173,15 +182,10 @@ cd ../..
 
 log_info "Waiting for frontend..."
 FRONTEND_READY=false
-FRONTEND_PORT="5173"
+FRONTEND_PORT="5002"
 for i in {1..30}; do
     if curl -s http://localhost:5002 >/dev/null 2>&1; then
         FRONTEND_PORT="5002"
-        FRONTEND_READY=true
-        break
-    fi
-    if curl -s http://localhost:5173 >/dev/null 2>&1; then
-        FRONTEND_PORT="5173"
         FRONTEND_READY=true
         break
     fi
@@ -194,11 +198,69 @@ if [ "$FRONTEND_READY" = true ]; then
 else
     if ps -p $FRONTEND_PID >/dev/null 2>&1; then
         log_warning "Frontend process running; check: tail -f /tmp/life-world-frontend.log"
-        grep -q "Local:" /tmp/life-world-frontend.log 2>/dev/null && FRONTEND_PORT=$(grep "Local:" /tmp/life-world-frontend.log | tail -1 | grep -o "http://localhost:[0-9]*" | cut -d: -f3 || echo "5173")
     else
         log_error "Frontend failed - see /tmp/life-world-frontend.log"
     fi
 fi
+
+# Step 7: Reality Intelligence Engine
+log_service "Step 7: Reality Intelligence Engine"
+
+# RIE Backend (Python FastAPI on port 8100)
+RIE_BACKEND_PID=""
+if command -v python3 >/dev/null 2>&1; then
+    RIE_DIR="$PROJECT_ROOT/apps/rie-backend"
+    RIE_VENV="$RIE_DIR/.venv"
+
+    # Create venv and install if not present
+    if [ ! -d "$RIE_VENV" ]; then
+        log_info "Setting up Python venv for RIE backend..."
+        python3 -m venv "$RIE_VENV" >/dev/null 2>&1
+        "$RIE_VENV/bin/pip" install -q -r "$RIE_DIR/requirements.txt" 2>/dev/null
+        log_success "RIE backend dependencies installed"
+    fi
+
+    # Create .env if missing
+    [ ! -f "$RIE_DIR/.env" ] && [ -f "$RIE_DIR/.env.example" ] && cp "$RIE_DIR/.env.example" "$RIE_DIR/.env"
+
+    log_info "Starting RIE backend (port 8100)..."
+    cd "$RIE_DIR"
+    DATABASE_PATH="./data/rie.db" "$RIE_VENV/bin/uvicorn" main:app --host 0.0.0.0 --port 8100 --reload > /tmp/rie-backend.log 2>&1 &
+    RIE_BACKEND_PID=$!
+    cd "$PROJECT_ROOT"
+
+    RIE_BACKEND_READY=false
+    for i in {1..20}; do
+        if curl -s http://localhost:8100/health >/dev/null 2>&1; then
+            log_success "RIE backend is UP (http://localhost:8100)"
+            RIE_BACKEND_READY=true
+            break
+        fi
+        sleep 1
+    done
+    [ "$RIE_BACKEND_READY" = false ] && log_warning "RIE backend starting... check: tail -f /tmp/rie-backend.log"
+else
+    log_warning "python3 not found — skipping RIE backend (install Python 3.12+ to enable)"
+fi
+
+# RIE Frontend (Vite on port 5173)
+log_info "Starting RIE frontend (port 5173)..."
+cd apps/rie-frontend
+[ ! -d "node_modules" ] && npm install --silent 2>/dev/null
+npm run dev > /tmp/rie-frontend.log 2>&1 &
+RIE_FRONTEND_PID=$!
+cd "$PROJECT_ROOT"
+
+RIE_FRONTEND_READY=false
+for i in {1..20}; do
+    if curl -s http://localhost:5173 >/dev/null 2>&1; then
+        log_success "RIE frontend is UP (http://localhost:5173/reality-intelligence)"
+        RIE_FRONTEND_READY=true
+        break
+    fi
+    sleep 1
+done
+[ "$RIE_FRONTEND_READY" = false ] && log_warning "RIE frontend starting... check: tail -f /tmp/rie-frontend.log"
 
 # Detect LAN IP for network access
 LOCAL_IP=""
@@ -214,33 +276,45 @@ echo -e "${GREEN}║${NC}  ${GREEN}✅ Local Lite is RUNNING!${NC}              
 echo -e "${GREEN}╚════════════════════════════════════════════════╝${NC}\n"
 
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${MAGENTA}🌐 Access${NC}"
+echo -e "${MAGENTA}🌐 Life World OS${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 echo -e "  Frontend:  ${GREEN}http://localhost:${FRONTEND_PORT}${NC}"
 echo -e "  Backend:   ${GREEN}http://localhost:5001${NC}"
 echo -e "  Health:    ${GREEN}http://localhost:5001/api/health${NC}"
 echo -e "  Database:  ${GREEN}localhost:5433${NC}"
+
+echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${MAGENTA}🌍 Reality Intelligence Engine${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+echo -e "  Dashboard: ${GREEN}http://localhost:5173/reality-intelligence${NC}"
+echo -e "  API:       ${GREEN}http://localhost:8100/api/dashboard${NC}"
+
 if [ -n "$LOCAL_IP" ]; then
     echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${MAGENTA}📱 Same Network (phones, tablets, other PCs)${NC}"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     echo -e "  Frontend:  ${GREEN}http://${LOCAL_IP}:${FRONTEND_PORT}${NC}"
+    echo -e "  RIE:       ${GREEN}http://${LOCAL_IP}:5173/reality-intelligence${NC}"
     echo -e "  Health:    ${GREEN}http://${LOCAL_IP}:5001/api/health${NC}"
     echo -e "\n  ${YELLOW}Ensure devices are on the same WiFi.${NC}"
     echo -e "  ${YELLOW}Tip: Remove VITE_API_URL from apps/frontend/.env.local if API calls fail.${NC}"
 fi
 echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${MAGENTA}📟 Backend & frontend logs (live below)${NC}"
+echo -e "${MAGENTA}📟 Logs — all services (live below)${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-echo -e "${YELLOW}Press Ctrl+C to stop${NC}\n"
+echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}\n"
 
 cleanup() {
-    echo -e "\n${YELLOW}Shutting down...${NC}"
+    echo -e "\n${YELLOW}Shutting down all services...${NC}"
     kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
-    log_info "Stopped backend and frontend"
+    [ -n "$RIE_BACKEND_PID" ] && kill "$RIE_BACKEND_PID" 2>/dev/null || true
+    [ -n "$RIE_FRONTEND_PID" ] && kill "$RIE_FRONTEND_PID" 2>/dev/null || true
+    log_info "All services stopped"
     exit 0
 }
 trap cleanup INT TERM
 
-# Stream backend and frontend logs so you see them running
-tail -f /tmp/life-world-backend.log /tmp/life-world-frontend.log 2>/dev/null || while true; do sleep 30; done
+# Stream all logs
+LOG_FILES="/tmp/life-world-backend.log /tmp/life-world-frontend.log /tmp/rie-frontend.log"
+[ -n "$RIE_BACKEND_PID" ] && LOG_FILES="$LOG_FILES /tmp/rie-backend.log"
+tail -f $LOG_FILES 2>/dev/null || while true; do sleep 30; done

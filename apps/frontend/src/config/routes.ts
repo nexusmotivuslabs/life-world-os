@@ -24,7 +24,8 @@ import {
   Search,
   List,
   Sword,
-  Users
+  Users,
+  Globe
 } from 'lucide-react'
 import { ComponentType } from 'react'
 
@@ -229,6 +230,14 @@ export const routes: Record<string, RouteConfig> = {
     icon: BookOpen,
     requiresAuth: true,
     description: 'Technical articles and insights',
+  },
+  realityIntelligence: {
+    path: '/reality-intelligence',
+    label: 'Reality Intelligence',
+    parent: '/choose-plane',
+    icon: Globe,
+    requiresAuth: true,
+    description: 'UK macro constraint intelligence — structural signals and early warning',
   },
   actions: {
     path: '/actions',

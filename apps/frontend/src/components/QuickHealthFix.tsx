@@ -168,7 +168,7 @@ export default function QuickHealthFix({ systemId }: QuickHealthFixProps = {}) {
               {systemSpecificIssues.backend > 0 && (
                 <span className="flex items-center gap-1 text-red-400">
                   <Server className="w-3 h-3" />
-                  {systemSpecificIssues.backend} backend
+                  {systemSpecificIssues.backend} service
                 </span>
               )}
             </div>

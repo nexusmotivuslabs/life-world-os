@@ -27,7 +27,7 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
+    /* Base URL: main Life World OS app (choose-plane, systems, etc.). RIE is separate at :5002/reality-intelligence/ */
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5002',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

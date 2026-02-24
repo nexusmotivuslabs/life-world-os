@@ -51,6 +51,7 @@ export default function MasterFinance() {
         agents={agents}
         loading={loading}
         rootNodeId="systems-node-stability_tier-money-universal-concept"
+        systemId="finance"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (

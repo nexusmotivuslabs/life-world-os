@@ -105,6 +105,7 @@ export default function MasterHealth() {
         agents={agents}
         loading={totalLoading}
         rootNodeId="systems-node-survival_tier-health-universal-concept"
+        systemId="health"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (

@@ -52,7 +52,7 @@ export async function request<T>(
     })
 
     throw createApiError(
-      'Unable to reach the API. Make sure the backend is running and VITE_API_URL is correct.',
+      'Unable to connect. Please try again later.',
       endpoint,
       method,
       undefined,

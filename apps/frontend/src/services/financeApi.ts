@@ -5,6 +5,13 @@ import { logger } from '../lib/logger'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
+/** Map frontend system IDs to backend canonical IDs (for system lens API). */
+const CANONICAL_SYSTEM_ID: Record<string, string> = { finance: 'money' }
+function getCanonicalSystemId(systemId: string | undefined): string | undefined {
+  if (!systemId) return undefined
+  return CANONICAL_SYSTEM_ID[systemId] ?? systemId
+}
+
 // Simple in-memory cache for Reality nodes
 // Cache expires after 5 minutes
 const NODE_CACHE = new Map<string, { data: any; timestamp: number }>()
@@ -475,12 +482,14 @@ export const realityNodeApi = {
     return result
   },
 
-  getNode: async (id: string) => {
-    const cacheKey = `node-${id}`
+  getNode: async (id: string, systemId?: string) => {
+    const canonical = getCanonicalSystemId(systemId)
+    const cacheKey = canonical ? `node-${id}-${canonical}` : `node-${id}`
     const cached = getCached(cacheKey)
     if (cached) return cached
-    
-    const result = await apiRequest<{ node: RealityNode }>(`/api/reality-nodes/${id}`, 'GET')
+
+    const query = canonical ? `?systemId=${encodeURIComponent(canonical)}` : ''
+    const result = await apiRequest<{ node: RealityNode }>(`/api/reality-nodes/${id}${query}`, 'GET')
     setCache(cacheKey, result)
     return result
   },
