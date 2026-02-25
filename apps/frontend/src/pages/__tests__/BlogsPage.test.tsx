@@ -89,17 +89,29 @@ describe('BlogsPage', () => {
     expect(screen.getByText('React Performance')).toBeInTheDocument()
   })
 
-  it('renders category filter buttons', async () => {
+  it('displays latest post as featured (largest card first)', async () => {
     renderBlogsPage()
 
     await waitFor(() => {
       expect(getAllBlogPosts).toHaveBeenCalled()
     })
 
-    // Category dot buttons render the category name; post row buttons also contain category text
+    // Posts are sorted by date descending; React Performance (2025-01-20) is latest, so it appears first (featured)
+    const headings = screen.getAllByRole('heading', { level: 2 })
+    expect(headings.length).toBeGreaterThanOrEqual(1)
+    expect(headings[0]).toHaveTextContent('React Performance')
+  })
+
+  it('renders category filter pills', async () => {
+    renderBlogsPage()
+
+    await waitFor(() => {
+      expect(getAllBlogPosts).toHaveBeenCalled()
+    })
+
     expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /systems/i }).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByRole('button', { name: /tech/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('button', { name: 'Systems' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tech' })).toBeInTheDocument()
   })
 
   it('shows "No blog posts yet" when posts are empty', async () => {
@@ -114,7 +126,7 @@ describe('BlogsPage', () => {
     expect(screen.getByText(/no blog posts yet/i)).toBeInTheDocument()
   })
 
-  it('filters posts by category when category button is clicked', async () => {
+  it('filters posts by category when category pill is clicked', async () => {
     const user = userEvent.setup()
     renderBlogsPage()
 
@@ -125,10 +137,9 @@ describe('BlogsPage', () => {
     expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
     expect(screen.getByText('React Performance')).toBeInTheDocument()
 
-    // Category filter button shows "Systems" and count (e.g. "Systems 1"); post row buttons also contain "Systems"
-    const systemsButtons = screen.getAllByRole('button', { name: /systems/i })
-    const categoryFilter = systemsButtons.find((b) => b.textContent?.match(/Systems\s+1$/))
-    await user.click(categoryFilter ?? systemsButtons[0])
+    // Category pills: "All", "Systems", "Tech" — click "Systems" to filter
+    const systemsPill = screen.getByRole('button', { name: 'Systems' })
+    await user.click(systemsPill)
 
     await waitFor(() => {
       expect(screen.getByText('GitOps vs Git Flow')).toBeInTheDocument()
