@@ -21,7 +21,7 @@ const router = Router()
 // All blog routes require authentication
 router.use(authenticateToken)
 
-// Blog posts metadata
+// Blog posts metadata — only entries with existing markdown files in blog/
 const BLOG_POSTS = [
   {
     slug: 'gitops-vs-gitflow',
@@ -31,42 +31,6 @@ const BLOG_POSTS = [
     tags: ['gitops', 'git-flow', 'ci-cd', 'devops', 'version-control', 'deployment'],
     date: '2025-01-15',
     path: 'systems/version-control/gitops-vs-gitflow.md'
-  },
-  {
-    slug: 'react-performance-optimization',
-    title: 'React Performance Optimization Techniques',
-    category: 'Tech',
-    subcategory: 'Frontend',
-    tags: ['react', 'performance', 'optimization', 'frontend', 'javascript'],
-    date: '2025-01-20',
-    path: 'tech/frontend/react-performance-optimization.md'
-  },
-  {
-    slug: 'typescript-best-practices',
-    title: 'TypeScript Best Practices for Large Codebases',
-    category: 'Tech',
-    subcategory: 'Programming',
-    tags: ['typescript', 'programming', 'best-practices', 'code-quality'],
-    date: '2025-01-18',
-    path: 'tech/programming/typescript-best-practices.md'
-  },
-  {
-    slug: 'database-design-patterns',
-    title: 'Database Design Patterns for Scalable Applications',
-    category: 'Tech',
-    subcategory: 'Backend',
-    tags: ['database', 'design-patterns', 'scalability', 'backend'],
-    date: '2025-01-22',
-    path: 'tech/backend/database-design-patterns.md'
-  },
-  {
-    slug: 'deployment-strategies',
-    title: 'Modern Deployment Strategies: Blue-Green vs Canary',
-    category: 'Systems',
-    subcategory: 'DevOps',
-    tags: ['deployment', 'devops', 'blue-green', 'canary', 'ci-cd'],
-    date: '2025-01-16',
-    path: 'systems/devops/deployment-strategies.md'
   },
   {
     slug: 'early-decisions-optionality',
@@ -222,20 +186,15 @@ router.get('/posts/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Blog post not found' })
     }
 
-    // Read markdown file from blog directory
-    // Blog directory is at project root
-    // From src/routes/blog.ts: go up 2 levels to project root (apps/backend/src/routes -> apps/backend -> project root)
-    // From dist/routes/blog.js: go up 3 levels to project root (dist/routes -> dist -> apps/backend -> project root)
-    const isProduction = process.env.NODE_ENV === 'production'
-    const projectRoot = isProduction 
-      ? join(__dirname, '../../../') 
-      : join(__dirname, '../../')
-    
-    // Try multiple path resolution strategies
+    // Read markdown file from blog directory (blog/ is at monorepo root)
+    // __dirname: apps/backend/src/routes (dev) or apps/backend/dist/routes (prod)
+    // Repo root = 5 levels up from either (routes -> src|dist -> backend -> apps -> root)
+    const repoRoot = join(__dirname, '../../../../../')
     const possiblePaths = [
-      join(projectRoot, 'blog', post.path), // Standard path
-      join(process.cwd(), 'blog', post.path), // From current working directory
-      join(__dirname, '../../../../blog', post.path), // Alternative relative path
+      join(repoRoot, 'blog', post.path),
+      join(process.cwd(), 'blog', post.path),                      // CWD = repo root
+      join(process.cwd(), '../blog', post.path),                   // CWD = apps/backend
+      join(__dirname, '../../../../blog', post.path),              // 4 levels (e.g. if run from different structure)
     ]
     
     let content: string | null = null
@@ -263,8 +222,7 @@ router.get('/posts/:slug', async (req, res) => {
         error: 'Failed to read blog post content',
         attemptedPaths: possiblePaths,
         postPath: post.path,
-        projectRoot,
-        __dirname,
+        repoRoot,
         cwd: process.cwd()
       })
     }

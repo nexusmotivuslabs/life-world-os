@@ -48,14 +48,14 @@ describe('BlogModal', () => {
     expect(screen.getByText(/Loading/i)).toBeInTheDocument()
   })
 
-  it('should display reading time and word count', async () => {
+  it('should display post title and body content when loaded', async () => {
     const mockPost = {
       slug: 'test-post',
       title: 'Test Post',
       category: 'Systems',
       date: '2025-01-15',
       tags: ['test'],
-      content: 'This is a test post with multiple words to calculate reading time properly. '.repeat(50),
+      content: 'This is a test post with multiple words. '.repeat(50),
     }
 
     vi.mocked(blogApi.getBlogPost).mockResolvedValue(mockPost as any)
@@ -65,10 +65,8 @@ describe('BlogModal', () => {
     )
 
     await waitFor(() => {
-      const wordCount = mockPost.content.split(/\s+/).length
-      expect(screen.getByText(new RegExp(`${wordCount.toLocaleString()} words`))).toBeInTheDocument()
-      const readingTime = Math.ceil(wordCount / 200)
-      expect(screen.getByText(new RegExp(`${readingTime} min`))).toBeInTheDocument()
+      expect(screen.getByText('Test Post')).toBeInTheDocument()
+      expect(screen.getByText(/This is a test post with multiple words/)).toBeInTheDocument()
     })
   })
 

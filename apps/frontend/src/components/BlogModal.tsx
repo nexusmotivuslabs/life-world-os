@@ -3,9 +3,9 @@
  *
  * Dark-themed, content-first article reader. Includes:
  *  - Category-colored reading progress bar
+ *  - Clean typography for long-form reading
  *  - Auto-generated collapsible Table of Contents (3+ headings)
- *  - Prev / Next navigation via plain text links
- *  - Tags as quiet comma-separated metadata
+ *  - Prev / Next navigation
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react'
@@ -20,6 +20,10 @@ const CATEGORY_COLORS: Record<string, string> = {
   oxygen: '#06b6d4',
   meaning: '#8b5cf6',
   optionality: '#f59e0b',
+  systems: '#3b82f6',
+  tech: '#06b6d4',
+  career: '#f59e0b',
+  'life world os': '#8b5cf6',
 }
 
 function getCategoryColor(category: string): string {
@@ -40,8 +44,33 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-')
 }
 
+/** Strip leading metadata block (Category, Tags, Date, Context) so the reader sees only the post body */
+function stripMetadataFromContent(content: string): string {
+  const lines = content.split('\n')
+  const metadataPattern = /^\*\*(Category|Tags|Date|Context)\*\*\s*:/
+  let foundMetadata = false
+  let separatorIndex = -1
+
+  for (let i = 0; i < Math.min(lines.length, 25); i++) {
+    const line = lines[i]
+    if (metadataPattern.test(line.trim())) {
+      foundMetadata = true
+    }
+    if (foundMetadata && line.trim() === '---') {
+      separatorIndex = i
+      break
+    }
+  }
+
+  if (separatorIndex >= 0) {
+    return lines.slice(separatorIndex + 1).join('\n').trim()
+  }
+  return content
+}
+
 function extractToc(markdown: string): TocEntry[] {
-  const lines = markdown.split('\n')
+  const body = stripMetadataFromContent(markdown)
+  const lines = body.split('\n')
   const entries: TocEntry[] = []
   for (const line of lines) {
     const h2 = line.match(/^##\s+(.+)/)
@@ -134,6 +163,7 @@ export default function BlogModal({
     setProgress(scrollable > 0 ? (el.scrollTop / scrollable) * 100 : 0)
   }, [])
 
+  const bodyContent = post ? stripMetadataFromContent(post.content) : ''
   const toc = post ? extractToc(post.content) : []
   const showToc = toc.length >= 3
   const accentColor = post ? getCategoryColor(post.category) : '#6b7280'
@@ -197,37 +227,12 @@ export default function BlogModal({
                   )}
                   {post && !loading && (
                     <>
-                      {/* Category breadcrumb */}
-                      <p className="text-xs mb-2 flex items-center gap-1.5">
-                        <span
-                          className="inline-block w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: accentColor }}
-                        />
-                        <span className="font-medium capitalize" style={{ color: accentColor }}>
-                          {post.category}
-                        </span>
-                        {post.subcategory && (
-                          <>
-                            <span className="text-gray-700">·</span>
-                            <span className="text-gray-500">{post.subcategory}</span>
-                          </>
-                        )}
-                      </p>
                       <h2
                         id="blog-modal-title"
                         className="text-xl sm:text-2xl font-bold text-white leading-snug"
                       >
                         {post.title}
                       </h2>
-                      {/* Byline: date only — tags moved to end of article */}
-                      <p className="text-xs text-gray-400 mt-2">
-                        {post.date &&
-                          new Date(post.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                      </p>
                     </>
                   )}
                 </div>
@@ -270,13 +275,6 @@ export default function BlogModal({
 
                   {post && !loading && (
                     <article>
-                      {/* Reading meta */}
-                      <div className="mb-5 pb-4 border-b border-gray-800 flex items-center gap-3 text-xs text-gray-600">
-                        <span>{Math.ceil(post.content.split(/\s+/).length / 200)} min read</span>
-                        <span>·</span>
-                        <span>{post.content.split(/\s+/).length.toLocaleString()} words</span>
-                      </div>
-
                       {/* Collapsible Table of Contents */}
                       {showToc && (
                         <div className="mb-6 border border-gray-800 rounded-md overflow-hidden">
@@ -325,120 +323,103 @@ export default function BlogModal({
                         </div>
                       )}
 
-                      {/* Article body */}
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ children }) => (
-                            <h1
-                              id={slugify(String(children))}
-                              className="text-2xl font-bold text-white mt-8 mb-4 first:mt-0"
-                            >
-                              {children}
-                            </h1>
-                          ),
-                          h2: ({ children }) => (
-                            <h2
-                              id={slugify(String(children))}
-                              className="text-xl font-bold text-white mt-7 mb-3"
-                            >
-                              {children}
-                            </h2>
-                          ),
-                          h3: ({ children }) => (
-                            <h3
-                              id={slugify(String(children))}
-                              className="text-base font-semibold text-gray-100 mt-5 mb-2"
-                            >
-                              {children}
-                            </h3>
-                          ),
-                          p: ({ children }) => (
-                            <p className="text-gray-300 mb-4 leading-relaxed text-[16px]">
-                              {children}
-                            </p>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-disc list-outside pl-6 text-gray-300 mb-4 space-y-1.5 text-[16px]">
-                              {children}
-                            </ul>
-                          ),
-                          ol: ({ children }) => (
-                            <ol className="list-decimal list-outside pl-6 text-gray-300 mb-4 space-y-1.5 text-[16px]">
-                              {children}
-                            </ol>
-                          ),
-                          li: ({ children }) => (
-                            <li className="leading-relaxed">{children}</li>
-                          ),
-                          code: ({ children, className }) => {
-                            const isInline = !className
-                            return isInline ? (
-                              <code className="bg-gray-800 text-gray-200 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-700">
-                                {children}
-                              </code>
-                            ) : (
-                              <code className={className}>{children}</code>
-                            )
-                          },
-                          pre: ({ children }) => (
-                            <pre className="bg-gray-800 border border-gray-700 rounded-md p-4 overflow-x-auto mb-4 text-sm text-gray-300">
-                              {children}
-                            </pre>
-                          ),
-                          blockquote: ({ children }) => (
-                            <blockquote className="border-l-2 border-gray-600 pl-4 italic text-gray-400 my-4">
-                              {children}
-                            </blockquote>
-                          ),
-                          a: ({ href, children }) => (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                            >
-                              {children}
-                            </a>
-                          ),
-                          table: ({ children }) => (
-                            <div className="overflow-x-auto my-4 border border-gray-700 rounded-md">
-                              <table className="min-w-full">{children}</table>
-                            </div>
-                          ),
-                          th: ({ children }) => (
-                            <th className="border-b border-gray-700 bg-gray-800 px-4 py-2 text-left text-gray-200 font-semibold text-sm">
-                              {children}
-                            </th>
-                          ),
-                          td: ({ children }) => (
-                            <td className="border-b border-gray-800 px-4 py-2 text-gray-400 text-sm">
-                              {children}
-                            </td>
-                          ),
-                          hr: () => <hr className="border-gray-800 my-6" />,
-                        }}
-                      >
-                        {post.content}
-                      </ReactMarkdown>
-
-                      {/* Tags — end of article, useful for discovery */}
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="mt-8 pt-5 border-t border-gray-800">
-                          <p className="text-xs text-gray-600 uppercase tracking-wider mb-2.5">
-                            Filed under
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {post.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-xs text-gray-400 bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-full"
+                      {/* Article body — constrained width for comfortable reading */}
+                      <div className="max-w-[65ch]">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ children }) => (
+                              <h1
+                                id={slugify(String(children))}
+                                className="text-2xl font-bold text-white mt-10 mb-4 first:mt-0 scroll-mt-4"
                               >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                                {children}
+                              </h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2
+                                id={slugify(String(children))}
+                                className="text-xl font-bold text-white mt-8 mb-3 scroll-mt-4"
+                              >
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3
+                                id={slugify(String(children))}
+                                className="text-base font-semibold text-gray-100 mt-6 mb-2 scroll-mt-4"
+                              >
+                                {children}
+                              </h3>
+                            ),
+                            p: ({ children }) => (
+                              <p className="text-gray-300 mb-5 leading-[1.7] text-[16px]">
+                                {children}
+                              </p>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc list-outside pl-6 text-gray-300 mb-5 space-y-2 text-[16px] leading-[1.7]">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal list-outside pl-6 text-gray-300 mb-5 space-y-2 text-[16px] leading-[1.7]">
+                                {children}
+                              </ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="leading-[1.7]">{children}</li>
+                            ),
+                            code: ({ children, className }) => {
+                              const isInline = !className
+                              return isInline ? (
+                                <code className="bg-gray-800 text-gray-200 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-700">
+                                  {children}
+                                </code>
+                              ) : (
+                                <code className={className}>{children}</code>
+                              )
+                            },
+                            pre: ({ children }) => (
+                              <pre className="bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-x-auto mb-5 text-sm text-gray-300 leading-relaxed">
+                                {children}
+                              </pre>
+                            ),
+                            blockquote: ({ children }) => (
+                              <blockquote className="border-l-2 pl-4 italic text-gray-400 my-5 py-0.5" style={{ borderColor: accentColor }}>
+                                {children}
+                              </blockquote>
+                            ),
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                              >
+                                {children}
+                              </a>
+                            ),
+                            table: ({ children }) => (
+                              <div className="overflow-x-auto my-5 border border-gray-700 rounded-lg">
+                                <table className="min-w-full">{children}</table>
+                              </div>
+                            ),
+                            th: ({ children }) => (
+                              <th className="border-b border-gray-700 bg-gray-800 px-4 py-2.5 text-left text-gray-200 font-semibold text-sm">
+                                {children}
+                              </th>
+                            ),
+                            td: ({ children }) => (
+                              <td className="border-b border-gray-800 px-4 py-2.5 text-gray-400 text-sm">
+                                {children}
+                              </td>
+                            ),
+                            hr: () => <hr className="border-gray-700 my-8" />,
+                          }}
+                        >
+                          {bodyContent}
+                        </ReactMarkdown>
+                      </div>
                     </article>
                   )}
                 </div>

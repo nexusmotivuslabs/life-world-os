@@ -129,16 +129,16 @@ export default function BlogsPage() {
   const selectedPost = selectedIndex !== null ? filteredPosts[selectedIndex] ?? null : null
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-neutral-200">
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header — matches Layout/Header (Life World OS dark theme) */}
+      <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500 shrink-0">
+          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 shrink-0">
             Life World OS Blog
           </span>
 
-          <div className="flex-1 flex items-center gap-2 max-w-md border border-neutral-300 rounded-md px-3 py-1.5 focus-within:border-neutral-500 focus-within:ring-1 focus-within:ring-neutral-400 transition-colors">
-            <Search className="w-4 h-4 text-neutral-500 shrink-0" />
+          <div className="flex-1 flex items-center gap-2 max-w-md border border-gray-700 rounded-md px-3 py-1.5 focus-within:border-gray-500 focus-within:ring-1 focus-within:ring-gray-600 transition-colors">
+            <Search className="w-4 h-4 text-gray-500 shrink-0" />
             <input
               type="text"
               value={search}
@@ -146,7 +146,7 @@ export default function BlogsPage() {
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
               placeholder={searchFocused || search ? '' : 'Search…'}
-              className="flex-1 bg-transparent text-sm text-neutral-800 placeholder-neutral-500 outline-none"
+              className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none"
               aria-label="Search posts"
             />
             <AnimatePresence>
@@ -156,7 +156,7 @@ export default function BlogsPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   onClick={() => setSearch('')}
-                  className="text-neutral-500 hover:text-neutral-700 transition-colors"
+                  className="text-gray-500 hover:text-gray-300 transition-colors"
                   aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function BlogsPage() {
 
           <Link
             to="/choose-plane"
-            className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors shrink-0"
+            className="text-sm text-gray-500 hover:text-gray-300 transition-colors shrink-0"
           >
             ← Back
           </Link>
@@ -178,7 +178,7 @@ export default function BlogsPage() {
         {loading ? (
           <LoadingSkeleton />
         ) : filteredPosts.length === 0 ? (
-          <p className="py-16 text-center text-neutral-500">
+          <p className="py-16 text-center text-gray-500">
             {search
               ? `No posts matching "${search}".`
               : selectedCategory
@@ -249,7 +249,7 @@ export default function BlogsPage() {
           </>
         )}
 
-        <div className="mt-12 pt-8 border-t border-neutral-200 text-center text-sm text-neutral-500">
+        <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
           Life World OS blog · Technical articles and insights
         </div>
       </main>
@@ -283,8 +283,8 @@ function CategoryPill({
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
         active
-          ? 'bg-neutral-900 text-white'
-          : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+          ? 'bg-gray-700 text-white border border-gray-600'
+          : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-gray-300 border border-gray-700'
       }`}
     >
       {label}
@@ -314,41 +314,43 @@ function BlogCard({
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left rounded-xl overflow-hidden border border-neutral-200 bg-white shadow-sm hover:shadow-md hover:border-neutral-300 transition-all duration-200 group"
+      className="w-full text-left rounded-xl overflow-hidden border border-gray-700 bg-gray-800/80 shadow-sm hover:shadow-md hover:border-gray-600 transition-all duration-200 group"
     >
-      {/* Placeholder cover (gradient by category) */}
+      {/* Placeholder cover (gradient by category, dark theme) */}
       <div
         className={`w-full ${coverHeight} flex items-end p-4 sm:p-5 transition-transform group-hover:scale-[1.02]`}
         style={{
-          background: `linear-gradient(135deg, ${color}22 0%, ${color}44 50%, ${color}22 100%)`,
+          background: `linear-gradient(135deg, ${color}18 0%, ${color}33 50%, ${color}18 100%)`,
         }}
       >
         <span
           className="inline-block px-2.5 py-0.5 rounded text-xs font-medium text-white/90"
-          style={{ backgroundColor: `${color}dd` }}
+          style={{ backgroundColor: `${color}cc` }}
         >
           {post.category}
         </span>
       </div>
 
       <div className="p-4 sm:p-5">
+        {/* Preview metadata: Category → Subcategory */}
+        <p className="text-xs font-medium mb-1.5" style={{ color }}>
+          {post.category}
+          {post.subcategory ? ` → ${post.subcategory}` : ''}
+        </p>
         <h2
-          className={`font-semibold text-neutral-900 leading-snug group-hover:text-neutral-700 ${
+          className={`font-semibold text-white leading-snug group-hover:text-gray-100 ${
             isFeatured ? 'text-xl sm:text-2xl' : isSecondary ? 'text-base sm:text-lg' : 'text-base'
           }`}
         >
           {post.title}
         </h2>
-        {post.subcategory && (
-          <p className="mt-1 text-sm text-neutral-500">{post.subcategory}</p>
-        )}
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-gray-500">
           {formatDate(post.date)}
         </p>
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {post.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="text-xs text-neutral-400">
+            {post.tags.map((tag) => (
+              <span key={tag} className="text-xs text-gray-500">
                 #{tag}
               </span>
             ))}
@@ -363,22 +365,22 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 md:row-span-2 rounded-xl bg-neutral-200 animate-pulse min-h-[320px]" />
-        <div className="rounded-xl bg-neutral-200 animate-pulse min-h-[140px]" />
-        <div className="rounded-xl bg-neutral-200 animate-pulse min-h-[140px]" />
+        <div className="md:col-span-2 md:row-span-2 rounded-xl bg-gray-800 animate-pulse min-h-[320px]" />
+        <div className="rounded-xl bg-gray-800 animate-pulse min-h-[140px]" />
+        <div className="rounded-xl bg-gray-800 animate-pulse min-h-[140px]" />
       </div>
       <div className="flex gap-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-9 w-20 rounded-full bg-neutral-200 animate-pulse" />
+          <div key={i} className="h-9 w-20 rounded-full bg-gray-800 animate-pulse" />
         ))}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="rounded-xl overflow-hidden border border-neutral-200">
-            <div className="h-28 bg-neutral-200 animate-pulse" />
+          <div key={i} className="rounded-xl overflow-hidden border border-gray-700">
+            <div className="h-28 bg-gray-800 animate-pulse" />
             <div className="p-4">
-              <div className="h-5 bg-neutral-200 rounded w-4/5 mb-2 animate-pulse" />
-              <div className="h-3 bg-neutral-200 rounded w-1/3 animate-pulse" />
+              <div className="h-5 bg-gray-800 rounded w-4/5 mb-2 animate-pulse" />
+              <div className="h-3 bg-gray-800 rounded w-1/3 animate-pulse" />
             </div>
           </div>
         ))}
