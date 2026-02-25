@@ -420,7 +420,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     const showLock = node.immutable || hasNoData(node)
     const lockTitle = node.immutable ? 'Immutable' : 'No data available'
     const { title: parsedTitle, systemId: parsedSystemId } = parseTitleAndSystem(node.label)
-    const displayName = getDisplayName(parsedTitle)
+    const displayName = getDisplayName(parsedTitle) || node.label || parsedTitle || 'Unnamed'
     const effectiveSystemId = parsedSystemId ?? systemId ?? undefined
 
     // Check if a node has a structured knowledge template or universal concept worth displaying
@@ -487,7 +487,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
           <div className="flex items-center gap-0 flex-1 min-w-0">
             <div className="flex-shrink-0">{getNodeIcon(node.type)}</div>
             <span
-              className={`truncate flex-1 min-w-0 ${
+              className={`flex-1 min-w-[10ch] break-words overflow-visible ${
                 isSelected
                   ? 'text-blue-300'
                   : node.type === 'reality'
@@ -508,13 +508,13 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             {showLock && (
               <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" title={lockTitle} />
             )}
-            <div className="flex max-sm:hidden items-center gap-0 flex-shrink-0 flex-wrap justify-end">
+            <div className="flex max-sm:hidden items-center gap-0 flex-shrink-0 flex-wrap justify-end min-w-0">
               {getNodeTypeBadge(node.type)}
               {node.category && getCategoryBadge(node.category)}
               {effectiveSystemId && getSystemBadge(effectiveSystemId)}
             </div>
             {(node.data?.description || node.data?.summary) && (
-              <span className="text-xs text-gray-500 ml-1 sm:ml-2 italic truncate hidden md:inline">
+              <span className="text-xs text-gray-500 ml-1 sm:ml-2 italic line-clamp-2 min-w-0 break-words hidden sm:inline flex-shrink">
                 - {node.data?.description || node.data?.summary}
               </span>
             )}
@@ -790,7 +790,72 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                 {(selectedNode.data?.description || selectedNode.data?.summary) && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                    <p className="text-gray-300 leading-relaxed">{selectedNode.data?.description || selectedNode.data?.summary}</p>
+                    <p className="text-gray-300 leading-relaxed break-words">{selectedNode.data?.description || selectedNode.data?.summary}</p>
+                  </div>
+                )}
+
+                {/* Sentiment & Advice – e.g. positive terms: how to do more; negative (e.g. cynicism): ways to avoid */}
+                {(selectedNode.data?.sentiment || selectedNode.data?.advice || selectedNode.data?.adviceToReinforce || selectedNode.data?.adviceToAvoid) && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-white mb-2">Sentiment &amp; advice</h3>
+                    {selectedNode.data?.sentiment && (
+                      <p className="text-sm text-gray-400">
+                        <span className="font-medium text-gray-300">Sentiment:</span>{' '}
+                        <span className={selectedNode.data.sentiment === 'positive' ? 'text-green-400' : selectedNode.data.sentiment === 'negative' ? 'text-amber-400' : 'text-gray-400'}>
+                          {String(selectedNode.data.sentiment)}
+                        </span>
+                      </p>
+                    )}
+                    {selectedNode.data?.advice && (
+                      <p className="text-gray-300 leading-relaxed break-words bg-gray-700/50 rounded-lg p-4">{selectedNode.data.advice}</p>
+                    )}
+                    {selectedNode.data?.adviceToReinforce && (
+                      <div>
+                        <p className="text-xs font-medium text-green-400/90 mb-1">How to do more / reinforce</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-green-500/10 border border-green-500/30 rounded-lg p-4">{selectedNode.data.adviceToReinforce}</p>
+                      </div>
+                    )}
+                    {selectedNode.data?.adviceToAvoid && (
+                      <div>
+                        <p className="text-xs font-medium text-amber-400/90 mb-1">Ways to avoid or reduce</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{selectedNode.data.adviceToAvoid}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Special terms – specialist advice: What it is, Key facts, How it contributes to life */}
+                {(selectedNode.data?.specialTermWhatItIs || selectedNode.data?.specialTermKeyFacts || selectedNode.data?.specialTermHowItContributesToLife) && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white mb-2">Specialist advice</h3>
+                    {selectedNode.data?.specialTermWhatItIs && (
+                      <div>
+                        <p className="text-xs font-medium text-cyan-400/90 mb-1">What it is</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{selectedNode.data.specialTermWhatItIs}</p>
+                      </div>
+                    )}
+                    {(selectedNode.data?.specialTermKeyFacts != null && (Array.isArray(selectedNode.data.specialTermKeyFacts) ? selectedNode.data.specialTermKeyFacts.length > 0 : String(selectedNode.data.specialTermKeyFacts).trim())) && (
+                      <div>
+                        <p className="text-xs font-medium text-cyan-400/90 mb-1">Key facts</p>
+                        <div className="text-gray-300 leading-relaxed break-words bg-gray-700/50 rounded-lg p-4">
+                          {Array.isArray(selectedNode.data.specialTermKeyFacts) ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {selectedNode.data.specialTermKeyFacts.map((fact: string, idx: number) => (
+                                <li key={idx}>{fact}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="whitespace-pre-line">{String(selectedNode.data.specialTermKeyFacts)}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {selectedNode.data?.specialTermHowItContributesToLife && (
+                      <div>
+                        <p className="text-xs font-medium text-cyan-400/90 mb-1">How it contributes to life</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{selectedNode.data.specialTermHowItContributesToLife}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -980,7 +1045,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                     <div className="space-y-3">
                       {Object.entries(selectedNode.data).map(([key, value]) => {
                         // Filter out internal/system metadata fields
-                        const internalKeys = ['description', '_templateType', '_version', '_lastSynced', 'seededAt', 'systemId', 'isPathway', 'isBranch', 'branchType', 'isReference', 'sourceRealityNodeId']
+                        const internalKeys = ['description', '_templateType', '_version', '_lastSynced', 'seededAt', 'systemId', 'isPathway', 'isBranch', 'branchType', 'isReference', 'sourceRealityNodeId', 'specialTermWhatItIs', 'specialTermKeyFacts', 'specialTermHowItContributesToLife']
                         if (internalKeys.includes(key)) return null
                         
                         return (

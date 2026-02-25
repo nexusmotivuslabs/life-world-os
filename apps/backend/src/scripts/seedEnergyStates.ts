@@ -120,6 +120,16 @@ const ENERGY_STATES = [
     },
     verdict: 'High value state. Cultivate and protect. Use strategically for important work.',
     category: RealityNodeCategory.FUNDAMENTAL,
+    sentiment: 'positive' as const,
+    adviceToReinforce: 'Protect focus blocks; eliminate interruptions; set clear goals and single-task. Build rituals (time, place, cue) and gradually extend session length. Use environment design so focus becomes the default.',
+    specialTermWhatItIs: 'Focus is a state of deep concentration where attention is narrowed on one task or goal and distractions are minimised. It is the gateway to flow and high-quality output.',
+    specialTermKeyFacts: [
+      'Single-tasking and clear goals sustain focus.',
+      'Interruptions cause a significant cost to re-engage (context-switching).',
+      'Focus is energy-intensive; it works best in protected time blocks.',
+      'Environment design (quiet, cues, no notifications) makes focus easier to achieve.',
+    ],
+    specialTermHowItContributesToLife: 'Focus multiplies the quality and quantity of meaningful work. It supports learning, decision quality, and progress on what matters. Protecting focus is one of the highest-leverage habits for long-term outcomes and well-being.',
   },
   {
     title: 'BURNOUT',
@@ -155,6 +165,8 @@ const ENERGY_STATES = [
     },
     verdict: 'Catastrophic state. Prevention critical. Recovery requires extended time and deliberate action.',
     category: RealityNodeCategory.FUNDAMENTAL,
+    sentiment: 'negative' as const,
+    adviceToAvoid: 'Prioritise rest and recovery; reduce commitments; set boundaries. Address chronic stress and overcommitment. Seek support and consider role or environment changes. Recovery takes time—avoid rushing back to full load.',
   },
   {
     title: 'CALM',
@@ -189,6 +201,8 @@ const ENERGY_STATES = [
     },
     verdict: 'Excellent default state. Low cost, sustainable, enables good judgment.',
     category: RealityNodeCategory.FUNDAMENTAL,
+    sentiment: 'positive' as const,
+    adviceToReinforce: 'Create conditions for rest, safety, and acceptance; protect sleep and downtime. Reduce unnecessary stimulation and decision load. Use routines and environment to make calm the default between high-arousal periods.',
   },
   {
     title: 'EXCITEMENT',
@@ -228,11 +242,18 @@ const ENERGY_STATES = [
 ]
 
 // Child states (states that arise from primary states)
+// sentiment + adviceToReinforce (positive) / adviceToAvoid (negative) for hierarchy tree sentiment & advice UI
 const CHILD_STATES = [
   {
     parentTitle: 'ANGER',
     children: [
-      { title: 'RAGE', description: 'Extreme anger with loss of control', category: RealityNodeCategory.FUNDAMENTAL },
+      {
+        title: 'RAGE',
+        description: 'Extreme anger with loss of control',
+        category: RealityNodeCategory.FUNDAMENTAL,
+        sentiment: 'negative' as const,
+        adviceToAvoid: 'Pause before acting: take space, regulate breathing, or defer response. Name the feeling and the trigger. Redirect energy into non-harmful outlets (e.g. movement, writing). Address underlying injustice or threat when calm. Seek support if rage is frequent or hard to control.',
+      },
       { title: 'RESENTMENT', description: 'Persistent bitter anger toward perceived wrong', category: RealityNodeCategory.FUNDAMENTAL },
       { title: 'FRUSTRATION', description: 'Anger at blocked goals or obstacles', category: RealityNodeCategory.FUNDAMENTAL },
     ]
@@ -240,14 +261,41 @@ const CHILD_STATES = [
   {
     parentTitle: 'FOCUS',
     children: [
-      { title: 'FLOW_STATE', description: 'Optimal experience with full immersion', category: RealityNodeCategory.FUNDAMENTAL },
-      { title: 'DEEP_WORK', description: 'Sustained concentration on cognitively demanding task', category: RealityNodeCategory.FUNDAMENTAL },
+      {
+        title: 'FLOW_STATE',
+        description: 'Optimal experience with full immersion',
+        category: RealityNodeCategory.FUNDAMENTAL,
+        sentiment: 'positive' as const,
+        adviceToReinforce: 'Match challenge to skill; eliminate interruptions; set clear goals and immediate feedback. Protect deep-work blocks and build rituals (time, place, cue) that signal focus. Gradually extend session length.',
+        specialTermWhatItIs: 'Flow state (or "being in the zone") is a mental state of full immersion and focused energy where you perform at your best with a sense of ease. Attention is fully absorbed, self-consciousness drops, and time can feel distorted. It is the optimal experience described by psychologist Mihaly Csikszentmihalyi.',
+        specialTermKeyFacts: [
+          'Requires a balance between challenge and skill—neither boredom nor anxiety.',
+          'Clear goals and immediate feedback support flow.',
+          'Common in creative work, sports, music, and deep work when distractions are removed.',
+          'Time can feel like it speeds up or slows down.',
+          'Flow is fragile: interruptions can break it; recovery takes minutes.',
+        ],
+        specialTermHowItContributesToLife: 'Flow increases performance, learning, and satisfaction. It makes difficult tasks feel rewarding and builds mastery. Regular flow supports well-being, meaning, and sustained high output without burning out—so designing your environment and schedule to enable flow is a high-leverage investment in how you work and live.',
+      },
+      {
+        title: 'DEEP_WORK',
+        description: 'Sustained concentration on cognitively demanding task',
+        category: RealityNodeCategory.FUNDAMENTAL,
+        sentiment: 'positive' as const,
+        adviceToReinforce: 'Schedule fixed blocks; remove distractions (notifications, clutter). Start with shorter sessions and increase. Use environment and routine as cues so deep work becomes a default.',
+      },
     ]
   },
   {
     parentTitle: 'BURNOUT',
     children: [
-      { title: 'CYNICISM', description: 'Negative detached attitude toward work', category: RealityNodeCategory.FUNDAMENTAL },
+      {
+        title: 'CYNICISM',
+        description: 'Negative detached attitude toward work',
+        category: RealityNodeCategory.FUNDAMENTAL,
+        sentiment: 'negative' as const,
+        adviceToAvoid: 'Reconnect with purpose and small wins; limit exposure to negativity; set boundaries. Rest and recover before making big decisions. Seek meaning in one area (e.g. one project or relationship) before generalising. Consider role or environment change if sustained.',
+      },
       { title: 'EMOTIONAL_EXHAUSTION', description: 'Feeling emotionally drained and depleted', category: RealityNodeCategory.FUNDAMENTAL },
     ]
   },
@@ -308,6 +356,12 @@ export async function seedEnergyStates() {
           status: state.status,
           xpLedger: state.xpLedger,
           verdict: state.verdict,
+          ...('sentiment' in state && state.sentiment && { sentiment: state.sentiment }),
+          ...('adviceToReinforce' in state && state.adviceToReinforce && { adviceToReinforce: state.adviceToReinforce }),
+          ...('adviceToAvoid' in state && state.adviceToAvoid && { adviceToAvoid: state.adviceToAvoid }),
+          ...('specialTermWhatItIs' in state && state.specialTermWhatItIs && { specialTermWhatItIs: state.specialTermWhatItIs }),
+          ...('specialTermKeyFacts' in state && state.specialTermKeyFacts && { specialTermKeyFacts: state.specialTermKeyFacts }),
+          ...('specialTermHowItContributesToLife' in state && state.specialTermHowItContributesToLife && { specialTermHowItContributesToLife: state.specialTermHowItContributesToLife }),
           seededAt: new Date().toISOString(),
         },
       })
@@ -323,7 +377,17 @@ export async function seedEnergyStates() {
       for (let i = 0; i < parentState.children.length; i++) {
         const child = parentState.children[i]
         const childId = `${parentId}-${child.title.toLowerCase()}`
-        
+        const metadata: Record<string, unknown> = {
+          parentState: parentState.parentTitle,
+          seededAt: new Date().toISOString(),
+        }
+        if ('sentiment' in child && child.sentiment) metadata.sentiment = child.sentiment
+        if ('adviceToAvoid' in child && child.adviceToAvoid) metadata.adviceToAvoid = child.adviceToAvoid
+        if ('adviceToReinforce' in child && child.adviceToReinforce) metadata.adviceToReinforce = child.adviceToReinforce
+        if ('specialTermWhatItIs' in child && child.specialTermWhatItIs) metadata.specialTermWhatItIs = child.specialTermWhatItIs
+        if ('specialTermKeyFacts' in child && child.specialTermKeyFacts) metadata.specialTermKeyFacts = child.specialTermKeyFacts
+        if ('specialTermHowItContributesToLife' in child && child.specialTermHowItContributesToLife) metadata.specialTermHowItContributesToLife = child.specialTermHowItContributesToLife
+
         await createNode({
           id: childId,
           title: child.title,
@@ -333,10 +397,7 @@ export async function seedEnergyStates() {
           category: child.category,
           immutable: false,
           orderIndex: i + 1,
-          metadata: {
-            parentState: parentState.parentTitle,
-            seededAt: new Date().toISOString(),
-          },
+          metadata,
         })
         
         console.log(`    ✓ Created ${child.title} (child of ${parentState.parentTitle})`)
