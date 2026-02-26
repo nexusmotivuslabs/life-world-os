@@ -24,11 +24,12 @@ services:
         # Set in Dashboard after frontend deploy: https://life-world-os-frontend.onrender.com
 
   # Frontend (React/Vite static build)
-  - type: static
+  - type: web
     name: life-world-os-frontend
+    runtime: static
     rootDir: apps/frontend
     buildCommand: npm ci && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         sync: false
