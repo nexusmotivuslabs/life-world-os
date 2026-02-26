@@ -114,6 +114,14 @@ See [Deployment Strategy](./confluence/domains/platform-engineering/implementati
 
 ---
 
+## Render + Supabase (recommended free tier)
+
+**Cost**: $0 (free tiers) | **Database**: Supabase (no 90-day expiration) | **Hosting**: Render
+
+See **[RENDER_SUPABASE_DEPLOYMENT.md](./RENDER_SUPABASE_DEPLOYMENT.md)** for step-by-step setup. Summary: Supabase for PostgreSQL, Render Web Service for backend, Render Static Site for frontend. A `render.yaml` blueprint is in the repo root.
+
+---
+
 ## Multi-Cloud Support
 
 The application can be deployed to any cloud provider:
