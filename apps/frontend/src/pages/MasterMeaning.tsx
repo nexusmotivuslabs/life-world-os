@@ -15,7 +15,7 @@ import { motion } from 'framer-motion'
 import CloudGauge from '../components/CloudGauge'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 
 /**
  * MasterMeaning Page
@@ -121,7 +121,7 @@ export default function MasterMeaning() {
       agents={agents}
       loading={totalLoading}
       rootNodeId="systems-node-creation-universal-concept"
-      systemId="meaning"
+      systemId={SystemId.MEANING}
       renderOverview={({ setView: setParentView }) => (
         <div className="space-y-8">
           {/* Sub-navigation for Meaning-specific views */}

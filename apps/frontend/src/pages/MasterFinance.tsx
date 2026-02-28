@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Team } from '../services/financeApi'
 import { useNavigate } from 'react-router-dom'
 import { getMasterProductRoute } from '../config/routes'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 import {
   TrendingUp,
   Users,
@@ -51,7 +51,7 @@ export default function MasterFinance() {
         agents={agents}
         loading={loading}
         rootNodeId="systems-node-finance-universal-concept"
-        systemId="finance"
+        systemId={SystemId.FINANCE}
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (

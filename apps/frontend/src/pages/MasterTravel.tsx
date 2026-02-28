@@ -17,7 +17,7 @@ import SavedLocationsView from '../components/travel/SavedLocationsView'
 import LocationDetailView from '../components/travel/LocationDetailView'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 
 export default function MasterTravel() {
   const { addToast } = useToastStore()
@@ -119,7 +119,7 @@ export default function MasterTravel() {
       agents={agents}
       loading={false}
       rootNodeId="systems-node-creation-universal-concept"
-      systemId="travel"
+      systemId={SystemId.TRAVEL}
       renderOverview={() => (
         <div className="space-y-8">
           <div className="flex gap-4 mb-6">

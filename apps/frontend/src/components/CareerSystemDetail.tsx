@@ -32,9 +32,14 @@ import {
   TRUST_AGENT_TYPES,
   REPUTATION_TEAM_DOMAINS,
 } from '../config/systemConfig'
+import { SystemId } from '../types'
+
+/** Career sub-systems that have their own detail pages (Trust, Reputation, Optionality). */
+export const CAREER_SYSTEM_IDS = [SystemId.TRUST, SystemId.REPUTATION, SystemId.OPTIONALITY] as const
+export type CareerDetailSystemId = (typeof CAREER_SYSTEM_IDS)[number]
 
 interface CareerSystemDetailProps {
-  systemId: 'trust' | 'reputation' | 'optionality'
+  systemId: SystemId
 }
 
 interface SystemConfig {
@@ -48,8 +53,8 @@ interface SystemConfig {
   agentTypes: readonly string[]
 }
 
-const systemConfigs: Record<string, SystemConfig> = {
-  trust: {
+const systemConfigs: Record<CareerDetailSystemId, SystemConfig> = {
+  [SystemId.TRUST]: {
     name: 'Trust System',
     mantra: 'Trust is a forward-looking belief.',
     description:
@@ -60,7 +65,7 @@ const systemConfigs: Record<string, SystemConfig> = {
     teamDomains: TRUST_TEAM_DOMAINS,
     agentTypes: TRUST_AGENT_TYPES,
   },
-  reputation: {
+  [SystemId.REPUTATION]: {
     name: 'Reputation System',
     mantra: 'Reputation is not what people think of you. It is what they expect from you.',
     description:
@@ -71,7 +76,7 @@ const systemConfigs: Record<string, SystemConfig> = {
     teamDomains: REPUTATION_TEAM_DOMAINS,
     agentTypes: TRUST_AGENT_TYPES,
   },
-  optionality: {
+  [SystemId.OPTIONALITY]: {
     name: 'Optionality System',
     mantra: 'Optionality is the right, but not the obligation, to act.',
     description:

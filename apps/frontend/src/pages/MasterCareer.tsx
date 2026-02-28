@@ -18,7 +18,7 @@ import {
   OPTIONALITY_TEAM_DOMAINS,
   OPTIONALITY_AGENT_TYPES,
 } from '../config/systemConfig'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 import { getMasterRoute } from '../config/routes'
 
 export default function MasterCareer() {
@@ -51,9 +51,8 @@ export default function MasterCareer() {
       teams={teams}
       agents={agents}
       loading={loading}
-      systemId={MasterDomain.CAREER}
       rootNodeId="systems-node-career-universal-concept"
-      systemId="career"
+      systemId={SystemId.CAREER}
       selectedTeam={selectedTeam}
       onTeamSelect={setSelectedTeam}
       renderOverview={({ setView }) => (

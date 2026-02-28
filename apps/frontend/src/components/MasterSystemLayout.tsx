@@ -6,17 +6,24 @@
  * Each system injects its own content via render props.
  */
 
-import { useState } from 'react'
-import { Users, Brain, BookOpen } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Users, Brain, BookOpen, LayoutGrid } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import TeamDetailView from './TeamDetailView'
 import AgentDetailCard from './AgentDetailCard'
 import DomainTag from './DomainTag'
 import HierarchyTreeView from './knowledge/HierarchyTreeView'
+import SkillsMapChart from './SkillsMapChart'
+import RootNodeModal from './knowledge/RootNodeModal'
+import SkillLeverageModal from './SkillLeverageModal'
+import { getSkillsMapConfig, MASTER_SYSTEM_IDS } from '../config/skillsMapConfig'
+import { SystemId } from '../types'
+import type { SkillsMapSkill } from '../config/skillsMapConfig'
+import { realityNodeApi } from '../services/financeApi'
 import type { Team, Agent } from '../services/financeApi'
 
-export type MasterSystemView = 'guide' | 'teams' | 'agents' | 'concepts'
+export type MasterSystemView = 'guide' | 'teams' | 'agents' | 'concepts' | 'skillsCapabilities'
 
 export interface MasterSystemLayoutProps {
   title: string
@@ -29,8 +36,8 @@ export interface MasterSystemLayoutProps {
   agents: Agent[]
   loading?: boolean
   rootNodeId?: string
-  /** When set, Universal Concepts tree uses system lens for references (e.g. "optionality", "money") */
-  systemId?: string
+  /** When set, Universal Concepts tree uses system lens for references (e.g. optionality, finance). Use SystemId enum. */
+  systemId?: SystemId
   /** Custom content for Guide tab (system overview and guidance) */
   renderOverview: (props: { setView: (view: MasterSystemView) => void }) => React.ReactNode
   /** Optional custom content for Universal Concepts (default: HierarchyTreeView) */
@@ -79,6 +86,29 @@ export default function MasterSystemLayout({
   selectedTeam = null,
 }: MasterSystemLayoutProps) {
   const [view, setView] = useState<MasterSystemView>('guide')
+  const [nodeDataForModal, setNodeDataForModal] = useState<{
+    node: unknown
+    ancestors: unknown[]
+    children: unknown[]
+    depth: number
+  } | null>(null)
+  const [selectedSkill, setSelectedSkill] = useState<SkillsMapSkill | null>(null)
+
+  const skillsMapConfig = getSkillsMapConfig(systemId)
+  // Skills and Capabilities tab is shown for every system using this layout (cascade from one core component).
+  const showSkillsCapabilitiesTab = !!systemId && MASTER_SYSTEM_IDS.includes(systemId)
+
+  const handleSkillClick = useCallback((skill: SkillsMapSkill) => {
+    setSelectedSkill(skill)
+  }, [])
+
+  const handleOpenSkillNode = useCallback((realityNodeId: string) => {
+    setSelectedSkill(null)
+    realityNodeApi
+      .getHierarchy(realityNodeId)
+      .then((data) => setNodeDataForModal(data))
+      .catch(() => {})
+  }, [])
 
   if (loading && teams.length === 0 && agents.length === 0) {
     return (
@@ -151,6 +181,16 @@ export default function MasterSystemLayout({
         >
           Universal Concepts
         </button>
+        {showSkillsCapabilitiesTab && (
+          <button
+            onClick={() => setView('skillsCapabilities')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              view === 'skillsCapabilities' ? `${color} border-b-2 ${color.replace('text-', 'border-')}` : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Skills and Capabilities ({skillsMapConfig?.skills.length ?? 0})
+          </button>
+        )}
       </div>
 
       {/* Guide View */}
@@ -222,10 +262,54 @@ export default function MasterSystemLayout({
         </motion.div>
       )}
 
+      {/* Skills and Capabilities View */}
+      {view === 'skillsCapabilities' && (
+        <motion.div
+          className="w-full min-w-0 flex-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {skillsMapConfig ? (
+            <SkillsMapChart
+              config={skillsMapConfig}
+              color={color}
+              onSkillClick={handleSkillClick}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-lg border border-gray-700 bg-gray-800/50 py-16 text-center">
+              <LayoutGrid className="mx-auto mb-4 h-12 w-12 text-gray-500" />
+              <p className="text-gray-400">No skills and capabilities for this system yet.</p>
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* Team Detail Modal */}
       {selectedTeam && onTeamSelect && (
         <TeamDetailView team={selectedTeam} onClose={() => onTeamSelect(null)} systemId={systemId} />
       )}
+
+      {/* Skill → Reality node exploration modal */}
+      {nodeDataForModal && (
+        <RootNodeModal
+          node={nodeDataForModal}
+          isOpen
+          onClose={() => setNodeDataForModal(null)}
+        />
+      )}
+
+      {/* Skill leverage modal (full framework: problem, structure, leverage, decision) */}
+      <SkillLeverageModal
+        skill={selectedSkill}
+        systemId={systemId}
+        isOpen={!!selectedSkill}
+        onClose={() => setSelectedSkill(null)}
+        onExploreInConcepts={() => {
+          setSelectedSkill(null)
+          setView('concepts')
+        }}
+        onOpenNode={handleOpenSkillNode}
+      />
     </div>
   )
 }

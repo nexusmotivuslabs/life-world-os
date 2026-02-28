@@ -7,12 +7,11 @@
 
 import { useParams } from 'react-router-dom'
 import { FeatureErrorBoundary } from './ErrorBoundary'
-import CareerSystemDetail from './CareerSystemDetail'
+import CareerSystemDetail, { CAREER_SYSTEM_IDS } from './CareerSystemDetail'
 
 export default function CareerSystemRouter() {
   const { systemId } = useParams<{ systemId: string }>()
-
-  const validSystems = ['trust', 'reputation', 'optionality']
+  const validSystems = CAREER_SYSTEM_IDS as readonly string[]
 
   if (!systemId || !validSystems.includes(systemId)) {
     return (
@@ -37,7 +36,7 @@ export default function CareerSystemRouter() {
 
   return (
     <FeatureErrorBoundary featureName={getFeatureName()}>
-      <CareerSystemDetail systemId={systemId as 'trust' | 'reputation' | 'optionality'} />
+      <CareerSystemDetail systemId={systemId as (typeof CAREER_SYSTEM_IDS)[number]} />
     </FeatureErrorBoundary>
   )
 }

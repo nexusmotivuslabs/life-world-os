@@ -15,7 +15,7 @@ import SleepLogForm from '../components/SleepLogForm'
 import EnergyStatusCard from '../components/EnergyStatusCard'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 
 /**
  * MasterEnergy Page
@@ -81,7 +81,7 @@ export default function MasterEnergy() {
       agents={agents}
       loading={totalLoading}
       rootNodeId="systems-node-health-universal-concept"
-      systemId="energy"
+      systemId={SystemId.ENERGY}
       renderOverview={({ setView }) => (
         <div className="space-y-8">
           {energyStatus && (

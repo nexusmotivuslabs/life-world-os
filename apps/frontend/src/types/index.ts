@@ -179,6 +179,27 @@ export enum RebalancingFrequency {
   THRESHOLD_BASED = 'THRESHOLD_BASED',
 }
 
+/**
+ * Canonical system IDs for tracking across the app.
+ * Use this enum wherever a system identifier is needed (configs, APIs, layout, artifacts).
+ */
+export enum SystemId {
+  FINANCE = 'finance',
+  ENERGY = 'energy',
+  TRAVEL = 'travel',
+  SOFTWARE = 'software',
+  HEALTH = 'health',
+  MEANING = 'meaning',
+  CAREER = 'career',
+  /** Relationships system; route is /master/relationships but tracking ID is trust */
+  TRUST = 'trust',
+  REPUTATION = 'reputation',
+  OPTIONALITY = 'optionality',
+  LOADOUT = 'loadout',
+  REALITY = 'reality',
+}
+
+/** Master domain routes (/master/:domain). Relationships route uses RELATIONSHIPS but layout systemId is TRUST. */
 export enum MasterDomain {
   FINANCE = 'finance',
   ENERGY = 'energy',

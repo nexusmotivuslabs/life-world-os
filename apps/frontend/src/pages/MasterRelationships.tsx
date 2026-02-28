@@ -13,6 +13,7 @@ import type { Team } from '../services/financeApi'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
 import { TRUST_TEAM_DOMAINS, TRUST_AGENT_TYPES, REPUTATION_TEAM_DOMAINS } from '../config/systemConfig'
+import { SystemId } from '../types'
 
 export default function MasterRelationships() {
   const navigate = useNavigate()
@@ -43,7 +44,7 @@ export default function MasterRelationships() {
       agents={agents}
       loading={loading}
       rootNodeId="systems-node-trust-universal-concept"
-      systemId="trust"
+      systemId={SystemId.TRUST}
       selectedTeam={selectedTeam}
       onTeamSelect={setSelectedTeam}
       renderOverview={() => (

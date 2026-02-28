@@ -2,7 +2,7 @@ import { Network, Code, Layers, Shield, BookOpen } from 'lucide-react'
 import MasterSystemLayout from '../components/MasterSystemLayout'
 import { useSystemData } from '../hooks/useSystemData'
 import { SOFTWARE_AGENT_TYPES, SOFTWARE_TEAM_DOMAINS } from '../config/systemConfig'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 
 export default function MasterSoftware() {
   const { teams, agents } = useSystemData({
@@ -25,7 +25,7 @@ export default function MasterSoftware() {
       agents={agents}
       loading={false}
       rootNodeId="systems-node-creation-universal-concept"
-      systemId="software"
+      systemId={SystemId.SOFTWARE}
       renderOverview={({ setView }) => (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

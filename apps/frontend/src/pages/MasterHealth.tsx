@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { healthApi, HealthStatus } from '../services/healthApi'
 import type { Team } from '../services/financeApi'
 import { getMasterProductRoute } from '../config/routes'
-import { MasterDomain } from '../types'
+import { MasterDomain, SystemId } from '../types'
 import {
   HeartPulse,
   Activity,
@@ -105,7 +105,7 @@ export default function MasterHealth() {
         agents={agents}
         loading={totalLoading}
         rootNodeId="systems-node-health-universal-concept"
-        systemId="health"
+        systemId={SystemId.HEALTH}
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}
         renderOverview={({ setView }) => (
