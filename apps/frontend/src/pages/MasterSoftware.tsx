@@ -24,7 +24,7 @@ export default function MasterSoftware() {
       teams={teams}
       agents={agents}
       loading={false}
-      rootNodeId="systems-node-leverage_tier-software-universal-concept"
+      rootNodeId="systems-node-creation-universal-concept"
       systemId="software"
       renderOverview={({ setView }) => (
         <div className="space-y-6">

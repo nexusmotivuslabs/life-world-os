@@ -32,16 +32,17 @@ const prisma = new PrismaClient()
 // Constants for node IDs
 const REALITY_ID = 'reality-root'
 const CONSTRAINTS_OF_REALITY_ID = 'constraints-of-reality'
+const FORMALIZATIONS_ID = 'constraints-of-reality-formalizations'
 const LAWS_ID = 'laws-node'
 const PRINCIPLES_ID = 'principles-node'
 const FRAMEWORKS_ID = 'frameworks-node'
 const AGENTS_ID = 'agents-node'
 const ENVIRONMENTS_ID = 'environments-node'
 const RESOURCES_ID = 'resources-node'
-const ENGINES_ID = 'engines-node'
+const INFRASTRUCTURE_ID = 'infrastructure-node'
 const VALUE_ID = 'value-root'
-const FINANCE_ID = 'finance-system'
 const SYSTEMS_ID = 'systems-node'
+const ENGINES_ID = 'engines-node' // used under Systems or Resources.Capital if needed
 
 /**
  * Merge metadata objects, preserving existing fields while adding/updating new ones
@@ -568,7 +569,26 @@ const SYSTEMS_HIERARCHY_DATA: Record<string, SystemData[]> = {
   ],
 }
 
-// Helper to get tier order index
+// Flat 7 systems under REALITY -> SYSTEMS (ontology refactor)
+interface FlatSystemSpec {
+  nodeKey: string
+  systemId: string
+  name: string
+  description: string
+  route: string
+  orderIndex: number
+}
+const FLAT_SYSTEMS: FlatSystemSpec[] = [
+  { nodeKey: 'finance', systemId: 'money', name: 'FINANCE', description: 'Financial system. Money, investing, risk, leverage, protection.', route: '/master/money', orderIndex: 1 },
+  { nodeKey: 'career', systemId: 'career', name: 'CAREER', description: 'Career system. Income, professional development, optionality.', route: '/master/career', orderIndex: 2 },
+  { nodeKey: 'trust', systemId: 'trust', name: 'TRUST', description: 'Trust system. Competence, reliability, alignment. Global modifier.', route: '/master/relationships', orderIndex: 3 },
+  { nodeKey: 'health', systemId: 'health', name: 'HEALTH', description: 'Health system. Capacity, recovery, resilience.', route: '/master/health', orderIndex: 4 },
+  { nodeKey: 'production', systemId: 'production', name: 'PRODUCTION', description: 'Production system. Output, delivery, value creation.', route: '/systems/production', orderIndex: 5 },
+  { nodeKey: 'governance', systemId: 'governance', name: 'GOVERNANCE', description: 'Governance system. Rules, decisions, accountability.', route: '/systems/governance', orderIndex: 6 },
+  { nodeKey: 'creation', systemId: 'creation', name: 'CREATION', description: 'Creation system. Innovation, design, new value.', route: '/systems/creation', orderIndex: 7 },
+]
+
+// Helper to get tier order index (kept for linkLawsToHierarchy / legacy if needed)
 function getTierOrderIndex(tierName: string): number {
   const tierOrder: Record<string, number> = {
     CORE_TIER_0: 0,
@@ -596,6 +616,10 @@ function getUniversalConceptForSystem(systemId: string): string {
     'software': 'SOFTWARE_SYSTEMS',
     'career': 'CAREER',
     'relationships': 'RELATIONSHIPS',
+    'trust': 'TRUST',
+    'production': 'PRODUCTION',
+    'governance': 'GOVERNANCE',
+    'creation': 'CREATION',
   }
   return conceptMap[systemId] || 'CONCEPT'
 }
@@ -1675,32 +1699,13 @@ const FRAMEWORKS = [
 ]
 
 // Pareto-selected top 5 agent types
+// Agent types in plan order: Human, Artificial, Collective, Organisational, Hybrid
 const AGENT_TYPES = [
-  {
-    title: 'HUMAN',
-    description: 'Individual human agents with consciousness, goals, and agency.',
-    category: RealityNodeCategory.HUMAN,
-  },
-  {
-    title: 'COLLECTIVE',
-    description: 'Groups of humans acting as a unit (teams, communities, organizations).',
-    category: RealityNodeCategory.COLLECTIVE,
-  },
-  {
-    title: 'ARTIFICIAL',
-    description: 'AI systems and automated agents with programmed behaviors.',
-    category: RealityNodeCategory.ARTIFICIAL,
-  },
-  {
-    title: 'ORGANISATIONAL',
-    description: 'Formal organizations with structure, processes, and hierarchies.',
-    category: RealityNodeCategory.ORGANISATIONAL,
-  },
-  {
-    title: 'HYBRID',
-    description: 'Combinations of human and artificial agents working together.',
-    category: RealityNodeCategory.HYBRID,
-  },
+  { title: 'HUMAN', description: 'Individual human agents with consciousness, goals, and agency.', category: RealityNodeCategory.HUMAN },
+  { title: 'ARTIFICIAL', description: 'AI systems and automated agents with programmed behaviors.', category: RealityNodeCategory.ARTIFICIAL },
+  { title: 'COLLECTIVE', description: 'Groups of humans acting as a unit (teams, communities).', category: RealityNodeCategory.COLLECTIVE },
+  { title: 'ORGANISATIONAL', description: 'Formal organizations with structure, processes, and hierarchies.', category: RealityNodeCategory.ORGANISATIONAL },
+  { title: 'HYBRID', description: 'Combinations of human and artificial agents working together.', category: RealityNodeCategory.HYBRID },
 ]
 
 // Meaningful capabilities for HUMAN agents (replaces generic examples)
@@ -1761,31 +1766,12 @@ const PHYSICAL_CAPABILITIES = [
 
 // Pareto-selected top 5 environment types
 const ENVIRONMENT_TYPES = [
-  {
-    title: 'PHYSICAL',
-    description: 'Physical spaces and material environments (offices, homes, nature).',
-    category: RealityNodeCategory.PHYSICAL,
-  },
-  {
-    title: 'ECONOMIC',
-    description: 'Economic systems, markets, and financial environments.',
-    category: RealityNodeCategory.ECONOMIC,
-  },
-  {
-    title: 'DIGITAL',
-    description: 'Digital spaces, online platforms, and virtual environments.',
-    category: RealityNodeCategory.DIGITAL,
-  },
-  {
-    title: 'SOCIAL',
-    description: 'Social networks, relationships, and cultural environments.',
-    category: RealityNodeCategory.SOCIAL,
-  },
-  {
-    title: 'BIOLOGICAL',
-    description: 'Biological systems, ecosystems, and living environments.',
-    category: RealityNodeCategory.BIOLOGICAL,
-  },
+  { title: 'PHYSICAL', description: 'Physical spaces and material environments (offices, homes, nature).', category: RealityNodeCategory.PHYSICAL },
+  { title: 'DIGITAL', description: 'Digital spaces, online platforms, and virtual environments.', category: RealityNodeCategory.DIGITAL },
+  { title: 'ECONOMIC', description: 'Economic systems, markets, and financial environments.', category: RealityNodeCategory.ECONOMIC },
+  { title: 'SOCIAL', description: 'Social networks, relationships, and cultural environments.', category: RealityNodeCategory.SOCIAL },
+  { title: 'ORGANIZATIONAL', description: 'Structures, processes, and formal organizational environments.', category: RealityNodeCategory.ORGANIZATIONAL },
+  { title: 'INFORMATIONAL', description: 'Information flows, data environments, and knowledge contexts.', category: RealityNodeCategory.INFORMATIONAL },
 ]
 
 // Economic environment breakdown
@@ -2083,13 +2069,13 @@ export async function seedRealityHierarchy() {
     })
     console.log('✅ Created REALITY root')
 
-    // Phase 2: Create top-level categories under REALITY (3 children)
-    console.log('\n📌 Phase 2: Creating top-level categories...')
-    
-    const constraintsNode = await createNode({
+    // Phase 2: Create exactly seven primary nodes under REALITY
+    console.log('\n📌 Phase 2: Creating seven primary nodes under REALITY...')
+
+    await createNode({
       id: CONSTRAINTS_OF_REALITY_ID,
       title: 'CONSTRAINTS_OF_REALITY',
-      description: 'Fundamental constraints that govern reality. Laws, principles, and frameworks.',
+      description: 'Constraints of reality. Physical, Biological, Informational, Economic, Social, Temporal dimensions plus Formalizations (Laws, Principles, Frameworks).',
       parentId: REALITY_ID,
       nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
       category: RealityNodeCategory.FOUNDATIONAL,
@@ -2097,10 +2083,10 @@ export async function seedRealityHierarchy() {
       orderIndex: 1,
     })
 
-    const agentsNode = await createNode({
-      id: AGENTS_ID,
-      title: 'AGENTS',
-      description: 'Entities that act within reality. Human, collective, artificial, organizational, and hybrid agents.',
+    await createNode({
+      id: ENVIRONMENTS_ID,
+      title: 'ENVIRONMENTS',
+      description: 'Contexts and settings where reality manifests. Physical, Digital, Economic, Social, Organizational, Informational.',
       parentId: REALITY_ID,
       nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
       category: RealityNodeCategory.FOUNDATIONAL,
@@ -2108,10 +2094,10 @@ export async function seedRealityHierarchy() {
       orderIndex: 2,
     })
 
-    const environmentsNode = await createNode({
-      id: ENVIRONMENTS_ID,
-      title: 'ENVIRONMENTS',
-      description: 'Contexts and settings where reality manifests. Physical, economic, digital, social, and biological environments.',
+    await createNode({
+      id: RESOURCES_ID,
+      title: 'RESOURCES',
+      description: 'Resources available within reality. Time, Energy, Capital, Attention, Information, Trust.',
       parentId: REALITY_ID,
       nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
       category: RealityNodeCategory.FOUNDATIONAL,
@@ -2119,64 +2105,132 @@ export async function seedRealityHierarchy() {
       orderIndex: 3,
     })
 
-    const resourcesNode = await createNode({
-      id: RESOURCES_ID,
-      title: 'RESOURCES',
-      description: 'Resources available within reality. Engines, assets, and value creation mechanisms.',
+    await createNode({
+      id: INFRASTRUCTURE_ID,
+      title: 'INFRASTRUCTURE',
+      description: 'Infrastructure that enables and supports reality. Placeholder for physical and digital infrastructure.',
       parentId: REALITY_ID,
       nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
       orderIndex: 4,
     })
-    console.log('✅ Created top-level categories')
 
-    // Phase 3: Build CONSTRAINTS_OF_REALITY hierarchy
+    await createNode({
+      id: AGENTS_ID,
+      title: 'AGENTS',
+      description: 'Entities that act within reality. Human, Artificial, Collective, Organisational, Hybrid. Each has States, Capabilities, Metrics.',
+      parentId: REALITY_ID,
+      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 5,
+    })
+
+    await createNode({
+      id: VALUE_ID,
+      title: 'VALUE',
+      description: 'Dimensions of value. Financial, Influence, Knowledge, Health, Stability, Optionality, Power.',
+      parentId: REALITY_ID,
+      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 6,
+    })
+
+    await createNode({
+      id: SYSTEMS_ID,
+      title: 'SYSTEMS',
+      description: 'Operational systems. Finance, Career, Trust, Health, Production, Governance, Creation. Each has States.',
+      parentId: REALITY_ID,
+      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 7,
+    })
+    console.log('✅ Created seven primary nodes: Constraints, Environments, Resources, Infrastructure, Agents, Value, Systems')
+
+    // Phase 3: Build CONSTRAINTS_OF_REALITY hierarchy (6 dimensions + Formalizations)
     console.log('\n📌 Phase 3: Building CONSTRAINTS_OF_REALITY hierarchy...')
-    
-    // Create LAWS under CONSTRAINTS_OF_REALITY
-    const lawsNode = await createNode({
+
+    // Six constraint dimensions under CONSTRAINTS_OF_REALITY
+    const CONSTRAINT_DIMENSIONS = [
+      { title: 'PHYSICAL', description: 'Physical constraints: matter, energy, space.', category: RealityNodeCategory.PHYSICAL },
+      { title: 'BIOLOGICAL', description: 'Biological constraints: life, ecosystems, organisms.', category: RealityNodeCategory.BIOLOGICAL },
+      { title: 'INFORMATIONAL', description: 'Informational constraints: data, signal, noise, bandwidth.', category: RealityNodeCategory.INFORMATIONAL },
+      { title: 'ECONOMIC', description: 'Economic constraints: scarcity, trade-offs, allocation.', category: RealityNodeCategory.ECONOMIC },
+      { title: 'SOCIAL', description: 'Social constraints: norms, coordination, trust.', category: RealityNodeCategory.SOCIAL },
+      { title: 'TEMPORAL', description: 'Temporal constraints: time, irreversibility, sequencing.', category: RealityNodeCategory.TEMPORAL },
+    ]
+    for (let i = 0; i < CONSTRAINT_DIMENSIONS.length; i++) {
+      const d = CONSTRAINT_DIMENSIONS[i]
+      await createNode({
+        id: `${CONSTRAINTS_OF_REALITY_ID}-${d.title.toLowerCase()}`,
+        title: d.title,
+        description: d.description,
+        parentId: CONSTRAINTS_OF_REALITY_ID,
+        nodeType: RealityNodeType.CATEGORY,
+        category: d.category,
+        immutable: true,
+        orderIndex: i + 1,
+      })
+    }
+
+    // Formalizations node (Laws, Principles, Frameworks, Derived Conditions)
+    await createNode({
+      id: FORMALIZATIONS_ID,
+      title: 'FORMALIZATIONS',
+      description: 'Formal expressions of constraints: Laws, Principles, Frameworks, and Derived Conditions.',
+      parentId: CONSTRAINTS_OF_REALITY_ID,
+      nodeType: RealityNodeType.CATEGORY,
+      category: RealityNodeCategory.FOUNDATIONAL,
+      immutable: true,
+      orderIndex: 7,
+    })
+
+    // Create LAWS under FORMALIZATIONS
+    await createNode({
       id: LAWS_ID,
       title: 'LAWS',
       description: 'Universal laws that govern all systems. Fundamental, strategic, and systemic laws.',
-      parentId: CONSTRAINTS_OF_REALITY_ID,
+      parentId: FORMALIZATIONS_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
       orderIndex: 1,
     })
 
-    // Create PRINCIPLES under CONSTRAINTS_OF_REALITY
-    const principlesNode = await createNode({
+    // Create PRINCIPLES under FORMALIZATIONS
+    await createNode({
       id: PRINCIPLES_ID,
       title: 'PRINCIPLES',
       description: 'Strategic and systemic principles for decision-making and system design.',
-      parentId: CONSTRAINTS_OF_REALITY_ID,
+      parentId: FORMALIZATIONS_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
       orderIndex: 2,
     })
 
-    // Create FRAMEWORKS under CONSTRAINTS_OF_REALITY
-    const frameworksNode = await createNode({
+    // Create FRAMEWORKS under FORMALIZATIONS
+    await createNode({
       id: FRAMEWORKS_ID,
       title: 'FRAMEWORKS',
       description: 'Practical frameworks for applying laws and principles across domains.',
-      parentId: CONSTRAINTS_OF_REALITY_ID,
+      parentId: FORMALIZATIONS_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
       orderIndex: 3,
     })
 
-    // Create DERIVED_CONDITIONS under CONSTRAINTS_OF_REALITY
-    const derivedConditionsId = `${CONSTRAINTS_OF_REALITY_ID}-derived-conditions`
-    const derivedConditionsNode = await createNode({
+    // Create DERIVED_CONDITIONS under FORMALIZATIONS
+    const derivedConditionsId = `${FORMALIZATIONS_ID}-derived-conditions`
+    await createNode({
       id: derivedConditionsId,
       title: 'DERIVED_CONDITIONS',
       description: 'Conditions that emerge from the fundamental constraints of reality. Scarcity, trade-offs, opportunity costs, irreversibility, and degrees of freedom.',
-      parentId: CONSTRAINTS_OF_REALITY_ID,
+      parentId: FORMALIZATIONS_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FOUNDATIONAL,
       immutable: true,
@@ -2460,25 +2514,103 @@ export async function seedRealityHierarchy() {
       })
     }
 
-    // Phase 4: Build AGENTS hierarchy with meaningful content
-    console.log('\n📌 Phase 4: Building AGENTS hierarchy...')
-    
-    // Create maps for grandchildren and great-grandchildren
-    const agentGrandchildrenMap = new Map<string, Array<{ title: string; description: string; category?: RealityNodeCategory }>>()
-    agentGrandchildrenMap.set('HUMAN', HUMAN_CAPABILITIES)
-    
-    const agentGreatGrandchildrenMap = new Map<string, Array<{ title: string; description: string; category?: RealityNodeCategory }>>()
-    agentGreatGrandchildrenMap.set('COGNITIVE_ABILITIES', COGNITIVE_ABILITIES)
-    agentGreatGrandchildrenMap.set('EMOTIONAL_INTELLIGENCE', EMOTIONAL_INTELLIGENCE)
-    agentGreatGrandchildrenMap.set('PHYSICAL_CAPABILITIES', PHYSICAL_CAPABILITIES)
-    
-    await seedMeaningfulHierarchy(
-      AGENTS_ID,
-      AGENT_TYPES,
-      RealityNodeType.AGENT,
-      agentGrandchildrenMap,
-      agentGreatGrandchildrenMap
-    )
+    // Phase 4: Build AGENTS hierarchy — each agent has States, Capabilities, Metrics
+    console.log('\n📌 Phase 4: Building AGENTS hierarchy (States, Capabilities, Metrics per agent)...')
+    for (let i = 0; i < AGENT_TYPES.length; i++) {
+      const agent = AGENT_TYPES[i]
+      const agentId = `${AGENTS_ID}-${agent.title.toLowerCase()}`
+      await createNode({
+        id: agentId,
+        title: agent.title,
+        description: agent.description,
+        parentId: AGENTS_ID,
+        nodeType: RealityNodeType.AGENT,
+        category: agent.category,
+        immutable: true,
+        orderIndex: i + 1,
+      })
+
+      // States branch
+      await createNode({
+        id: `${agentId}-states`,
+        title: 'STATES',
+        description: `States for ${agent.title} agents.`,
+        parentId: agentId,
+        nodeType: RealityNodeType.STATE,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: false,
+        orderIndex: 1,
+      })
+
+      // Capabilities branch (constraint-breaking mechanisms with 5-field structure)
+      const capabilitiesId = `${agentId}-capabilities`
+      await createNode({
+        id: capabilitiesId,
+        title: 'CAPABILITIES',
+        description: `Capabilities for ${agent.title} agents. Constraint-breaking mechanisms.`,
+        parentId: agentId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: agent.category,
+        immutable: false,
+        orderIndex: 2,
+      })
+      // Add one or more capability nodes with metadata (Constraints Overcome, Inputs, Outputs, Leverage Multiplier, Metrics)
+      if (agent.title === 'HUMAN') {
+        for (let c = 0; c < HUMAN_CAPABILITIES.length; c++) {
+          const cap = HUMAN_CAPABILITIES[c]
+          await createNode({
+            id: `${capabilitiesId}-${cap.title.toLowerCase().replace(/_/g, '-')}`,
+            title: cap.title,
+            description: cap.description,
+            parentId: capabilitiesId,
+            nodeType: RealityNodeType.CAPABILITY,
+            category: agent.category,
+            immutable: false,
+            orderIndex: c + 1,
+            metadata: {
+              constraintsOvercome: [],
+              inputsRequired: [],
+              outputsProduced: [cap.title],
+              leverageMultiplier: 1,
+              metrics: [],
+              seededAt: new Date().toISOString(),
+            },
+          })
+        }
+      } else {
+        await createNode({
+          id: `${capabilitiesId}-primary`,
+          title: `${agent.title}_CAPABILITY`,
+          description: `Primary capability for ${agent.title} agents.`,
+          parentId: capabilitiesId,
+          nodeType: RealityNodeType.CAPABILITY,
+          category: agent.category,
+          immutable: false,
+          orderIndex: 1,
+          metadata: {
+            constraintsOvercome: [],
+            inputsRequired: [],
+            outputsProduced: [],
+            leverageMultiplier: 1,
+            metrics: [],
+            seededAt: new Date().toISOString(),
+          },
+        })
+      }
+
+      // Metrics branch
+      await createNode({
+        id: `${agentId}-metrics`,
+        title: 'METRICS',
+        description: `Metrics for ${agent.title} agents.`,
+        parentId: agentId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: false,
+        orderIndex: 3,
+      })
+    }
+    console.log('  → Created 5 agents with States, Capabilities, Metrics')
 
     // Phase 5: Build ENVIRONMENTS hierarchy with meaningful content
     console.log('\n📌 Phase 5: Building ENVIRONMENTS hierarchy...')
@@ -2498,235 +2630,118 @@ export async function seedRealityHierarchy() {
       envGreatGrandchildrenMap
     )
 
-    // Phase 6: Build RESOURCES hierarchy with Engines
+    // Phase 6: Build RESOURCES hierarchy (Time, Energy, Capital, Attention, Information, Trust)
     console.log('\n📌 Phase 6: Building RESOURCES hierarchy...')
-    
-    // Create ENGINES node under RESOURCES
-    const enginesNode = await createNode({
-      id: ENGINES_ID,
-      title: 'ENGINES',
-      description: 'Value creation mechanisms that generate income, Gold, and Oxygen. Sustainable income sources: Career, Business, Investment, and Learning.',
-      parentId: RESOURCES_ID,
-      nodeType: RealityNodeType.CATEGORY,
-      category: RealityNodeCategory.ECONOMIC,
-      immutable: true,
-      orderIndex: 1,
-      metadata: {
-        resourceType: 'ENGINES',
-        seededAt: new Date().toISOString(),
-      },
-    })
-    console.log('  → Created ENGINES node')
-
-    // Seed Engine Types as child nodes with reference keys
-    console.log('  → Seeding Engine Types...')
-    for (let i = 0; i < ENGINE_TYPES.length; i++) {
-      const engineType = ENGINE_TYPES[i]
+    const RESOURCE_TYPES = [
+      { title: 'TIME', description: 'Time as a finite resource. Opportunity cost and sequencing.', category: RealityNodeCategory.TEMPORAL },
+      { title: 'ENERGY', description: 'Physical, mental, and emotional energy. Capacity and renewal.', category: RealityNodeCategory.PHYSICAL },
+      { title: 'CAPITAL', description: 'Financial and material capital. Money, assets, and investable resources.', category: RealityNodeCategory.ECONOMIC },
+      { title: 'ATTENTION', description: 'Cognitive attention. Focus and selective awareness.', category: RealityNodeCategory.INFORMATIONAL },
+      { title: 'INFORMATION', description: 'Data, knowledge, and signal. Information as a resource.', category: RealityNodeCategory.INFORMATIONAL },
+      { title: 'TRUST', description: 'Trust as a relational resource. Reduces friction and unlocks access.', category: RealityNodeCategory.SOCIAL },
+    ]
+    for (let i = 0; i < RESOURCE_TYPES.length; i++) {
+      const r = RESOURCE_TYPES[i]
       await createNode({
-        id: `${ENGINES_ID}-${engineType.engineType.toLowerCase()}`,
-        title: engineType.title,
-        description: engineType.description,
-        parentId: ENGINES_ID,
+        id: `${RESOURCES_ID}-${r.title.toLowerCase()}`,
+        title: r.title,
+        description: r.description,
+        parentId: RESOURCES_ID,
         nodeType: RealityNodeType.CATEGORY,
-        category: engineType.category,
+        category: r.category,
         immutable: true,
         orderIndex: i + 1,
-        metadata: {
-          engineType: engineType.engineType, // Reference key
-          resourceType: 'ENGINE',
-          seededAt: new Date().toISOString(),
-        },
       })
     }
-    console.log(`  → Seeded ${ENGINE_TYPES.length} engine types`)
+    console.log('  → Created 6 resource nodes: Time, Energy, Capital, Attention, Information, Trust')
 
-    // Phase 7: Build VALUE -> FINANCE hierarchy
-    console.log('\n📌 Phase 7: Building VALUE -> FINANCE hierarchy...')
-    
-    // Create VALUE root invariant under REALITY (not a system, just a container)
-    const valueNode = await createNode({
-      id: VALUE_ID,
-      title: 'VALUE',
-      description: 'Root invariant. The fundamental measure and medium of worth. All value flows through this node. This is not a system, but a foundational container for value-related systems.',
-      parentId: REALITY_ID,
-      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
-      category: RealityNodeCategory.FOUNDATIONAL,
-      immutable: true,
-      orderIndex: 5,
-      metadata: {
-        isRootInvariant: true,
-        isSystem: false,
-        seededAt: new Date().toISOString(),
-      },
-    })
-    console.log('  → Created VALUE root invariant')
+    // Phase 7: Build VALUE hierarchy (7 dimensions: Financial, Influence, Knowledge, Health, Stability, Optionality, Power)
+    console.log('\n📌 Phase 7: Building VALUE hierarchy...')
+    const VALUE_DIMENSIONS = [
+      { title: 'FINANCIAL', description: 'Monetary and asset-based value.', category: RealityNodeCategory.ECONOMIC },
+      { title: 'INFLUENCE', description: 'Capacity to affect outcomes and decisions.', category: RealityNodeCategory.SOCIAL },
+      { title: 'KNOWLEDGE', description: 'Knowledge and understanding as value.', category: RealityNodeCategory.INFORMATIONAL },
+      { title: 'HEALTH', description: 'Physical and mental health as value.', category: RealityNodeCategory.BIOLOGICAL },
+      { title: 'STABILITY', description: 'Resilience and reduced volatility.', category: RealityNodeCategory.FOUNDATIONAL },
+      { title: 'OPTIONALITY', description: 'Options and future flexibility.', category: RealityNodeCategory.STRATEGIC },
+      { title: 'POWER', description: 'Agency and capacity to act.', category: RealityNodeCategory.FOUNDATIONAL },
+    ]
+    for (let i = 0; i < VALUE_DIMENSIONS.length; i++) {
+      const v = VALUE_DIMENSIONS[i]
+      await createNode({
+        id: `${VALUE_ID}-${v.title.toLowerCase()}`,
+        title: v.title,
+        description: v.description,
+        parentId: VALUE_ID,
+        nodeType: RealityNodeType.CATEGORY,
+        category: v.category,
+        immutable: true,
+        orderIndex: i + 1,
+      })
+    }
+    console.log('  → Created 7 value dimensions: Financial, Influence, Knowledge, Health, Stability, Optionality, Power')
 
-    // Create FINANCE system under VALUE (this is the actual system)
-    const financeNode = await createNode({
-      id: FINANCE_ID,
-      title: 'FINANCE',
-      description: 'Finance System. The complete financial framework covering money, investing, risk, leverage, and protection. This is a system, not just a category.',
-      parentId: VALUE_ID,
-      nodeType: RealityNodeType.CATEGORY,
-      category: RealityNodeCategory.ECONOMIC,
-      immutable: true,
-      orderIndex: 1,
-      metadata: {
-        isSystem: true,
-        systemType: 'FINANCE',
-        systemName: 'Finance System',
-        seededAt: new Date().toISOString(),
-      },
-    })
-    console.log('  → Created FINANCE system')
-
-    // Create Universal Concept for Finance (MONEY)
-    const financeUniversalConceptId = `${FINANCE_ID}-universal-concept`
-    const financeSummary = 'Universal concept for Finance system. The foundational domain knowledge that governs financial systems.'
-    const financeUniversalConcept = await createNode({
-      id: financeUniversalConceptId,
-      title: 'MONEY',
-      description: financeSummary,
-      parentId: FINANCE_ID,
-      nodeType: RealityNodeType.CATEGORY,
-      category: RealityNodeCategory.FOUNDATIONAL,
-      immutable: true,
-      orderIndex: 1, // First index - root artifact
-      metadata: buildUniversalConceptMetadata(financeUniversalConceptId, 'finance', financeSummary),
-    })
-    console.log('  → Created Universal Concept: MONEY')
-
-    // Add Finance-specific pathways
-    await seedSystemPathways('finance', financeUniversalConceptId, FINANCE_ID)
-
-    // Create finance category nodes and their children
-    const financeGrandchildrenMap = new Map<string, Array<{ title: string; description: string; category?: RealityNodeCategory }>>()
-    financeGrandchildrenMap.set('MONEY', MONEY_CHILDREN)
-    financeGrandchildrenMap.set('INVESTING', INVESTING_CHILDREN)
-    financeGrandchildrenMap.set('RISK', RISK_CHILDREN)
-    financeGrandchildrenMap.set('LEVERAGE', LEVERAGE_CHILDREN)
-    financeGrandchildrenMap.set('PROTECTION', PROTECTION_CHILDREN)
-
-    await seedMeaningfulHierarchy(
-      FINANCE_ID,
-      FINANCE_CATEGORIES,
-      RealityNodeType.CATEGORY,
-      financeGrandchildrenMap
-    )
-    console.log('  → Seeded Finance categories and children')
-
-    // Phase 8: Build SYSTEMS hierarchy
+    // Phase 8: Build SYSTEMS hierarchy (flat 7 systems: Finance, Career, Trust, Health, Production, Governance, Creation)
     console.log('\n📌 Phase 8: Building SYSTEMS hierarchy...')
-    
-    const systemsNode = await createNode({
-      id: SYSTEMS_ID,
-      title: 'SYSTEMS',
-      description: 'Operational systems that construct and navigate reality. Organized by tier: Survival, Stability, Growth, Leverage, Expression, and Cross-System States.',
-      parentId: REALITY_ID,
-      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
-      category: RealityNodeCategory.FOUNDATIONAL,
-      immutable: true,
-      orderIndex: 6, // After VALUE
-      metadata: {
-        seededAt: new Date().toISOString(),
-      },
-    })
-    console.log('  → Created SYSTEMS node')
 
-    // Create tier nodes and their systems
-    // Ensures max 3 instances per level, max 5 levels total (ROOT -> Tier -> System -> Sub-System -> Artifact)
-    for (const [tierName, systems] of Object.entries(SYSTEMS_HIERARCHY_DATA)) {
-      if (systems.length === 0) continue // Skip empty tiers
-      
-      const tierNode = await createNode({
-        id: `${SYSTEMS_ID}-${tierName.toLowerCase()}`,
-        title: tierName,
-        description: `Systems in the ${tierName.replace(/_/g, ' ')} tier.`,
+    // Create flat 7 systems: Finance, Career, Trust, Health, Production, Governance, Creation
+    for (const system of FLAT_SYSTEMS) {
+      const systemNodeId = `${SYSTEMS_ID}-${system.nodeKey}`
+      await createNode({
+        id: systemNodeId,
+        title: system.name,
+        description: system.description,
         parentId: SYSTEMS_ID,
         nodeType: RealityNodeType.CATEGORY,
-        category: RealityNodeCategory.SYSTEM_TIER as any, // Type assertion for newly added enum
+        category: RealityNodeCategory.SYSTEM,
         immutable: true,
-        orderIndex: getTierOrderIndex(tierName),
+        orderIndex: system.orderIndex,
         metadata: {
-          systemTier: tierName,
+          isSystem: true,
+          systemId: system.systemId,
+          systemRoute: system.route,
           seededAt: new Date().toISOString(),
         },
       })
-      console.log(`  → Created ${tierName} tier node`)
+      console.log(`  → Created ${system.name} system`)
 
-      // Create systems under this tier (limit to 3 per tier for efficiency)
-      const systemsToSeed = systems.slice(0, 3)
-      for (const system of systemsToSeed) {
-        const systemNode = await createNode({
-          id: `${tierNode.id}-${system.id}`,
-          title: system.name,
-          description: system.description,
-          parentId: tierNode.id,
-          nodeType: RealityNodeType.CATEGORY,
-          category: RealityNodeCategory.SYSTEM as any, // Type assertion for newly added enum
-          immutable: true,
-          orderIndex: system.orderIndex,
-          metadata: {
-            isSystem: true,
-            systemId: system.id,
-            systemMantra: system.mantra,
-            systemRoute: system.route,
-            systemTier: tierName,
-            subSystems: system.subSystems || [],
-            seededAt: new Date().toISOString(),
-          },
-        })
-        console.log(`    → Created ${system.name} system`)
+      // States branch (States exist only under Agents or Systems)
+      const statesNodeId = `${systemNodeId}-states`
+      await createNode({
+        id: statesNodeId,
+        title: 'STATES',
+        description: `States for ${system.name} system.`,
+        parentId: systemNodeId,
+        nodeType: RealityNodeType.STATE,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: false,
+        orderIndex: 1,
+      })
 
-        // Create Universal Concept for this system (system-specific root)
-        const universalConceptTitle = getUniversalConceptForSystem(system.id)
-        const universalConceptId = `${systemNode.id}-universal-concept`
-        const universalConceptSummary = `Universal concept for ${system.name} system. The foundational domain knowledge that governs this system.`
-        const universalConceptNode = await createNode({
-          id: universalConceptId,
-          title: universalConceptTitle,
-          description: universalConceptSummary,
-          parentId: systemNode.id,
-          nodeType: RealityNodeType.CATEGORY,
-          category: RealityNodeCategory.FOUNDATIONAL,
-          immutable: true,
-          orderIndex: 1, // First index - root artifact
-          metadata: buildUniversalConceptMetadata(universalConceptId, system.id, universalConceptSummary),
-        })
-        console.log(`      → Created Universal Concept: ${universalConceptTitle}`)
+      // Universal Concept for this system
+      const universalConceptTitle = getUniversalConceptForSystem(system.systemId)
+      const universalConceptId = `${systemNodeId}-universal-concept`
+      const universalConceptSummary = `Universal concept for ${system.name} system. The foundational domain knowledge that governs this system.`
+      await createNode({
+        id: universalConceptId,
+        title: universalConceptTitle,
+        description: universalConceptSummary,
+        parentId: systemNodeId,
+        nodeType: RealityNodeType.CATEGORY,
+        category: RealityNodeCategory.FOUNDATIONAL,
+        immutable: true,
+        orderIndex: 2,
+        metadata: buildUniversalConceptMetadata(universalConceptId, system.systemId, universalConceptSummary),
+      })
+      console.log(`    → Created Universal Concept: ${universalConceptTitle}`)
 
-        // Seed LAWS / PRINCIPLES / FRAMEWORKS branches under the universal concept
-        await seedUniversalConceptBranches(system.id, universalConceptId)
+      // Seed LAWS / PRINCIPLES / FRAMEWORKS branches under the universal concept (if mapping exists)
+      await seedUniversalConceptBranches(system.systemId, universalConceptId)
 
-        // Add system-specific pathways (offset by 3 for the new LAWS/PRINCIPLES/FRAMEWORKS branches)
-        await seedSystemPathways(system.id, universalConceptId, systemNode.id, 3)
-
-        // Create sub-systems if they exist (limit to 3 per system, level 4)
-        if (system.subSystems && system.subSystems.length > 0) {
-          const subSystemsToSeed = system.subSystems.slice(0, 3)
-          for (let i = 0; i < subSystemsToSeed.length; i++) {
-            const subSystem = subSystemsToSeed[i]
-            await createNode({
-              id: `${systemNode.id}-${subSystem.name.toLowerCase()}`,
-              title: subSystem.name.toUpperCase(),
-              description: subSystem.description,
-              parentId: systemNode.id,
-              nodeType: RealityNodeType.CATEGORY,
-              category: RealityNodeCategory.SYSTEM as any, // Type assertion for newly added enum
-              immutable: false,
-              orderIndex: i + 2, // After universal concept
-              metadata: {
-                isSubSystem: true,
-                parentSystem: system.id,
-                seededAt: new Date().toISOString(),
-              },
-            })
-          }
-          console.log(`      → Created ${subSystemsToSeed.length} sub-systems for ${system.name}`)
-        }
-      }
+      // Add system-specific pathways (offset by 3 for LAWS/PRINCIPLES/FRAMEWORKS branches)
+      await seedSystemPathways(system.systemId, universalConceptId, systemNodeId, 3)
     }
-    console.log('  → Seeded SYSTEMS hierarchy')
+    console.log('  → Seeded 7 systems with States and Universal Concepts')
 
     // Note: Power Laws and Bible Laws linking happens after they are seeded
     // See linkLawsToRealityHierarchy() function for the linking phase
@@ -2736,12 +2751,11 @@ export async function seedRealityHierarchy() {
     console.log('\n🗑️  Invalidated reality node caches')
 
     console.log('\n✅ Reality hierarchy seeded successfully!')
-    console.log('   Structure: REALITY -> 6 top-level (Constraints, Agents, Environments, Resources, Value, Systems) -> children -> grandchildren -> great-grandchildren')
-    console.log('   Total levels: 5+ (including REALITY root)')
-    console.log('   Power Laws and Bible Laws linked to hierarchy')
-    console.log('   Resources -> Engines -> Engine Types (CAREER, BUSINESS, INVESTMENT, LEARNING)')
-    console.log('   Value (root invariant) -> Finance (system) -> Categories (Money, Investing, Risk, Leverage, Protection) -> Children')
-    console.log('   Systems -> Tiers -> Systems -> Sub-Systems (organized by tier with max 3 instances per level)')
+    console.log('   Structure: REALITY -> 7 primary (Constraints, Environments, Resources, Infrastructure, Agents, Value, Systems)')
+    console.log('   Constraints: 6 dimensions + Formalizations (Laws, Principles, Frameworks)')
+    console.log('   Resources: Time, Energy, Capital, Attention, Information, Trust')
+    console.log('   Value: Financial, Influence, Knowledge, Health, Stability, Optionality, Power')
+    console.log('   Systems: Finance, Career, Trust, Health, Production, Governance, Creation (each with States + Universal Concept)')
 
   } catch (error) {
     console.error('❌ Error seeding Reality hierarchy:', error)

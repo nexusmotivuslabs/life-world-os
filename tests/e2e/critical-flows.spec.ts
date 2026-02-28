@@ -113,7 +113,7 @@ test.describe('System Tree & Reality Hierarchy', () => {
     
     if (hasWarning) {
       // Fallback mode - check fallback data is shown
-      await expect(page.getByText('CONSTRAINTS OF REALITY')).toBeVisible();
+      await expect(page.getByText(/constraints of reality/i)).toBeVisible();
     } else {
       // Real data mode - check expand/collapse buttons
       await expect(page.getByRole('button', { name: 'Expand All' })).toBeVisible();
@@ -125,18 +125,18 @@ test.describe('System Tree & Reality Hierarchy', () => {
     await page.goto('/systems/tree');
     
     // Wait for tree to load
-    await page.waitForSelector('text=CONSTRAINTS OF REALITY', { timeout: 10000 });
+    await page.waitForSelector('text=/constraints of reality/i', { timeout: 10000 });
     
     // Find an expandable node
-    const constraintsNode = page.getByText('CONSTRAINTS OF REALITY').first();
+    const constraintsNode = page.getByText(/constraints of reality/i).first();
     await expect(constraintsNode).toBeVisible();
     
-    // Click to expand (if collapsed)
+    // Click to expand (if collapsed) — new ontology: Constraints has dimensions + Formalizations
     await constraintsNode.click();
     
-    // Check if child nodes appear (Laws, Principles, or Frameworks)
+    // Check if child nodes appear (dimensions or Formalizations / LAWS)
     await expect(
-      page.getByText('LAWS').or(page.getByText('PRINCIPLES')).or(page.getByText('FRAMEWORKS'))
+      page.getByText(/physical/i).or(page.getByText(/formalizations/i)).or(page.getByText('LAWS'))
     ).toBeVisible({ timeout: 5000 });
   });
 });

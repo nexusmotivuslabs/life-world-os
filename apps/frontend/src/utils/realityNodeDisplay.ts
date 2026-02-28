@@ -13,6 +13,9 @@ export type RealityNodeType =
   | 'FRAMEWORK'
   | 'AGENT'
   | 'ENVIRONMENT'
+  | 'STATE'
+  | 'CAPABILITY'
+  | 'METRIC'
 
 export type RealityNodeCategory =
   | 'FOUNDATIONAL'
@@ -34,6 +37,9 @@ export type RealityNodeCategory =
   | 'DIGITAL'
   | 'SOCIAL'
   | 'BIOLOGICAL'
+  | 'INFORMATIONAL'
+  | 'TEMPORAL'
+  | 'ORGANIZATIONAL'
 
 /**
  * Get nice display name for RealityNodeType
@@ -48,6 +54,9 @@ export function getNodeTypeDisplayName(nodeType: string): string {
     FRAMEWORK: 'Framework',
     AGENT: 'Agent',
     ENVIRONMENT: 'Environment',
+    STATE: 'State',
+    CAPABILITY: 'Capability',
+    METRIC: 'Metric',
   }
 
   return displayNames[nodeType] || nodeType
@@ -77,6 +86,9 @@ export function getCategoryDisplayName(category: string): string {
     DIGITAL: 'Digital',
     SOCIAL: 'Social',
     BIOLOGICAL: 'Biological',
+    INFORMATIONAL: 'Informational',
+    TEMPORAL: 'Temporal',
+    ORGANIZATIONAL: 'Organizational',
   }
 
   return displayNames[category] || category
@@ -95,6 +107,9 @@ export function getNodeTypeDescription(nodeType: string): string {
     FRAMEWORK: 'Practical frameworks for applying laws and principles',
     AGENT: 'Entities that act within reality',
     ENVIRONMENT: 'Contexts and settings where reality manifests',
+    STATE: 'State of an agent or system',
+    CAPABILITY: 'Constraint-breaking mechanism with inputs, outputs, and leverage',
+    METRIC: 'Measurable indicator for agents or systems',
   }
 
   return descriptions[nodeType] || ''
@@ -123,6 +138,9 @@ export const CATEGORY_BADGE_CLASSES: Record<string, string> = {
   DIGITAL: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
   SOCIAL: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
   BIOLOGICAL: 'bg-lime-500/20 text-lime-400 border-lime-500/30',
+  INFORMATIONAL: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+  TEMPORAL: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  ORGANIZATIONAL: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
 }
 
 export function getCategoryBadgeClasses(category: string): string {
@@ -143,6 +161,9 @@ export const NODE_TYPE_BADGE_CLASSES: Record<string, string> = {
   'power-law': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   'bible-law': 'bg-green-500/20 text-green-400 border-green-500/30',
   artifact: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  state: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  capability: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+  metric: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 }
 
 export function getNodeTypeBadgeClasses(nodeType: string): string {
@@ -214,6 +235,9 @@ export function getCategoryDescription(category: string): string {
     DIGITAL: 'Digital spaces, online platforms, and virtual environments',
     SOCIAL: 'Social networks, relationships, and cultural environments',
     BIOLOGICAL: 'Biological systems, ecosystems, and living environments',
+    INFORMATIONAL: 'Information flows, data, and knowledge environments',
+    TEMPORAL: 'Time-related constraints and dimensions',
+    ORGANIZATIONAL: 'Structures, processes, and formal organizations',
   }
 
   return descriptions[category] || ''

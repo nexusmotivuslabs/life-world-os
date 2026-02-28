@@ -47,7 +47,8 @@ async function createNode(data: {
   })
 }
 
-const STATES_ID = 'reality-root-states'
+// States exist only under Agents or Systems (ontology refactor). Energy states live under Systems -> Health -> States.
+const HEALTH_SYSTEM_STATES_ID = 'systems-node-health-states'
 const ENERGY_STATES_ID = 'states-energy-states'
 
 // Energy states with full metadata including XP impacts
@@ -305,26 +306,15 @@ export async function seedEnergyStates() {
   console.log('🌱 Seeding Energy States...')
 
   try {
-    // Create STATES branch under REALITY (if not exists)
-    console.log('  → Creating STATES branch...')
-    await createNode({
-      id: STATES_ID,
-      title: 'STATES',
-      description: 'Mental, emotional, and energy states that affect performance and outcomes.',
-      parentId: 'reality-root',
-      nodeType: RealityNodeType.UNIVERSAL_FOUNDATION,
-      category: RealityNodeCategory.FOUNDATIONAL,
-      immutable: true,
-      orderIndex: 4, // After CONSTRAINTS, AGENTS, ENVIRONMENTS
-    })
+    // Energy states live under Systems -> Health -> States (States only under Agents or Systems)
+    console.log('  → Creating ENERGY_STATES under Health system States...')
 
-    // Create ENERGY_STATES category under STATES
-    console.log('  → Creating ENERGY_STATES category...')
+    // Create ENERGY_STATES category under Health system's States branch
     await createNode({
       id: ENERGY_STATES_ID,
       title: 'ENERGY_STATES',
       description: 'States related to energy, attention, and emotional arousal.',
-      parentId: STATES_ID,
+      parentId: HEALTH_SYSTEM_STATES_ID,
       nodeType: RealityNodeType.CATEGORY,
       category: RealityNodeCategory.FUNDAMENTAL,
       immutable: true,

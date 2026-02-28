@@ -56,7 +56,14 @@ export const ARTIFACT_SYSTEM_MAP: Record<string, ArtifactSystemId[]> = {
   meaning: ['meaning'],
   optionality: ['optionality'],
 
-  // Systems (meta-artifacts)
+  // Systems (meta-artifacts) — flat ontology node IDs (systems-node-*)
+  'systems-node-finance': ['finance'],
+  'systems-node-career': ['finance', 'optionality', 'trust'],
+  'systems-node-trust': ['trust'],
+  'systems-node-health': ['health'],
+  'systems-node-production': ['reality'],
+  'systems-node-governance': ['reality'],
+  'systems-node-creation': ['software', 'meaning'],
   'money-system': ['finance'],
   'energy-system': ['energy'],
   'finance-system': ['finance'],

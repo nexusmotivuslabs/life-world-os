@@ -79,6 +79,21 @@ function defaultFrameworkLens(conceptKey: string, systemId: string): FrameworkLe
 
 const EXPLICIT_FRAMEWORK_LENSES: Record<string, Record<string, Partial<FrameworkLens>>> = {
   PARETO_PRINCIPLE: {
+    money: {
+      title: 'Pareto Principle (Money)',
+      description:
+        'In money, ~20% of your inputs produce ~80% of your financial results. A small number of expense categories, income sources, and investment decisions drive most of your outcomes. Focus on the vital few: the biggest leaks, the highest-return actions, and the most impactful allocations.',
+      descriptionStrong:
+        'The 80/20 rule applied to finance: 20% of expense categories usually account for 80% of spending (find and cut those first). 20% of income activities often produce 80% of earnings (protect and grow those). A minority of holdings often drive most portfolio return—and most portfolio risk. Use the Pareto principle to identify where to cut, where to invest time and capital, and where to avoid spreading effort evenly.',
+      purpose:
+        'Identify the minority of financial inputs that produce the majority of results—so you can cut the 80% of effort that yields little, and double down on the 20% that compounds.',
+      structure:
+        '1. List inputs: expense categories, income sources, investments, time spent on money-related tasks. 2. Measure output: savings impact, income generated, return per unit of risk, value of time. 3. Rank by impact. 4. Focus: cut or automate the trivial many; protect and scale the vital few. Examples: (a) Spending: housing, transport, food often are the vital few—optimise there before trimming subscriptions. (b) Income: one skill or client may deliver most revenue—invest in that. (c) Portfolio: a few positions or one asset class may drive most return—understand concentration and risk. (d) Time: one or two high-leverage activities (e.g. negotiation, system-building) beat many low-leverage tasks.',
+      whenToUse:
+        'When deciding where to cut spending; when allocating time to income-generating activities; when building or rebalancing a portfolio; when prioritising which financial habits to change first.',
+      whenNotToUse:
+        'When every expense category is already optimised and marginal; when outputs are not measurable (e.g. some intangible benefits); when the distribution is roughly equal (rare in personal finance).',
+    },
     optionality: {
       title: 'Pareto Principle (Optionality)',
       description:

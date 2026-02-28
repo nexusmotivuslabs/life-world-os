@@ -104,7 +104,7 @@ export default function MasterHealth() {
         teams={teams}
         agents={agents}
         loading={totalLoading}
-        rootNodeId="systems-node-survival_tier-health-universal-concept"
+        rootNodeId="systems-node-health-universal-concept"
         systemId="health"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}

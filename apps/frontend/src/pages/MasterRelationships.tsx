@@ -42,7 +42,7 @@ export default function MasterRelationships() {
       teams={teams}
       agents={agents}
       loading={loading}
-      rootNodeId="systems-node-cross_system_states-trust-universal-concept"
+      rootNodeId="systems-node-trust-universal-concept"
       systemId="trust"
       selectedTeam={selectedTeam}
       onTeamSelect={setSelectedTeam}

@@ -50,7 +50,7 @@ export default function MasterFinance() {
         teams={teams}
         agents={agents}
         loading={loading}
-        rootNodeId="systems-node-stability_tier-money-universal-concept"
+        rootNodeId="systems-node-finance-universal-concept"
         systemId="finance"
         selectedTeam={selectedTeam}
         onTeamSelect={setSelectedTeam}

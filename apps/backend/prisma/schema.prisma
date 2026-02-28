@@ -1190,6 +1190,9 @@ enum RealityNodeType {
   FRAMEWORK
   AGENT
   ENVIRONMENT
+  STATE
+  CAPABILITY
+  METRIC
 }
 
 enum RealityNodeCategory {
@@ -1212,6 +1215,9 @@ enum RealityNodeCategory {
   DIGITAL
   SOCIAL
   BIOLOGICAL
+  INFORMATIONAL
+  TEMPORAL
+  ORGANIZATIONAL
 }
 
 enum ArtifactCategory {

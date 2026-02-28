@@ -54,10 +54,14 @@ export function useCacheWarming() {
   useEffect(() => {
     const warmCache = async () => {
       try {
-        // Common root nodes to preload
+        // Common root nodes to preload (flat ontology: REALITY + Constraints + 7 systems)
         const rootNodes = [
           'reality-root',
           'constraints-of-reality',
+          'systems-node-finance-universal-concept',
+          'systems-node-health-universal-concept',
+          'systems-node-career-universal-concept',
+          'systems-node-trust-universal-concept',
         ]
 
         // Warm cache for each root node

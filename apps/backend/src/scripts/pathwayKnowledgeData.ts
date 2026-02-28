@@ -2,22 +2,34 @@
  * Pathway Knowledge Data
  *
  * Structured knowledge for every pathway/category node in the reality hierarchy.
- * Each entry distils the Pareto-optimal 20% of knowledge that gives 80% of understanding.
+ * Display order for all systems: 1. Definition  2. Insights (max 3)  3. How to apply in reality  4. Risks
  *
- * Template fields:
- *   definition          — What is this? (1-2 sentences)
- *   keyInsight          — The one thing to know (the 80/20)
- *   howItWorks          — Core mechanics
- *   keyRisks            — What can go wrong
- *   practicalApplication — How to apply this knowledge
+ * Preferred fields (new format):
+ *   definition            — What is this? (1-2 sentences)
+ *   insights              — Up to 3 insights (string array)
+ *   howToApplyInReality   — How to apply this knowledge in reality
+ *   risks                 — What can go wrong
+ *
+ * Legacy fields (still supported, mapped in UI):
+ *   keyInsight, practicalApplication, keyRisks
  */
 
 export interface PathwayKnowledge {
   definition: string
-  keyInsight: string
-  howItWorks: string
-  keyRisks: string
-  practicalApplication: string
+  /** New format: up to 3 insights. Legacy: keyInsight is used as first insight if insights not set */
+  insights?: string[]
+  /** New format. Legacy: practicalApplication is used if not set */
+  howToApplyInReality?: string
+  /** New format. Legacy: keyRisks is used if not set */
+  risks?: string
+  /** Legacy — mapped to first insight in UI */
+  keyInsight?: string
+  /** Legacy — no longer displayed; use howToApplyInReality */
+  howItWorks?: string
+  /** Legacy — mapped to risks in UI */
+  keyRisks?: string
+  /** Legacy — mapped to howToApplyInReality in UI */
+  practicalApplication?: string
   /** Optional tags for artifact filtering (e.g. stressor, cortisol, burnout) */
   tags?: string[]
 }
@@ -295,6 +307,27 @@ export const PATHWAY_KNOWLEDGE: Record<string, PathwayKnowledge> = {
     howItWorks: 'Ultradian rhythms cycle every 90-120 minutes. Physical depletion needs physical rest. Mental depletion needs mental rest (not scrolling). Emotional depletion often needs social connection or solitude. Matching rest type to depletion type accelerates recovery.',
     keyRisks: 'Passive scrolling mistaken for rest, guilt about resting, powering through without breaks, using stimulants to mask the need for recovery.',
     practicalApplication: 'Take 10-15 minute breaks every 90 minutes. Match rest type to what was depleted. Schedule recovery before you need it. Track what actually restores you.',
+  },
+  ACTIVE_REST: {
+    definition: 'Intentional recovery activities that restore energy, as opposed to passive consumption (e.g. scrolling) that often drains it.',
+    keyInsight: 'Active rest matches the type of depletion: physical rest (walk, stretch, nap), mental rest (quiet, nature, no screens), emotional rest (connection or solitude). Passive consumption is not rest.',
+    howItWorks: 'Choose rest that contrasts with what you depleted. After focus work: movement or nature. After meetings: solitude. After physical effort: true rest or sleep. The wrong type of rest leaves you still depleted.',
+    keyRisks: 'Scrolling or TV labelled as rest, guilt preventing real recovery, same environment for work and rest so the brain never disengages.',
+    practicalApplication: 'Define 2–3 active rest options per depletion type. Schedule short recovery blocks. Turn off notifications during rest. Track which activities actually restore you.',
+  },
+  SLEEP_HYGIENE: {
+    definition: 'Environment and habits that support quality sleep and full restoration of base energy.',
+    keyInsight: 'Sleep is the primary energy restoration mechanism. Hygiene (light, temperature, timing, wind-down) matters as much as duration. Small habit changes compound.',
+    howItWorks: 'Circadian rhythm responds to light and consistency. Cool, dark room; consistent schedule; no caffeine late; wind-down routine signal the brain to restore. Poor hygiene fragments sleep and reduces restoration.',
+    keyRisks: 'Blue light before bed, irregular sleep times, caffeine after noon, hot or bright room, screens in bed.',
+    practicalApplication: 'Same wake time every day. Dark, cool bedroom. No screens 1 hour before bed. Caffeine before noon only. Create a short wind-down routine.',
+  },
+  MICRO_RECOVERY: {
+    definition: 'Short, intentional breaks that prevent energy collapse and protect sustained performance.',
+    keyInsight: 'Brief recovery within the day prevents deep depletion. A few minutes of the right rest can reset focus and delay fatigue more than pushing through.',
+    howItWorks: 'Ultradian cycles suggest a break every 90–120 minutes. Stand, walk, close eyes, breathe, or hydrate. Micro-recovery reduces cumulative drain and avoids the crash that requires long recovery.',
+    keyRisks: 'No breaks until exhausted, treating breaks as unproductive, skipping breaks to hit deadlines and then burning out.',
+    practicalApplication: 'Set a 90-minute work block then 5–10 minute break. Use breaks for movement or quiet, not more screens. Protect at least one micro-recovery per morning and afternoon.',
   },
   ENVIRONMENTAL_ENERGY: {
     definition: 'How physical surroundings — light, space, and nature — affect energy levels, focus, and restoration.',

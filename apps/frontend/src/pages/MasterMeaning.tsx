@@ -120,7 +120,7 @@ export default function MasterMeaning() {
       teams={teams}
       agents={agents}
       loading={totalLoading}
-      rootNodeId="systems-node-expression_tier-meaning-universal-concept"
+      rootNodeId="systems-node-creation-universal-concept"
       systemId="meaning"
       renderOverview={({ setView: setParentView }) => (
         <div className="space-y-8">

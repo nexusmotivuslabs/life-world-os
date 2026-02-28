@@ -52,7 +52,7 @@ export default function MasterCareer() {
       agents={agents}
       loading={loading}
       systemId={MasterDomain.CAREER}
-      rootNodeId="systems-node-cross_system_states-trust-universal-concept"
+      rootNodeId="systems-node-career-universal-concept"
       systemId="career"
       selectedTeam={selectedTeam}
       onTeamSelect={setSelectedTeam}

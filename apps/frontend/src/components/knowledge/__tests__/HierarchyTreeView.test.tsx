@@ -32,10 +32,12 @@ vi.mock('../../../lib/hierarchyCache', () => ({
 
 const mockGetNode = vi.fn()
 const mockGetChildren = vi.fn()
+const mockEnsureNode = vi.fn()
 vi.mock('../../../services/financeApi', () => ({
   realityNodeApi: {
     getNode: (...args: any[]) => mockGetNode(...args),
     getChildren: (...args: any[]) => mockGetChildren(...args),
+    ensureNode: (...args: any[]) => mockEnsureNode(...args),
     clearCache: vi.fn(),
   },
 }))
@@ -156,16 +158,16 @@ describe('HierarchyTreeView', () => {
           node: {
             id: 'node-flow',
             title: 'FLOW_STATE',
-            description: 'Optimal experience',
+            description: 'Optimal experience with full immersion',
             nodeType: 'PRINCIPLE',
             category: 'FUNDAMENTAL',
             parentId: 'reality-root',
             orderIndex: 1,
             immutable: false,
             metadata: {
-              specialTermWhatItIs: 'Flow is full immersion.',
-              specialTermKeyFacts: ['Balance challenge and skill.'],
-              specialTermHowItContributesToLife: 'Flow increases performance.',
+              specialTermWhatItIs: 'Flow is full immersion and focused energy.',
+              specialTermKeyFacts: ['Balance challenge and skill.', 'Clear goals help.'],
+              specialTermHowItContributesToLife: 'Flow increases performance and well-being.',
             },
           },
         })
@@ -199,6 +201,10 @@ describe('HierarchyTreeView', () => {
         })
       }
       return Promise.resolve({ children: [], count: 0 })
+    })
+    // ensureNode returns same shape as getNode (node wrapper) for detail panel
+    mockEnsureNode.mockImplementation((id: string) => {
+      return mockGetNode(id).then((r: any) => (r?.node ? { node: r.node } : r))
     })
   })
 

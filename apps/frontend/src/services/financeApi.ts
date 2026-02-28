@@ -494,6 +494,22 @@ export const realityNodeApi = {
     return result
   },
 
+  /**
+   * Ensure node has content: backend generates from PATHWAY_KNOWLEDGE (or other engine) and saves to DB if missing.
+   * Returns the node (possibly updated). Use when you want to guarantee all nodes have content; response is cached like getNode.
+   */
+  ensureNode: async (id: string, systemId?: string) => {
+    const canonical = getCanonicalSystemId(systemId)
+    const cacheKey = canonical ? `node-${id}-${canonical}` : `node-${id}`
+    const cached = getCached(cacheKey)
+    if (cached) return cached
+
+    const query = canonical ? `?systemId=${encodeURIComponent(canonical)}` : ''
+    const result = await apiRequest<{ node: RealityNode }>(`/api/reality-nodes/${id}/ensure${query}`, 'GET')
+    setCache(cacheKey, result)
+    return result
+  },
+
   getAncestors: async (id: string) => {
     const cacheKey = `ancestors-${id}`
     const cached = getCached(cacheKey)

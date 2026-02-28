@@ -9,6 +9,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../../../../lib/prisma.js'
 import { getOrSet, cacheKeys } from '../../../../lib/cache.js'
 import { resolveNodeForSystem } from '../../../../lib/resolveSystemLens.js'
+import { ensureRealityNodeContent } from '../../../../lib/ensureRealityNodeContent.js'
 import { RealityNodeType, RealityNodeCategory } from '@prisma/client'
 
 const router = Router()
@@ -123,6 +124,42 @@ router.get('/roots', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error fetching root nodes:', error)
     res.status(500).json({ error: error.message || 'Failed to fetch root nodes' })
+  }
+})
+
+/**
+ * GET /api/reality-nodes/:id/ensure
+ * Ensure the node has content: if data exists in PATHWAY_KNOWLEDGE (or other engine) but the node
+ * has minimal/empty metadata, generate and save to DB, then return the node. Uses caching for
+ * nodes that already have content.
+ */
+router.get('/:id/ensure', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const systemId = (req.query.systemId as string)?.trim() || undefined
+
+    const node = await ensureRealityNodeContent(id, systemId)
+
+    let sourceNode: typeof node | null = null
+    const meta = node.metadata as Record<string, unknown> | null | undefined
+    if (systemId && meta?.isReference && typeof meta.sourceRealityNodeId === 'string') {
+      sourceNode = await prisma.realityNode.findUnique({
+        where: { id: meta.sourceRealityNodeId },
+      })
+    }
+
+    const resolved = systemId
+      ? resolveNodeForSystem(node as any, systemId, sourceNode ?? undefined)
+      : (node as unknown as Record<string, unknown>)
+
+    res.setHeader('Cache-Control', systemId ? 'public, max-age=60' : 'public, max-age=300')
+    res.json({ node: resolved })
+  } catch (error: any) {
+    if (error.message === 'Node not found') {
+      return res.status(404).json({ error: 'Node not found' })
+    }
+    console.error('Error ensuring node content:', error)
+    res.status(500).json({ error: error.message || 'Failed to ensure node content' })
   }
 })
 

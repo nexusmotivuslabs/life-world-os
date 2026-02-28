@@ -80,7 +80,7 @@ export default function MasterEnergy() {
       teams={teams}
       agents={agents}
       loading={totalLoading}
-      rootNodeId="systems-node-stability_tier-energy-universal-concept"
+      rootNodeId="systems-node-health-universal-concept"
       systemId="energy"
       renderOverview={({ setView }) => (
         <div className="space-y-8">

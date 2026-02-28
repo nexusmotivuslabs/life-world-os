@@ -153,14 +153,14 @@ function generateSystemSuggestion(
   dashboard: any
 ): AssistantSuggestion {
   // Provide contextual guidance based on system
-  if (currentNode?.id === 'finance-system') {
+  if (currentNode?.id === 'finance-system' || currentNode?.id === 'systems-node-finance') {
     return {
       type: 'systems',
       message: 'Finance System: Manage finances, investments, and cash flow. Use Systems for transactions, Knowledge for financial laws and principles.',
     }
   }
 
-  if (currentNode?.id === 'energy-system') {
+  if (currentNode?.id === 'energy-system' || currentNode?.id === 'systems-node-health') {
     return {
       type: 'systems',
       message: 'Energy System: Track and manage your energy levels. Systems for actions, Knowledge for energy laws and optimization strategies.',

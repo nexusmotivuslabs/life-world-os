@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, ExternalLink } from 'lucide-react'
+import { ChevronDown, ChevronRight, BookOpen, FileText, Layers, Target, Lock, Maximize2, Minimize2, X, Info, ExternalLink, RefreshCw } from 'lucide-react'
 import { realityNodeApi, RealityNode } from '../../services/financeApi'
 import {
   getCategoryDisplayName,
@@ -57,7 +57,12 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => new Set([actualRootId]))
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(true)
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null)
+  const [selectedConceptId, setSelectedConceptId] = useState<string>('')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  /** Cache of full node content keyed by nodeId (or nodeId@systemId). When a node is selected we fetch full content and store here; panel uses this when present. */
+  const [enrichedNodeCache, setEnrichedNodeCache] = useState<Record<string, TreeNode>>({})
+  /** True while fetching full content for the currently selected node (so we can show loading in panel). */
+  const [contentLoading, setContentLoading] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const expandedNodesRef = useRef<Set<string>>(expandedNodes)
@@ -79,6 +84,8 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       setIsRefreshing(true)
       const preservedExpandedNodes = new Set(expandedNodesRef.current)
       realityNodeApi.clearCache()
+      hierarchyCache.invalidate(cacheKey) // clear hierarchy cache so fresh data is fetched
+      setEnrichedNodeCache({}) // clear per-node content cache so refreshed tree data is used
       const rootTree = await loadNodeWithChildren(actualRootId, overrideParentId)
       await hierarchyCache.set(cacheKey, rootTree)
       setTreeData([rootTree])
@@ -90,7 +97,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       isRefreshingRef.current = false
       setIsRefreshing(false)
     }
-  }, [actualRootId, overrideParentId, systemId])
+  }, [actualRootId, overrideParentId, systemId, cacheKey])
 
   refreshTreeDataRef.current = refreshTreeData
 
@@ -138,17 +145,18 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
     return toTitleCase(trimmed)
   }
 
-  // Convert RealityNode to TreeNode format
+  // Convert RealityNode to TreeNode format (safe for partial API data)
   const convertToTreeNode = (node: RealityNode): TreeNode => {
-    const metadata = node.metadata || {}
+    const metadata = node?.metadata || {}
+    const title = node?.title ?? ''
     // Ensure description/summary is available for display (universal concepts use metadata.summary)
-    const description = node.description || metadata.summary
+    const description = node?.description || metadata.summary
     return {
-      id: node.id,
-      label: node.title,
-      type: getTreeNodeType(node.nodeType),
-      category: node.category || undefined,
-      immutable: node.immutable || false,
+      id: node?.id ?? '',
+      label: title,
+      type: getTreeNodeType(node?.nodeType ?? 'CATEGORY'),
+      category: node?.category || undefined,
+      immutable: node?.immutable ?? false,
       data: { ...metadata, description },
       children: [] // Will be populated by recursive loading
     }
@@ -165,29 +173,80 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       'FRAMEWORK': 'framework',
       'AGENT': 'artifact',
       'ENVIRONMENT': 'artifact',
+      'STATE': 'category',
+      'CAPABILITY': 'artifact',
+      'METRIC': 'category',
     }
     return typeMap[nodeType] || 'artifact'
   }
 
-  // Recursively load children for a node (systemId triggers system lens resolution for references)
-  const loadNodeWithChildren = async (nodeId: string, effectiveParentId?: string): Promise<TreeNode> => {
-    const [nodeResponse, childrenResponse] = await Promise.all([
-      realityNodeApi.getNode(nodeId, systemId),
-      realityNodeApi.getChildren(nodeId)
-    ])
+  // Cache key for enriched content (same node with different systemId gets different cache entry)
+  const getEnrichedCacheKey = useCallback((nodeId: string) => (systemId ? `${nodeId}@${systemId}` : nodeId), [systemId])
 
-    const node = convertToTreeNode(nodeResponse.node)
-    
+  // When a node is selected: if we don't have full content in cache, fetch from API (API response is also cached by realityNodeApi). Then panel uses cached content when present.
+  useEffect(() => {
+    if (!selectedNode?.id) {
+      setContentLoading(false)
+      return
+    }
+    const key = getEnrichedCacheKey(selectedNode.id)
+    if (enrichedNodeCache[key]) {
+      setContentLoading(false)
+      return
+    }
+    let cancelled = false
+    setContentLoading(true)
+    realityNodeApi
+      .ensureNode(selectedNode.id, systemId)
+      .then((res) => {
+        if (cancelled) return
+        const full = convertToTreeNode(res.node)
+        setEnrichedNodeCache((prev) => ({ ...prev, [key]: full }))
+      })
+      .catch(() => {
+        if (!cancelled) setContentLoading(false)
+      })
+      .finally(() => {
+        if (!cancelled) setContentLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedNode?.id, systemId, getEnrichedCacheKey])
+
+  // Recursively load children for a node (systemId triggers system lens resolution for references).
+  // If getNode fails for a node, uses fallbackNode from getChildren so the tree still shows all nodes (e.g. Active Rest and siblings).
+  const loadNodeWithChildren = async (nodeId: string, effectiveParentId?: string, fallbackNode?: RealityNode): Promise<TreeNode> => {
+    let node: TreeNode
+    let childrenResponse: { children: RealityNode[]; count: number }
+
+    try {
+      const [nodeResponse, childrenRes] = await Promise.all([
+        realityNodeApi.getNode(nodeId, systemId),
+        realityNodeApi.getChildren(nodeId)
+      ])
+      childrenResponse = childrenRes
+      node = convertToTreeNode(nodeResponse.node)
+    } catch (err) {
+      if (fallbackNode && fallbackNode.id === nodeId) {
+        childrenResponse = await realityNodeApi.getChildren(nodeId).catch(() => ({ children: [], count: 0 }))
+        node = convertToTreeNode(fallbackNode)
+      } else {
+        throw err
+      }
+    }
+
     // If overrideParentId is provided and this node's parent should be overridden
     if (overrideParentId && effectiveParentId && node.data?.parentId !== overrideParentId) {
-      // Override the parent relationship in the node data
       node.data = { ...node.data, originalParentId: node.data?.parentId, parentId: overrideParentId }
     }
-    
-    // Load children recursively
+
+    // Load children recursively; pass each child as fallback so one failed fetch doesn't break the whole branch
     if (childrenResponse.children && childrenResponse.children.length > 0) {
       node.children = await Promise.all(
-        childrenResponse.children.map(child => loadNodeWithChildren(child.id, overrideParentId || effectiveParentId))
+        childrenResponse.children.map(child =>
+          loadNodeWithChildren(child.id, overrideParentId || effectiveParentId, child)
+        )
       )
     }
 
@@ -202,6 +261,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       if (clearCacheFirst) {
         realityNodeApi.clearCache()
         hierarchyCache.invalidate(cacheKey)
+        setEnrichedNodeCache({})
       }
 
       const cached = await hierarchyCache.get(cacheKey)
@@ -291,6 +351,53 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
       }
     }
     return null
+  }
+
+  // Collect all concept nodes (laws, principles, frameworks) for the dropdown, with path from root for expand
+  const collectConceptNodes = (
+    nodes: TreeNode[],
+    path: string[] = []
+  ): { id: string; label: string; type: TreeNode['type']; path: string[] }[] => {
+    const result: { id: string; label: string; type: TreeNode['type']; path: string[] }[] = []
+    try {
+      for (const node of nodes) {
+        if (!node?.id) continue
+        const nextPath = [...path, node.id]
+        if (node.type === 'law' || node.type === 'principle' || node.type === 'framework' || node.type === 'power-law' || node.type === 'bible-law') {
+          const label = node.label ?? ''
+          const { title: parsedTitle } = parseTitleAndSystem(label)
+          result.push({
+            id: node.id,
+            label: getDisplayName(parsedTitle) || label || 'Unnamed',
+            type: node.type,
+            path: nextPath,
+          })
+        }
+        if (node.children && node.children.length > 0) {
+          result.push(...collectConceptNodes(node.children, nextPath))
+        }
+      }
+    } catch (_) {
+      // Avoid breaking the whole tree if dropdown collection fails
+    }
+    return result
+  }
+
+  const conceptOptions = treeData.length > 0 ? collectConceptNodes(treeData) : []
+
+  const handleConceptSelect = (nodeId: string) => {
+    setSelectedConceptId(nodeId)
+    if (!nodeId) return
+    const option = conceptOptions.find((o) => o.id === nodeId)
+    if (option) {
+      setExpandedNodes((prev) => {
+        const next = new Set(prev)
+        option.path.forEach((id) => next.add(id))
+        return next
+      })
+      const node = treeData[0] ? findNodeById(treeData[0], nodeId) : null
+      if (node) setSelectedNode(node)
+    }
   }
 
   const toggleNode = (nodeId: string) => {
@@ -444,10 +551,9 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         navigateToArtifact(node)
         return
       }
-      // Row click (not the arrow): open modal in window for nodes with content
-      if (hasKnowledgeTemplate(node) || node.data?.isUniversalConcept) {
-        setSelectedNode(node)
-      } else if (hasChildren) {
+      // Row click (not the arrow): select node to open detail panel (content is fetched on demand and cached)
+      setSelectedNode(node)
+      if (hasChildren && !hasKnowledgeTemplate(node) && !node.data?.isUniversalConcept) {
         toggleNode(node.id)
       }
     }
@@ -593,7 +699,16 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               </span>
             )}
           </div>
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded border border-purple-500/30 text-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              title="Refresh hierarchy from server (e.g. after ontology update)"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
             <button
               onClick={expandAll}
               className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 text-sm flex items-center gap-0 transition-colors"
@@ -610,10 +725,30 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
             </button>
           </div>
         </div>
-        <p className="text-gray-400">
+        <p className="text-gray-400 mb-4">
           Complete hierarchical view from REALITY (root) down to individual laws, principles, and frameworks.
           This structure supports artifacts and provides a complete ontological view. The tree is collapsed to root by default - click nodes to expand/collapse sections.
         </p>
+        {conceptOptions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="concept-dropdown" className="text-sm font-medium text-gray-300 whitespace-nowrap">
+              Jump to concept:
+            </label>
+            <select
+              id="concept-dropdown"
+              value={selectedConceptId}
+              onChange={(e) => handleConceptSelect(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px] max-w-full"
+            >
+              <option value="">Select a law, principle, or framework...</option>
+              {conceptOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {String(opt.label || 'Unnamed')} ({opt.type === 'law' || opt.type === 'power-law' || opt.type === 'bible-law' ? 'Law' : opt.type === 'principle' ? 'Principle' : 'Framework'})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="bg-gray-900/50 rounded-lg p-2 sm:p-4 border border-gray-700 max-h-[600px] sm:max-h-[800px] overflow-y-auto">
@@ -709,9 +844,13 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
         )}
       </div>
 
-      {/* Artifact Modal */}
+      {/* Artifact Modal: use enriched content from cache when available (fetch-on-select); show loading while fetching */}
       <AnimatePresence>
-        {selectedNode && (
+        {selectedNode && (() => {
+          const cacheKey = getEnrichedCacheKey(selectedNode.id)
+          const displayNode = enrichedNodeCache[cacheKey] ?? selectedNode
+          const isLoadingContent = contentLoading && !enrichedNodeCache[cacheKey]
+          return (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -730,11 +869,12 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-4 sm:p-6 flex items-start justify-between">
                 <div className="flex items-start gap-0 flex-1 min-w-0">
                   <div className="p-2 sm:p-3 bg-blue-500/20 rounded-lg flex-shrink-0">
-                    {getNodeIcon(selectedNode.type)}
+                    {getNodeIcon(displayNode.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     {(() => {
-                      const { title, systemId: parsedSystemId } = parseTitleAndSystem(selectedNode.label)
+                      const label = displayNode?.label ?? ''
+                      const { title, systemId: parsedSystemId } = parseTitleAndSystem(label)
                       const effectiveSystemId = parsedSystemId ?? systemId ?? undefined
                       return (
                         <>
@@ -742,16 +882,16 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                             <h2 className="text-xl sm:text-2xl font-bold text-white break-words">
                               {getDisplayName(title)}
                             </h2>
-                            {(selectedNode.immutable || hasNoData(selectedNode)) && (
+                            {(displayNode.immutable || hasNoData(displayNode)) && !isLoadingContent && (
                               <Lock 
                                 className="w-5 h-5 text-purple-400" 
-                                title={selectedNode.immutable ? 'Immutable' : 'No data available'} 
+                                title={displayNode.immutable ? 'Immutable' : 'No data available'} 
                               />
                             )}
                           </div>
                           <div className="flex items-center gap-0 flex-wrap">
-                            {getNodeTypeBadge(selectedNode.type)}
-                            {selectedNode.category && getCategoryBadge(selectedNode.category)}
+                            {getNodeTypeBadge(displayNode.type)}
+                            {displayNode.category && getCategoryBadge(displayNode.category)}
                             {effectiveSystemId && getSystemBadge(effectiveSystemId)}
                           </div>
                           {effectiveSystemId && (
@@ -765,9 +905,9 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                   </div>
                 </div>
                 <div className="flex items-center gap-0">
-                  {(selectedNode.type === 'law' || selectedNode.type === 'principle' || selectedNode.type === 'framework' || selectedNode.data?._templateType === 'knowledge' || selectedNode.data?.isUniversalConcept === true) && (
+                  {(displayNode.type === 'law' || displayNode.type === 'principle' || displayNode.type === 'framework' || displayNode.data?._templateType === 'knowledge' || displayNode.data?.isUniversalConcept === true) && (
                     <button
-                      onClick={() => navigateToArtifact(selectedNode)}
+                      onClick={() => navigateToArtifact(displayNode)}
                       className="p-2 hover:bg-green-500/20 rounded-lg transition-colors text-gray-400 hover:text-green-400 flex items-center gap-0"
                       title="View artifact"
                     >
@@ -786,88 +926,94 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
 
               {/* Content */}
               <div className="p-6 space-y-6">
+                {isLoadingContent && (
+                  <div className="flex items-center gap-3 text-gray-400 py-4">
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading full content…</span>
+                  </div>
+                )}
                 {/* Description / Summary */}
-                {(selectedNode.data?.description || selectedNode.data?.summary) && (
+                {!isLoadingContent && (displayNode.data?.description || displayNode.data?.summary) && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                    <p className="text-gray-300 leading-relaxed break-words">{selectedNode.data?.description || selectedNode.data?.summary}</p>
+                    <p className="text-gray-300 leading-relaxed break-words">{displayNode.data?.description || displayNode.data?.summary}</p>
                   </div>
                 )}
 
                 {/* Sentiment & Advice – e.g. positive terms: how to do more; negative (e.g. cynicism): ways to avoid */}
-                {(selectedNode.data?.sentiment || selectedNode.data?.advice || selectedNode.data?.adviceToReinforce || selectedNode.data?.adviceToAvoid) && (
+                {!isLoadingContent && (displayNode.data?.sentiment || displayNode.data?.advice || displayNode.data?.adviceToReinforce || displayNode.data?.adviceToAvoid) && (
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-white mb-2">Sentiment &amp; advice</h3>
-                    {selectedNode.data?.sentiment && (
+                    {displayNode.data?.sentiment && (
                       <p className="text-sm text-gray-400">
                         <span className="font-medium text-gray-300">Sentiment:</span>{' '}
-                        <span className={selectedNode.data.sentiment === 'positive' ? 'text-green-400' : selectedNode.data.sentiment === 'negative' ? 'text-amber-400' : 'text-gray-400'}>
-                          {String(selectedNode.data.sentiment)}
+                        <span className={displayNode.data.sentiment === 'positive' ? 'text-green-400' : displayNode.data.sentiment === 'negative' ? 'text-amber-400' : 'text-gray-400'}>
+                          {String(displayNode.data.sentiment)}
                         </span>
                       </p>
                     )}
-                    {selectedNode.data?.advice && (
-                      <p className="text-gray-300 leading-relaxed break-words bg-gray-700/50 rounded-lg p-4">{selectedNode.data.advice}</p>
+                    {displayNode.data?.advice && (
+                      <p className="text-gray-300 leading-relaxed break-words bg-gray-700/50 rounded-lg p-4">{displayNode.data.advice}</p>
                     )}
-                    {selectedNode.data?.adviceToReinforce && (
+                    {displayNode.data?.adviceToReinforce && (
                       <div>
                         <p className="text-xs font-medium text-green-400/90 mb-1">How to do more / reinforce</p>
-                        <p className="text-gray-300 leading-relaxed break-words bg-green-500/10 border border-green-500/30 rounded-lg p-4">{selectedNode.data.adviceToReinforce}</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-green-500/10 border border-green-500/30 rounded-lg p-4">{displayNode.data.adviceToReinforce}</p>
                       </div>
                     )}
-                    {selectedNode.data?.adviceToAvoid && (
+                    {displayNode.data?.adviceToAvoid && (
                       <div>
                         <p className="text-xs font-medium text-amber-400/90 mb-1">Ways to avoid or reduce</p>
-                        <p className="text-gray-300 leading-relaxed break-words bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{selectedNode.data.adviceToAvoid}</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{displayNode.data.adviceToAvoid}</p>
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* Special terms – specialist advice: What it is, Key facts, How it contributes to life */}
-                {(selectedNode.data?.specialTermWhatItIs || selectedNode.data?.specialTermKeyFacts || selectedNode.data?.specialTermHowItContributesToLife) && (
+                {!isLoadingContent && (displayNode.data?.specialTermWhatItIs || displayNode.data?.specialTermKeyFacts || displayNode.data?.specialTermHowItContributesToLife) && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-white mb-2">Specialist advice</h3>
-                    {selectedNode.data?.specialTermWhatItIs && (
+                    {displayNode.data?.specialTermWhatItIs && (
                       <div>
                         <p className="text-xs font-medium text-cyan-400/90 mb-1">What it is</p>
-                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{selectedNode.data.specialTermWhatItIs}</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{displayNode.data.specialTermWhatItIs}</p>
                       </div>
                     )}
-                    {(selectedNode.data?.specialTermKeyFacts != null && (Array.isArray(selectedNode.data.specialTermKeyFacts) ? selectedNode.data.specialTermKeyFacts.length > 0 : String(selectedNode.data.specialTermKeyFacts).trim())) && (
+                    {(displayNode.data?.specialTermKeyFacts != null && (Array.isArray(displayNode.data.specialTermKeyFacts) ? displayNode.data.specialTermKeyFacts.length > 0 : String(displayNode.data.specialTermKeyFacts).trim())) && (
                       <div>
                         <p className="text-xs font-medium text-cyan-400/90 mb-1">Key facts</p>
                         <div className="text-gray-300 leading-relaxed break-words bg-gray-700/50 rounded-lg p-4">
-                          {Array.isArray(selectedNode.data.specialTermKeyFacts) ? (
+                          {Array.isArray(displayNode.data.specialTermKeyFacts) ? (
                             <ul className="list-disc list-inside space-y-1">
-                              {selectedNode.data.specialTermKeyFacts.map((fact: string, idx: number) => (
+                              {displayNode.data.specialTermKeyFacts.map((fact: string, idx: number) => (
                                 <li key={idx}>{fact}</li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="whitespace-pre-line">{String(selectedNode.data.specialTermKeyFacts)}</p>
+                            <p className="whitespace-pre-line">{String(displayNode.data.specialTermKeyFacts)}</p>
                           )}
                         </div>
                       </div>
                     )}
-                    {selectedNode.data?.specialTermHowItContributesToLife && (
+                    {displayNode.data?.specialTermHowItContributesToLife && (
                       <div>
                         <p className="text-xs font-medium text-cyan-400/90 mb-1">How it contributes to life</p>
-                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{selectedNode.data.specialTermHowItContributesToLife}</p>
+                        <p className="text-gray-300 leading-relaxed break-words bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">{displayNode.data.specialTermHowItContributesToLife}</p>
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* Law Template Fields */}
-                {selectedNode.type === 'law' && (
+                {!isLoadingContent && displayNode.type === 'law' && (
                   <>
-                    {selectedNode.data?.derivedFrom && Array.isArray(selectedNode.data.derivedFrom) && selectedNode.data.derivedFrom.length > 0 && (
+                    {displayNode.data?.derivedFrom && Array.isArray(displayNode.data.derivedFrom) && displayNode.data.derivedFrom.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Derived From</h3>
                         <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
                           <div className="flex flex-wrap gap-0">
-                            {selectedNode.data.derivedFrom.map((constraint: string, idx: number) => (
+                            {displayNode.data.derivedFrom.map((constraint: string, idx: number) => (
                               <span 
                                 key={idx}
                                 className="px-3 py-1.5 bg-purple-500/20 text-purple-300 rounded border border-purple-500/30 text-sm font-medium"
@@ -879,42 +1025,42 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                         </div>
                       </div>
                     )}
-                    {selectedNode.data?.statement && (
+                    {displayNode.data?.statement && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Statement</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.statement}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.statement}</p>
                       </div>
                     )}
-                    {selectedNode.data?.recursiveBehavior && (
+                    {displayNode.data?.recursiveBehavior && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Recursive Behavior</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.recursiveBehavior}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.recursiveBehavior}</p>
                       </div>
                     )}
-                    {selectedNode.data?.violationOutcome && (
+                    {displayNode.data?.violationOutcome && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Violation Outcome</h3>
-                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedNode.data.violationOutcome}</p>
+                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{displayNode.data.violationOutcome}</p>
                       </div>
                     )}
-                    {selectedNode.data?.whyThisLawPersists && (
+                    {displayNode.data?.whyThisLawPersists && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Why This Law Persists</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.whyThisLawPersists}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.whyThisLawPersists}</p>
                       </div>
                     )}
                   </>
                 )}
 
                 {/* Principle Template Fields */}
-                {selectedNode.type === 'principle' && (
+                {!isLoadingContent && displayNode.type === 'principle' && (
                   <>
-                    {selectedNode.data?.alignedWith && Array.isArray(selectedNode.data.alignedWith) && selectedNode.data.alignedWith.length > 0 && (
+                    {displayNode.data?.alignedWith && Array.isArray(displayNode.data.alignedWith) && displayNode.data.alignedWith.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Aligned With</h3>
                         <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
                           <div className="flex flex-wrap gap-0">
-                            {selectedNode.data.alignedWith.map((law: string, idx: number) => (
+                            {displayNode.data.alignedWith.map((law: string, idx: number) => (
                               <span 
                                 key={idx}
                                 className="px-3 py-1.5 bg-cyan-500/20 text-cyan-300 rounded border border-cyan-500/30 text-sm font-medium"
@@ -926,42 +1072,42 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                         </div>
                       </div>
                     )}
-                    {selectedNode.data?.principle && (
+                    {displayNode.data?.principle && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Principle</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.principle}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.principle}</p>
                       </div>
                     )}
-                    {selectedNode.data?.whyItWorks && (
+                    {displayNode.data?.whyItWorks && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Why It Works</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.whyItWorks}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.whyItWorks}</p>
                       </div>
                     )}
-                    {selectedNode.data?.violationPattern && (
+                    {displayNode.data?.violationPattern && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Violation Pattern</h3>
-                        <p className="text-gray-300 leading-relaxed bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">{selectedNode.data.violationPattern}</p>
+                        <p className="text-gray-300 leading-relaxed bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">{displayNode.data.violationPattern}</p>
                       </div>
                     )}
-                    {selectedNode.data?.predictableResult && (
+                    {displayNode.data?.predictableResult && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Predictable Result of Violation</h3>
-                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedNode.data.predictableResult}</p>
+                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{displayNode.data.predictableResult}</p>
                       </div>
                     )}
                   </>
                 )}
 
                 {/* Framework Template Fields */}
-                {selectedNode.type === 'framework' && (
+                {!isLoadingContent && displayNode.type === 'framework' && (
                   <>
-                    {selectedNode.data?.basedOn && Array.isArray(selectedNode.data.basedOn) && selectedNode.data.basedOn.length > 0 && (
+                    {displayNode.data?.basedOn && Array.isArray(displayNode.data.basedOn) && displayNode.data.basedOn.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Based On</h3>
                         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
                           <div className="flex flex-wrap gap-0">
-                            {selectedNode.data.basedOn.map((principle: string, idx: number) => (
+                            {displayNode.data.basedOn.map((principle: string, idx: number) => (
                               <span 
                                 key={idx}
                                 className="px-3 py-1.5 bg-green-500/20 text-green-300 rounded border border-green-500/30 text-sm font-medium"
@@ -973,77 +1119,86 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                         </div>
                       </div>
                     )}
-                    {selectedNode.data?.purpose && (
+                    {displayNode.data?.purpose && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Purpose</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.purpose}</p>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.purpose}</p>
                       </div>
                     )}
-                    {selectedNode.data?.structure && (
+                    {displayNode.data?.structure && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">Structure</h3>
-                        <div className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4 whitespace-pre-line">{selectedNode.data.structure}</div>
+                        <div className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4 whitespace-pre-line">{displayNode.data.structure}</div>
                       </div>
                     )}
-                    {selectedNode.data?.whenToUse && (
+                    {displayNode.data?.whenToUse && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">When to Use</h3>
-                        <p className="text-gray-300 leading-relaxed bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">{selectedNode.data.whenToUse}</p>
+                        <p className="text-gray-300 leading-relaxed bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">{displayNode.data.whenToUse}</p>
                       </div>
                     )}
-                    {selectedNode.data?.whenNotToUse && (
+                    {displayNode.data?.whenNotToUse && (
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-2">When Not to Use</h3>
-                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedNode.data.whenNotToUse}</p>
+                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{displayNode.data.whenNotToUse}</p>
                       </div>
                     )}
                   </>
                 )}
 
-                {/* Knowledge Template Fields (Pareto-optimised structured knowledge for pathway nodes) */}
-                {selectedNode.data?._templateType === 'knowledge' && (
+                {/* Knowledge Template: 1. Definition  2. Insights (max 3)  3. How to apply in reality  4. Risks */}
+                {!isLoadingContent && displayNode.data?._templateType === 'knowledge' && (
                   <>
-                    {selectedNode.data?.definition && (
+                    {displayNode.data?.definition && (
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Definition</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.definition}</p>
+                        <h3 className="text-lg font-semibold text-white mb-2">1. Definition</h3>
+                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{displayNode.data.definition}</p>
                       </div>
                     )}
-                    {selectedNode.data?.keyInsight && (
+                    {(() => {
+                      const insights: string[] = Array.isArray(displayNode.data?.insights)
+                        ? displayNode.data.insights.slice(0, 3)
+                        : displayNode.data?.keyInsight
+                          ? [displayNode.data.keyInsight]
+                          : []
+                      return insights.length > 0 ? (
+                        <div>
+                          <h3 className="text-lg font-semibold text-white mb-2">2. Insights</h3>
+                          <ul className="list-disc list-inside space-y-2 text-gray-300 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                            {insights.map((insight, idx) => (
+                              <li key={idx} className="leading-relaxed">{insight}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null
+                    })()}
+                    {(displayNode.data?.howToApplyInReality || displayNode.data?.practicalApplication) && (
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Key Insight</h3>
-                        <p className="text-gray-300 leading-relaxed bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{selectedNode.data.keyInsight}</p>
+                        <h3 className="text-lg font-semibold text-white mb-2">3. How to apply in reality</h3>
+                        <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                          {displayNode.data?.howToApplyInReality || displayNode.data?.practicalApplication}
+                        </p>
                       </div>
                     )}
-                    {selectedNode.data?.howItWorks && (
+                    {(displayNode.data?.risks || displayNode.data?.keyRisks) && (
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">How It Works</h3>
-                        <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{selectedNode.data.howItWorks}</p>
-                      </div>
-                    )}
-                    {selectedNode.data?.keyRisks && (
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Key Risks</h3>
-                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{selectedNode.data.keyRisks}</p>
-                      </div>
-                    )}
-                    {selectedNode.data?.practicalApplication && (
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Practical Application</h3>
-                        <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">{selectedNode.data.practicalApplication}</p>
+                        <h3 className="text-lg font-semibold text-white mb-2">4. Risks</h3>
+                        <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                          {displayNode.data?.risks || displayNode.data?.keyRisks}
+                        </p>
                       </div>
                     )}
                   </>
                 )}
 
                 {/* Fallback: Generic Metadata Display */}
-                {selectedNode.type !== 'law' && selectedNode.type !== 'principle' && selectedNode.type !== 'framework' && 
-                 selectedNode.data?._templateType !== 'knowledge' &&
-                 selectedNode.data && Object.keys(selectedNode.data).length > 1 && (
+                {!isLoadingContent && displayNode.type !== 'law' && displayNode.type !== 'principle' && displayNode.type !== 'framework' && 
+                 displayNode.data?._templateType !== 'knowledge' &&
+                 displayNode.data && Object.keys(displayNode.data).length > 1 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-3">Details</h3>
                     <div className="space-y-3">
-                      {Object.entries(selectedNode.data).map(([key, value]) => {
+                      {Object.entries(displayNode.data).map(([key, value]) => {
                         // Filter out internal/system metadata fields
                         const internalKeys = ['description', '_templateType', '_version', '_lastSynced', 'seededAt', 'systemId', 'isPathway', 'isBranch', 'branchType', 'isReference', 'sourceRealityNodeId', 'specialTermWhatItIs', 'specialTermKeyFacts', 'specialTermHowItContributesToLife']
                         if (internalKeys.includes(key)) return null
@@ -1076,12 +1231,12 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
                 )}
 
                 {/* Children Count */}
-                {selectedNode.children && selectedNode.children.length > 0 && (
+                {!isLoadingContent && displayNode.children && displayNode.children.length > 0 && (
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                     <div className="flex items-center gap-0">
                       <Layers className="w-5 h-5 text-blue-400" />
                       <span className="text-white font-medium">
-                        Contains {selectedNode.children.length} child node{selectedNode.children.length !== 1 ? 's' : ''}
+                        Contains {displayNode.children.length} child node{displayNode.children.length !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
@@ -1089,7 +1244,7 @@ export default function HierarchyTreeView({ rootNodeId = 'reality', overridePare
               </div>
             </motion.div>
           </motion.div>
-        )}
+          ); })()}
       </AnimatePresence>
     </div>
   )

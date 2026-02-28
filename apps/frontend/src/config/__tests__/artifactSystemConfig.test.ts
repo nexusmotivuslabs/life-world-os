@@ -93,6 +93,15 @@ describe('artifactSystemConfig', () => {
       expect(getArtifactSystems('reality-root')).toEqual(['reality'])
       expect(getArtifactSystems('node-abc')).toEqual(['reality'])
     })
+
+    it('returns correct systems for flat ontology system node IDs', () => {
+      expect(getArtifactSystems('systems-node-finance')).toEqual(['finance'])
+      expect(getArtifactSystems('systems-node-health')).toEqual(['health'])
+      expect(getArtifactSystems('systems-node-trust')).toEqual(['trust'])
+      expect(getArtifactSystems('systems-node-career')).toContain('finance')
+      expect(getArtifactSystems('systems-node-career')).toContain('optionality')
+      expect(getArtifactSystems('systems-node-creation')).toContain('software')
+    })
   })
 
   describe('getSystemsForPowerLawDomain', () => {

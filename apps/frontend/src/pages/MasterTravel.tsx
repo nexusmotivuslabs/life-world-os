@@ -118,7 +118,7 @@ export default function MasterTravel() {
       teams={teams}
       agents={agents}
       loading={false}
-      rootNodeId="systems-node-expression_tier-travel-universal-concept"
+      rootNodeId="systems-node-creation-universal-concept"
       systemId="travel"
       renderOverview={() => (
         <div className="space-y-8">

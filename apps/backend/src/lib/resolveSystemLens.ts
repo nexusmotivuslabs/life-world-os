@@ -4,6 +4,7 @@
  */
 
 import type { RealityNode } from '@prisma/client'
+import { MONEY_PRINCIPLE_LEARNING } from '../scripts/principleLearningData.js'
 
 type Metadata = Record<string, unknown> | null
 
@@ -70,6 +71,10 @@ export function resolveNodeForSystem(
     metadata = applyLawLens(metadata, lens)
   } else if (templateType === 'principle') {
     metadata = applyPrincipleLens(metadata, lens)
+    // Attach "children for learning" when viewing a Money principle
+    if (systemId === 'money' && base.title && MONEY_PRINCIPLE_LEARNING[base.title]) {
+      ;(metadata as Record<string, unknown>).learningChildren = MONEY_PRINCIPLE_LEARNING[base.title]
+    }
   } else if (templateType === 'framework') {
     metadata = applyFrameworkLens(metadata, lens)
   }

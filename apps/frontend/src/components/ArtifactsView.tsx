@@ -2119,37 +2119,46 @@ export default function ArtifactsView({ searchQuery: externalSearchQuery, system
                       </>
                     )}
 
-                    {/* Knowledge Template Fields */}
+                    {/* Knowledge Template: 1. Definition  2. Insights (max 3)  3. How to apply in reality  4. Risks */}
                     {selectedArtifact.category === ArtifactCategory.KNOWLEDGE && selectedArtifact.metadata && (
                       <>
                         {selectedArtifact.metadata.definition && (
                           <div>
-                            <h3 className="text-xl font-semibold text-white mb-3">Definition</h3>
+                            <h3 className="text-xl font-semibold text-white mb-3">1. Definition</h3>
                             <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{String(selectedArtifact.metadata.definition)}</p>
                           </div>
                         )}
-                        {selectedArtifact.metadata.keyInsight && (
+                        {(() => {
+                          const insights: string[] = Array.isArray(selectedArtifact.metadata.insights)
+                            ? selectedArtifact.metadata.insights.slice(0, 3)
+                            : selectedArtifact.metadata.keyInsight
+                              ? [String(selectedArtifact.metadata.keyInsight)]
+                              : []
+                          return insights.length > 0 ? (
+                            <div>
+                              <h3 className="text-xl font-semibold text-white mb-3">2. Insights</h3>
+                              <ul className="list-disc list-inside space-y-2 text-gray-300 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                                {insights.map((insight, idx) => (
+                                  <li key={idx} className="leading-relaxed">{String(insight)}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null
+                        })()}
+                        {(selectedArtifact.metadata.howToApplyInReality ?? selectedArtifact.metadata.practicalApplication) && (
                           <div>
-                            <h3 className="text-xl font-semibold text-white mb-3">Key Insight</h3>
-                            <p className="text-gray-300 leading-relaxed bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.keyInsight)}</p>
+                            <h3 className="text-xl font-semibold text-white mb-3">3. How to apply in reality</h3>
+                            <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                              {String(selectedArtifact.metadata.howToApplyInReality ?? selectedArtifact.metadata.practicalApplication)}
+                            </p>
                           </div>
                         )}
-                        {selectedArtifact.metadata.howItWorks && (
+                        {(selectedArtifact.metadata.risks ?? selectedArtifact.metadata.keyRisks) && (
                           <div>
-                            <h3 className="text-xl font-semibold text-white mb-3">How It Works</h3>
-                            <p className="text-gray-300 leading-relaxed bg-gray-700/50 rounded-lg p-4">{String(selectedArtifact.metadata.howItWorks)}</p>
-                          </div>
-                        )}
-                        {selectedArtifact.metadata.keyRisks && (
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-3">Key Risks</h3>
-                            <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.keyRisks)}</p>
-                          </div>
-                        )}
-                        {selectedArtifact.metadata.practicalApplication && (
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-3">Practical Application</h3>
-                            <p className="text-gray-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">{String(selectedArtifact.metadata.practicalApplication)}</p>
+                            <h3 className="text-xl font-semibold text-white mb-3">4. Risks</h3>
+                            <p className="text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                              {String(selectedArtifact.metadata.risks ?? selectedArtifact.metadata.keyRisks)}
+                            </p>
                           </div>
                         )}
                       </>

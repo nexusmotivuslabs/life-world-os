@@ -223,4 +223,42 @@ export const SYSTEM_UNIVERSAL_CONCEPT_MAP: Record<string, SystemConceptMapping> 
     crossSystemPrinciples: ['ENERGY_RESERVE'],
     frameworks: ['RISK_ASSESSMENT_FRAMEWORK'],
   },
+
+  // Flat ontology systems (Finance, Career, Trust, Health, Production, Governance, Creation)
+  career: {
+    fundamentalLaws: ['LAW_OF_COMPOUNDING', 'LAW_OF_TIME', 'LAW_OF_CAUSE_EFFECT'],
+    powerLawDomains: ['CAREER', 'NEGOTIATION'],
+    bibleLawDomains: ['CAREER'],
+    strategicPrinciples: ['LEVERAGE', 'OPPORTUNITY_COST', 'MARGIN_OF_SAFETY'],
+    systemicPrinciples: ['FEEDBACK_LOOPS', 'ADAPTATION'],
+    crossSystemPrinciples: ['TRUST', 'OPTIONALITY'],
+    frameworks: ['DECISION_MATRIX', 'RISK_ASSESSMENT_FRAMEWORK'],
+  },
+  production: {
+    fundamentalLaws: ['LAW_OF_CAUSE_EFFECT', 'LAW_OF_ENTROPY'],
+    powerLawDomains: [],
+    bibleLawDomains: [],
+    strategicPrinciples: ['LEVERAGE', 'SYSTEMS_THINKING'],
+    systemicPrinciples: ['FEEDBACK_LOOPS', 'HIERARCHY'],
+    crossSystemPrinciples: [],
+    frameworks: ['PARETO_PRINCIPLE', 'DOMAIN_APPLICATION_FRAMEWORK'],
+  },
+  governance: {
+    fundamentalLaws: ['LAW_OF_CAUSE_EFFECT', 'LAW_OF_TIME'],
+    powerLawDomains: ['LEADERSHIP'],
+    bibleLawDomains: ['RELATIONSHIPS', 'LEADERSHIP'],
+    strategicPrinciples: ['SYSTEMS_THINKING', 'INVERSION'],
+    systemicPrinciples: ['HIERARCHY', 'FEEDBACK_LOOPS'],
+    crossSystemPrinciples: ['TRUST'],
+    frameworks: ['RISK_ASSESSMENT_FRAMEWORK', 'DECISION_MATRIX'],
+  },
+  creation: {
+    fundamentalLaws: ['LAW_OF_COMPOUNDING', 'LAW_OF_CAUSE_EFFECT'],
+    powerLawDomains: [],
+    bibleLawDomains: [],
+    strategicPrinciples: ['LEVERAGE', 'FIRST_PRINCIPLES'],
+    systemicPrinciples: ['EMERGENCE', 'ADAPTATION', 'HIERARCHY'],
+    crossSystemPrinciples: [],
+    frameworks: ['DOMAIN_APPLICATION_FRAMEWORK', 'GOAL_HIERARCHY_FRAMEWORK'],
+  },
 }
