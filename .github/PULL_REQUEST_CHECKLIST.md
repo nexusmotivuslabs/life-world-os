@@ -11,6 +11,7 @@ Use this before opening a PR or when reviewing your own changes.
 - [ ] Type-check passes (`tsc --noEmit` or project equivalent)
 - [ ] Existing tests pass (backend + frontend `npm test`)
 - [ ] New behavior covered by tests where practical (no drop in coverage)
+- [ ] Coverage thresholds met: `npm run test:coverage` (90% lines/statements on covered files; see `.cursor/rules/test-coverage-pr.mdc`)
 
 ## Scope & docs
 

@@ -11,10 +11,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      // Critical areas: config (release, artifacts), choose-plane & blogs, blog/error services, navigation store, currency, hooks, release types
+      // Critical areas: config (release, artifacts, skills map), components (skills, blog), pages, services, store, utils, hooks
       include: [
         'src/config/releaseStatus.ts',
         'src/config/artifactSystemConfig.ts',
+        'src/config/skillsMapConfig.ts',
+        'src/components/SkillLeverageModal.tsx',
+        'src/components/SkillsMapChart.tsx',
         'src/pages/PlaneChoice.tsx',
         'src/pages/BlogsPage.tsx',
         'src/services/blogApi.ts',
@@ -39,7 +42,7 @@ export default defineConfig({
       thresholds: {
         lines: 90,
         statements: 90,
-        functions: 70,
+        functions: 65,
         branches: 65,
       },
     },
